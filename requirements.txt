@@ -1,0 +1,17 @@
+fastapi>=0.109.0
+uvicorn>=0.27.0
+pydantic>=2.6.0
+python-dotenv>=1.0.0
+httpx>=0.26.0
+agno>=1.1.13
+openai>=1.12.0
+pgvector>=0.2.4
+pypdf>=4.0.0
+psycopg[binary]>=3.2.0
+sqlalchemy>=2.0.25
+beautifulsoup4>=4.12.2
+requests>=2.31.0
+tiktoken>=0.6.0
+python-magic-bin>=0.4.14
+aiofiles>=23.2.1
+tenacity>=8.2.3
