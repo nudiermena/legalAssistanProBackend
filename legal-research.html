@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Asistente de Investigación Legal - LegalTechAI</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+      rel="stylesheet" />
+    <link
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
+      rel="stylesheet" />
+    <link rel="stylesheet" href="legal-research.css" />
+  </head>
+  <body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-info mb-4">
+      <div class="container">
+        <a class="navbar-brand" href="index.html">
+          <i class="fas fa-chevron-left me-2"></i>
+          LegalTechAI
+        </a>
+        <span class="navbar-text text-white">
+          Asistente de Investigación Legal
+        </span>
+      </div>
+    </nav>
+
+    <div class="container">
+      <!-- Search Section -->
+      <div class="row mb-4">
+        <div class="col-12">
+          <div class="card">
+            <div class="card-body">
+              <div class="search-area">
+                <div class="input-group mb-3">
+                  <input
+                    type="text"
+                    class="form-control form-control-lg"
+                    placeholder="Buscar en jurisprudencia, leyes y regulaciones..." />
+                  <button class="btn btn-info btn-lg" type="button">
+                    <i class="fas fa-search"></i>
+                    Buscar
+                  </button>
+                </div>
+                <div class="search-filters">
+                  <div class="row">
+                    <div class="col-md-3">
+                      <select class="form-select">
+                        <option selected>Tipo de Documento</option>
+                        <option>Jurisprudencia</option>
+                        <option>Leyes</option>
+                        <option>Regulaciones</option>
+                        <option>Doctrina</option>
+                      </select>
+                    </div>
+                    <div class="col-md-3">
+                      <select class="form-select">
+                        <option selected>Jurisdicción</option>
+                        <option>Federal</option>
+                        <option>Estatal</option>
+                        <option>Municipal</option>
+                      </select>
+                    </div>
+                    <div class="col-md-3">
+                      <select class="form-select">
+                        <option selected>Fecha</option>
+                        <option>Último año</option>
+                        <option>Últimos 5 años</option>
+                        <option>Últimos 10 años</option>
+                        <option>Personalizado</option>
+                      </select>
+                    </div>
+                    <div class="col-md-3">
+                      <select class="form-select">
+                        <option selected>Relevancia</option>
+                        <option>Más citados</option>
+                        <option>Más recientes</option>
+                        <option>Más relevantes</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="row">
+        <!-- Results and Analysis Section -->
+        <div class="col-md-8">
+          <div class="card mb-4">
+            <div
+              class="card-header d-flex justify-content-between align-items-center">
+              <h5 class="mb-0">
+                <i class="fas fa-search me-2"></i>
+                Resultados de la Búsqueda
+              </h5>
+              <div class="btn-group">
+                <button class="btn btn-outline-secondary btn-sm">
+                  <i class="fas fa-list"></i>
+                </button>
+                <button class="btn btn-outline-secondary btn-sm active">
+                  <i class="fas fa-th-large"></i>
+                </button>
+              </div>
+            </div>
+            <div class="card-body">
+              <div class="search-results">
+                <div class="text-center text-muted py-5">
+                  <i class="fas fa-search fa-3x mb-3"></i>
+                  <p>Ingresa un término de búsqueda para comenzar</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Document Preview -->
+          <div class="card">
+            <div class="card-header">
+              <h5 class="mb-0">
+                <i class="fas fa-file-alt me-2"></i>
+                Vista Previa del Documento
+              </h5>
+            </div>
+            <div class="card-body">
+              <div class="document-preview">
+                <div class="text-center text-muted py-5">
+                  <i class="fas fa-file-pdf fa-3x mb-3"></i>
+                  <p>Selecciona un documento para ver su contenido</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- AI Analysis and Tools -->
+        <div class="col-md-4">
+          <!-- AI Recommendations -->
+          <div class="card mb-4">
+            <div class="card-header">
+              <h5 class="mb-0">
+                <i class="fas fa-robot me-2"></i>
+                Recomendaciones IA
+              </h5>
+            </div>
+            <div class="card-body">
+              <div class="recommendations">
+                <div class="recommendation-item mb-3">
+                  <h6>Precedentes Relevantes</h6>
+                  <div class="progress mb-2">
+                    <div
+                      class="progress-bar bg-info"
+                      role="progressbar"
+                      style="width: 0%"></div>
+                  </div>
+                  <small class="text-muted">0 precedentes encontrados</small>
+                </div>
+                <div class="recommendation-item mb-3">
+                  <h6>Citas Relacionadas</h6>
+                  <div class="progress mb-2">
+                    <div
+                      class="progress-bar bg-info"
+                      role="progressbar"
+                      style="width: 0%"></div>
+                  </div>
+                  <small class="text-muted">0 citas extraídas</small>
+                </div>
+                <div class="recommendation-item">
+                  <h6>Argumentos Sugeridos</h6>
+                  <div class="progress mb-2">
+                    <div
+                      class="progress-bar bg-info"
+                      role="progressbar"
+                      style="width: 0%"></div>
+                  </div>
+                  <small class="text-muted">0 argumentos generados</small>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Writing Assistant -->
+          <div class="card mb-4">
+            <div class="card-header">
+              <h5 class="mb-0">
+                <i class="fas fa-pen-fancy me-2"></i>
+                Asistente de Redacción
+              </h5>
+            </div>
+            <div class="card-body">
+              <div class="mb-3">
+                <select class="form-select mb-3">
+                  <option selected>Tipo de Documento</option>
+                  <option>Demanda</option>
+                  <option>Contestación</option>
+                  <option>Recurso</option>
+                  <option>Informe</option>
+                </select>
+                <button class="btn btn-info w-100">
+                  <i class="fas fa-magic me-2"></i>
+                  Generar Borrador
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Actions -->
+          <div class="card">
+            <div class="card-header">
+              <h5 class="mb-0">
+                <i class="fas fa-tasks me-2"></i>
+                Acciones
+              </h5>
+            </div>
+            <div class="card-body">
+              <button class="btn btn-outline-info w-100 mb-2">
+                <i class="fas fa-save me-2"></i>
+                Guardar Investigación
+              </button>
+              <button class="btn btn-outline-info w-100 mb-2">
+                <i class="fas fa-download me-2"></i>
+                Exportar Referencias
+              </button>
+              <button class="btn btn-outline-secondary w-100">
+                <i class="fas fa-share-alt me-2"></i>
+                Compartir Resultados
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  </body>
+</html>

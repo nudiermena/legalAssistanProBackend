@@ -1,0 +1,579 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Análisis de Contratos - LegalTechAI</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+      rel="stylesheet" />
+    <link
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
+      rel="stylesheet" />
+    <style>
+      .upload-area {
+        border: 2px dashed #dee2e6;
+        border-radius: 8px;
+        transition: all 0.3s ease;
+        cursor: pointer;
+      }
+
+      .upload-area:hover,
+      .upload-area.dragover {
+        border-color: #0d6efd;
+        background-color: rgba(13, 110, 253, 0.05);
+      }
+
+      .document-preview {
+        min-height: 200px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .progress {
+        height: 25px;
+        border-radius: 12px;
+        overflow: hidden;
+      }
+
+      .progress-bar {
+        transition: width 0.6s ease;
+      }
+
+      .metric-item {
+        text-align: center;
+        padding: 15px;
+        border-radius: 8px;
+        background-color: #f8f9fa;
+      }
+
+      .metric-item h3 {
+        color: #0d6efd;
+        font-weight: bold;
+      }
+
+      .card {
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        transition: transform 0.2s ease;
+      }
+
+      .card:hover {
+        transform: translateY(-2px);
+      }
+
+      .btn:disabled {
+        cursor: not-allowed;
+        opacity: 0.7;
+        position: relative;
+      }
+
+      .btn:disabled::after {
+        content: attr(data-tooltip);
+        position: absolute;
+        bottom: 100%;
+        left: 50%;
+        transform: translateX(-50%);
+        padding: 5px 10px;
+        background: rgba(0, 0, 0, 0.8);
+        color: white;
+        border-radius: 4px;
+        font-size: 0.8rem;
+        white-space: nowrap;
+        opacity: 0;
+        transition: opacity 0.2s;
+        pointer-events: none;
+      }
+
+      .btn:disabled:hover::after {
+        opacity: 1;
+      }
+
+      .btn-retry {
+        display: none;
+        margin-top: 10px;
+      }
+
+      .btn-retry.show {
+        display: block;
+      }
+
+      .btn-loading {
+        position: relative;
+        pointer-events: none;
+      }
+
+      .btn-loading::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: inherit;
+      }
+
+      .error-details {
+        display: none;
+        margin-top: 10px;
+        padding: 10px;
+        background: #fff3f3;
+        border: 1px solid #dc3545;
+        border-radius: 4px;
+        font-size: 0.9rem;
+      }
+
+      .error-details.show {
+        display: block;
+      }
+
+      .form-check-input:checked {
+        background-color: #0d6efd;
+        border-color: #0d6efd;
+      }
+
+      .contract-preview {
+        width: 100%;
+      }
+
+      .metadata-item {
+        padding: 10px;
+        background-color: #f8f9fa;
+        border-radius: 6px;
+        margin-bottom: 10px;
+      }
+
+      .metadata-item small {
+        display: block;
+        margin-bottom: 4px;
+      }
+
+      .content-preview {
+        max-height: 500px;
+        overflow-y: auto;
+        padding: 15px;
+        background-color: #f8f9fa;
+        border-radius: 6px;
+        font-size: 0.9rem;
+        line-height: 1.6;
+      }
+
+      .content-preview::-webkit-scrollbar {
+        width: 8px;
+      }
+
+      .content-preview::-webkit-scrollbar-track {
+        background: #f1f1f1;
+        border-radius: 4px;
+      }
+
+      .content-preview::-webkit-scrollbar-thumb {
+        background: #888;
+        border-radius: 4px;
+      }
+
+      .content-preview::-webkit-scrollbar-thumb:hover {
+        background: #555;
+      }
+
+      .stat-item {
+        padding: 10px;
+        background-color: #f8f9fa;
+        border-radius: 6px;
+      }
+
+      .stat-item p {
+        font-size: 1.2rem;
+        font-weight: bold;
+        color: #0d6efd;
+      }
+
+      .content-header {
+        padding-bottom: 10px;
+        border-bottom: 1px solid #dee2e6;
+      }
+
+      .pdf-preview {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .pdf-page {
+        background: white;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        margin-bottom: 10px;
+        max-width: 100%;
+      }
+
+      .pdf-controls {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 10px;
+      }
+
+      .pdf-page-number {
+        font-size: 0.9rem;
+        color: #666;
+      }
+
+      .loading-pdf {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 10px;
+        padding: 20px;
+      }
+
+      .loading-pdf i {
+        font-size: 2rem;
+        color: #0d6efd;
+        animation: spin 1s linear infinite;
+      }
+
+      @keyframes spin {
+        0% {
+          transform: rotate(0deg);
+        }
+        100% {
+          transform: rotate(360deg);
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary mb-4">
+      <div class="container">
+        <a class="navbar-brand" href="index.html">
+          <i class="fas fa-chevron-left me-2"></i>
+          LegalTechAI
+        </a>
+        <span class="navbar-text text-white"> Análisis de Contratos </span>
+      </div>
+    </nav>
+
+    <div class="container">
+      <!-- Upload Section -->
+      <div class="row mb-4">
+        <div class="col-12">
+          <div class="upload-area p-5 text-center">
+            <i class="fas fa-file-upload fa-3x mb-3"></i>
+            <h3>Subir Contrato</h3>
+            <p class="text-muted">
+              Arrastra y suelta archivos aquí o haz clic para seleccionar
+            </p>
+            <input
+              type="file"
+              id="contract-upload"
+              class="d-none"
+              accept=".pdf,.doc,.docx" />
+            <button
+              class="btn btn-primary btn-lg mt-3"
+              onclick="document.getElementById('contract-upload').click()">
+              Seleccionar Archivo
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Analysis Options -->
+      <div class="row mb-4">
+        <div class="col-md-4">
+          <div class="card h-100">
+            <div class="card-body">
+              <h5 class="card-title">
+                <i class="fas fa-shield-alt me-2"></i>
+                Evaluación de Riesgos
+              </h5>
+              <div class="form-check mb-2">
+                <input
+                  class="form-check-input"
+                  type="checkbox"
+                  id="risk-financial"
+                  checked />
+                <label class="form-check-label" for="risk-financial">
+                  Riesgos Financieros
+                </label>
+              </div>
+              <div class="form-check mb-2">
+                <input
+                  class="form-check-input"
+                  type="checkbox"
+                  id="risk-legal"
+                  checked />
+                <label class="form-check-label" for="risk-legal">
+                  Riesgos Legales
+                </label>
+              </div>
+              <div class="form-check mb-2">
+                <input
+                  class="form-check-input"
+                  type="checkbox"
+                  id="risk-compliance"
+                  checked />
+                <label class="form-check-label" for="risk-compliance">
+                  Riesgos de Cumplimiento
+                </label>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="card h-100">
+            <div class="card-body">
+              <h5 class="card-title">
+                <i class="fas fa-file-contract me-2"></i>
+                Extracción de Cláusulas
+              </h5>
+              <div class="form-check mb-2">
+                <input
+                  class="form-check-input"
+                  type="checkbox"
+                  id="clause-important"
+                  checked />
+                <label class="form-check-label" for="clause-important">
+                  Cláusulas Importantes
+                </label>
+              </div>
+              <div class="form-check mb-2">
+                <input
+                  class="form-check-input"
+                  type="checkbox"
+                  id="clause-obligations"
+                  checked />
+                <label class="form-check-label" for="clause-obligations">
+                  Obligaciones
+                </label>
+              </div>
+              <div class="form-check mb-2">
+                <input
+                  class="form-check-input"
+                  type="checkbox"
+                  id="clause-termination"
+                  checked />
+                <label class="form-check-label" for="clause-termination">
+                  Términos de Finalización
+                </label>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="card h-100">
+            <div class="card-body">
+              <h5 class="card-title">
+                <i class="fas fa-check-circle me-2"></i>
+                Verificación de Cumplimiento
+              </h5>
+              <div class="form-check mb-2">
+                <input
+                  class="form-check-input"
+                  type="checkbox"
+                  id="compliance-regulatory"
+                  checked />
+                <label class="form-check-label" for="compliance-regulatory">
+                  Normativa Regulatoria
+                </label>
+              </div>
+              <div class="form-check mb-2">
+                <input
+                  class="form-check-input"
+                  type="checkbox"
+                  id="compliance-internal"
+                  checked />
+                <label class="form-check-label" for="compliance-internal">
+                  Políticas Internas
+                </label>
+              </div>
+              <div class="form-check mb-2">
+                <input
+                  class="form-check-input"
+                  type="checkbox"
+                  id="compliance-industry"
+                  checked />
+                <label class="form-check-label" for="compliance-industry">
+                  Estándares de la Industria
+                </label>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Results Section -->
+      <div class="row">
+        <div class="col-md-8">
+          <div class="card mb-4">
+            <div class="card-header">
+              <h5 class="mb-0">
+                <i class="fas fa-file-alt me-2"></i>
+                Vista Previa del Contrato
+              </h5>
+            </div>
+            <div class="card-body">
+              <div class="document-preview">
+                <!-- Initial Upload State -->
+                <div
+                  class="text-center text-muted py-5"
+                  id="initial-upload-state">
+                  <i class="fas fa-file-pdf fa-3x mb-3"></i>
+                  <p>Sube un contrato para comenzar el análisis</p>
+                </div>
+
+                <!-- Contract Preview State -->
+                <div
+                  class="contract-preview d-none"
+                  id="contract-preview-state">
+                  <div class="contract-metadata mb-4">
+                    <div class="row">
+                      <div class="col-md-6">
+                        <div class="metadata-item">
+                          <small class="text-muted">Nombre del Documento</small>
+                          <p class="mb-0" id="contract-name">-</p>
+                        </div>
+                      </div>
+                      <div class="col-md-6">
+                        <div class="metadata-item">
+                          <small class="text-muted">Tipo de Documento</small>
+                          <p class="mb-0" id="contract-type">-</p>
+                        </div>
+                      </div>
+                      <div class="col-md-6">
+                        <div class="metadata-item">
+                          <small class="text-muted">Tamaño</small>
+                          <p class="mb-0" id="contract-size">-</p>
+                        </div>
+                      </div>
+                      <div class="col-md-6">
+                        <div class="metadata-item">
+                          <small class="text-muted">Fecha de Subida</small>
+                          <p class="mb-0" id="contract-date">-</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="contract-content">
+                    <div class="content-header mb-3">
+                      <h6 class="mb-0">Contenido del Contrato</h6>
+                    </div>
+                    <div class="content-preview" id="contract-content">
+                      <!-- Content will be loaded here -->
+                    </div>
+                  </div>
+
+                  <div class="contract-stats mt-4">
+                    <div class="row">
+                      <div class="col-md-4">
+                        <div class="stat-item text-center">
+                          <small class="text-muted">Páginas</small>
+                          <p class="mb-0" id="contract-pages">-</p>
+                        </div>
+                      </div>
+                      <div class="col-md-4">
+                        <div class="stat-item text-center">
+                          <small class="text-muted">Palabras</small>
+                          <p class="mb-0" id="contract-words">-</p>
+                        </div>
+                      </div>
+                      <div class="col-md-4">
+                        <div class="stat-item text-center">
+                          <small class="text-muted">Caracteres</small>
+                          <p class="mb-0" id="contract-chars">-</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="card mb-4">
+            <div class="card-header">
+              <h5 class="mb-0">
+                <i class="fas fa-chart-pie me-2"></i>
+                Resumen del Análisis
+              </h5>
+            </div>
+            <div class="card-body">
+              <div class="analysis-summary">
+                <div class="risk-meter mb-4">
+                  <h6>Nivel de Riesgo General</h6>
+                  <div class="progress">
+                    <div
+                      class="progress-bar bg-success"
+                      role="progressbar"
+                      style="width: 0%"></div>
+                  </div>
+                </div>
+                <div class="key-metrics">
+                  <div class="metric-item mb-3">
+                    <small class="text-muted">Cláusulas Analizadas</small>
+                    <h3 class="mb-0">0</h3>
+                  </div>
+                  <div class="metric-item mb-3">
+                    <small class="text-muted">Riesgos Identificados</small>
+                    <h3 class="mb-0">0</h3>
+                  </div>
+                  <div class="metric-item">
+                    <small class="text-muted">Cumplimiento</small>
+                    <h3 class="mb-0">0%</h3>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <h5 class="mb-0">
+                <i class="fas fa-tasks me-2"></i>
+                Acciones
+              </h5>
+            </div>
+            <div class="card-body">
+              <button
+                class="btn btn-primary w-100 mb-2"
+                disabled
+                data-tooltip="Sube un contrato para comenzar el análisis">
+                <i class="fas fa-play me-2"></i>
+                Iniciar Análisis
+              </button>
+              <button
+                class="btn btn-outline-primary w-100 mb-2"
+                disabled
+                data-tooltip="Realiza el análisis primero para descargar el reporte">
+                <i class="fas fa-download me-2"></i>
+                Descargar Reporte
+              </button>
+              <button
+                class="btn btn-outline-secondary w-100"
+                disabled
+                data-tooltip="Realiza el análisis primero para compartir los resultados">
+                <i class="fas fa-share-alt me-2"></i>
+                Compartir Resultados
+              </button>
+              <button
+                class="btn btn-outline-danger w-100 btn-retry"
+                style="display: none">
+                <i class="fas fa-redo me-2"></i>
+                Reintentar Análisis
+              </button>
+              <div class="error-details"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="contract-analysis.js"></script>
+  </body>
+</html>

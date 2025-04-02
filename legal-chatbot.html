@@ -1,0 +1,697 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Chatbot Legal Colombia - LegalTechAI</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+      rel="stylesheet" />
+    <link
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
+      rel="stylesheet" />
+    <link rel="stylesheet" href="legal-chatbot.css" />
+    <style>
+      .typing-indicator {
+        display: none;
+        padding: 10px;
+        margin: 10px 0;
+      }
+
+      .typing-indicator span {
+        display: inline-block;
+        width: 8px;
+        height: 8px;
+        background-color: #ffc107;
+        border-radius: 50%;
+        margin-right: 5px;
+        animation: typing 1s infinite;
+      }
+
+      .typing-indicator span:nth-child(2) {
+        animation-delay: 0.2s;
+      }
+      .typing-indicator span:nth-child(3) {
+        animation-delay: 0.4s;
+      }
+
+      @keyframes typing {
+        0%,
+        100% {
+          transform: translateY(0);
+        }
+        50% {
+          transform: translateY(-5px);
+        }
+      }
+
+      .loading-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(255, 255, 255, 0.8);
+        display: none;
+        justify-content: center;
+        align-items: center;
+        z-index: 1000;
+      }
+
+      .spinner-border {
+        width: 3rem;
+        height: 3rem;
+      }
+
+      /* Message Status Indicators */
+      .message-status {
+        font-size: 0.8em;
+        margin-top: 4px;
+      }
+
+      .status-sending {
+        color: #ffc107;
+      }
+      .status-sent {
+        color: #0d6efd;
+      }
+      .status-delivered {
+        color: #198754;
+      }
+      .status-error {
+        color: #dc3545;
+      }
+
+      /* Enhanced Loading Animations */
+      .loading-wave {
+        display: inline-flex;
+        gap: 2px;
+        height: 20px;
+      }
+
+      .loading-wave div {
+        width: 4px;
+        background: #ffc107;
+        animation: wave 1s infinite ease-in-out;
+      }
+
+      .loading-wave div:nth-child(2) {
+        animation-delay: 0.1s;
+      }
+      .loading-wave div:nth-child(3) {
+        animation-delay: 0.2s;
+      }
+      .loading-wave div:nth-child(4) {
+        animation-delay: 0.3s;
+      }
+      .loading-wave div:nth-child(5) {
+        animation-delay: 0.4s;
+      }
+
+      @keyframes wave {
+        0%,
+        100% {
+          transform: scaleY(1);
+        }
+        50% {
+          transform: scaleY(2);
+        }
+      }
+
+      /* Offline Queue Indicator */
+      .offline-indicator {
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        background: #dc3545;
+        color: white;
+        padding: 10px 15px;
+        border-radius: 5px;
+        display: none;
+      }
+
+      .queue-count {
+        background: white;
+        color: #dc3545;
+        padding: 2px 6px;
+        border-radius: 10px;
+        margin-left: 5px;
+      }
+    </style>
+  </head>
+  <body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-warning mb-4">
+      <div class="container">
+        <a class="navbar-brand" href="index.html">
+          <i class="fas fa-chevron-left me-2"></i>
+          LegalTechAI
+        </a>
+        <span class="navbar-text text-dark">
+          Asistente Legal IA - Colombia
+        </span>
+      </div>
+    </nav>
+
+    <div class="container">
+      <div class="row">
+        <!-- Main Chat Area -->
+        <div class="col-md-8">
+          <div class="card chat-card">
+            <div class="card-header">
+              <div class="d-flex justify-content-between align-items-center">
+                <div class="d-flex align-items-center">
+                  <div class="chat-status online"></div>
+                  <h5 class="mb-0 ms-2">Asistente Legal IA Colombia</h5>
+                </div>
+                <span class="badge bg-success">En línea 24/7</span>
+              </div>
+            </div>
+            <div class="card-body chat-body">
+              <div class="chat-messages" id="chatMessages">
+                <!-- Messages will be dynamically added here -->
+                <div class="typing-indicator" id="typingIndicator">
+                  <span></span>
+                  <span></span>
+                  <span></span>
+                </div>
+              </div>
+              <div class="chat-input">
+                <div class="input-group">
+                  <input
+                    type="text"
+                    class="form-control"
+                    id="messageInput"
+                    placeholder="Escribe tu consulta legal aquí..."
+                    maxlength="5000" />
+                  <button class="btn btn-warning" id="sendMessage">
+                    <i class="fas fa-paper-plane"></i>
+                  </button>
+                </div>
+                <div class="quick-actions mt-2">
+                  <button
+                    class="btn btn-sm btn-outline-warning quick-action"
+                    data-type="Laboral">
+                    Derecho Laboral
+                  </button>
+                  <button
+                    class="btn btn-sm btn-outline-warning quick-action"
+                    data-type="Civil">
+                    Derecho Civil
+                  </button>
+                  <button
+                    class="btn btn-sm btn-outline-warning quick-action"
+                    data-type="Comercial">
+                    Derecho Comercial
+                  </button>
+                  <button
+                    class="btn btn-sm btn-outline-warning quick-action"
+                    data-type="Penal">
+                    Derecho Penal
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Sidebar -->
+        <div class="col-md-4">
+          <!-- Case Evaluation -->
+          <div class="card mb-4">
+            <div class="card-header">
+              <h5 class="mb-0">
+                <i class="fas fa-balance-scale me-2"></i>
+                Evaluación de Caso
+              </h5>
+            </div>
+            <div class="card-body">
+              <form id="caseEvaluationForm">
+                <div class="mb-3">
+                  <label class="form-label">Tipo de Caso</label>
+                  <select class="form-select" id="caseType">
+                    <option selected value="">Seleccionar categoría</option>
+                    <option value="Laboral">Laboral</option>
+                    <option value="Civil">Civil</option>
+                    <option value="Comercial">Comercial</option>
+                    <option value="Administrativo">Administrativo</option>
+                    <option value="Penal">Penal</option>
+                  </select>
+                </div>
+                <div class="mb-3">
+                  <label class="form-label">Descripción Breve</label>
+                  <textarea
+                    class="form-control"
+                    id="caseDescription"
+                    rows="3"></textarea>
+                </div>
+                <button type="submit" class="btn btn-warning w-100">
+                  Evaluar Caso
+                </button>
+              </form>
+            </div>
+          </div>
+
+          <!-- FAQ Section -->
+          <div class="card mb-4">
+            <div class="card-header">
+              <h5 class="mb-0">
+                <i class="fas fa-question-circle me-2"></i>
+                Preguntas Frecuentes
+              </h5>
+            </div>
+            <div class="card-body">
+              <div class="accordion" id="faqAccordion">
+                <div class="accordion-item">
+                  <h2 class="accordion-header">
+                    <button
+                      class="accordion-button collapsed"
+                      type="button"
+                      data-bs-toggle="collapse"
+                      data-bs-target="#faq1">
+                      ¿Cuáles son mis derechos laborales básicos en Colombia?
+                    </button>
+                  </h2>
+                  <div
+                    id="faq1"
+                    class="accordion-collapse collapse"
+                    data-bs-parent="#faqAccordion">
+                    <div class="accordion-body">
+                      Los derechos laborales básicos en Colombia incluyen
+                      jornada máxima de 48 horas semanales, salario mínimo
+                      legal, afiliación a seguridad social (EPS, ARL, AFP),
+                      vacaciones remuneradas...
+                    </div>
+                  </div>
+                </div>
+                <div class="accordion-item">
+                  <h2 class="accordion-header">
+                    <button
+                      class="accordion-button collapsed"
+                      type="button"
+                      data-bs-toggle="collapse"
+                      data-bs-target="#faq2">
+                      ¿Cómo puedo constituir una empresa en Colombia?
+                    </button>
+                  </h2>
+                  <div
+                    id="faq2"
+                    class="accordion-collapse collapse"
+                    data-bs-parent="#faqAccordion">
+                    <div class="accordion-body">
+                      Los pasos incluyen registro mercantil en la Cámara de
+                      Comercio, escritura pública, obtención de NIT, registro en
+                      el RUT...
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- CRM Integration -->
+          <div class="card">
+            <div class="card-header">
+              <h5 class="mb-0">
+                <i class="fas fa-link me-2"></i>
+                Integración CRM
+              </h5>
+            </div>
+            <div class="card-body">
+              <div class="crm-status">
+                <div
+                  class="d-flex justify-content-between align-items-center mb-3">
+                  <span>Estado de Conexión</span>
+                  <span class="badge bg-success">Conectado</span>
+                </div>
+                <div
+                  class="d-flex justify-content-between align-items-center mb-3">
+                  <span>Casos Sincronizados</span>
+                  <span>124</span>
+                </div>
+                <div class="d-flex justify-content-between align-items-center">
+                  <span>Última Sincronización</span>
+                  <small class="text-muted">Hace 5 minutos</small>
+                </div>
+              </div>
+              <button class="btn btn-outline-warning w-100 mt-3">
+                <i class="fas fa-sync-alt me-2"></i>
+                Sincronizar Ahora
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Error Toast -->
+    <div class="toast-container position-fixed bottom-0 end-0 p-3">
+      <div
+        id="errorToast"
+        class="toast"
+        role="alert"
+        aria-live="assertive"
+        aria-atomic="true">
+        <div class="toast-header bg-danger text-white">
+          <strong class="me-auto">Error</strong>
+          <button
+            type="button"
+            class="btn-close"
+            data-bs-dismiss="toast"
+            aria-label="Close"></button>
+        </div>
+        <div class="toast-body" id="errorToastBody"></div>
+      </div>
+    </div>
+
+    <!-- Add loading overlay -->
+    <div class="loading-overlay" id="loadingOverlay">
+      <div class="spinner-border text-warning" role="status">
+        <span class="visually-hidden">Loading...</span>
+      </div>
+    </div>
+
+    <div class="offline-indicator" id="offlineIndicator">
+      Offline Mode <span class="queue-count" id="queueCount">0</span>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+      // API Configuration
+      const API_URL = "http://localhost:8000";
+      const API_KEY =
+        localStorage.getItem("apiKey") || prompt("Please enter your API key:");
+      let currentSessionId = null;
+
+      // Store API key
+      localStorage.setItem("apiKey", API_KEY);
+
+      // Retry configuration
+      const MAX_RETRIES = 3;
+      const RETRY_DELAY = 1000; // 1 second
+
+      // Loading state management
+      function showLoading() {
+        document.getElementById("loadingOverlay").style.display = "flex";
+        document.getElementById("sendMessage").disabled = true;
+        document
+          .querySelectorAll(".quick-action")
+          .forEach((btn) => (btn.disabled = true));
+      }
+
+      function hideLoading() {
+        document.getElementById("loadingOverlay").style.display = "none";
+        document.getElementById("sendMessage").disabled = false;
+        document
+          .querySelectorAll(".quick-action")
+          .forEach((btn) => (btn.disabled = false));
+      }
+
+      // Typing indicator
+      function showTypingIndicator() {
+        document.getElementById("typingIndicator").style.display = "block";
+        const messagesDiv = document.getElementById("chatMessages");
+        messagesDiv.scrollTop = messagesDiv.scrollHeight;
+      }
+
+      function hideTypingIndicator() {
+        document.getElementById("typingIndicator").style.display = "none";
+      }
+
+      // Enhanced API call with retries
+      async function fetchWithRetry(url, options, retries = MAX_RETRIES) {
+        try {
+          const response = await fetch(url, options);
+          if (!response.ok) {
+            const error = await response.json();
+            throw new Error(
+              error.error?.message || "Error en la comunicación con el servidor"
+            );
+          }
+          return response;
+        } catch (error) {
+          if (retries > 0 && !error.message.includes("API key")) {
+            await new Promise((resolve) => setTimeout(resolve, RETRY_DELAY));
+            return fetchWithRetry(url, options, retries - 1);
+          }
+          throw error;
+        }
+      }
+
+      // Message Queue Management
+      const messageQueue = [];
+      let isOnline = navigator.onLine;
+
+      // Message Status Management
+      const MessageStatus = {
+        SENDING: "sending",
+        SENT: "sent",
+        DELIVERED: "delivered",
+        ERROR: "error",
+      };
+
+      function updateMessageStatus(messageId, status) {
+        const statusElement = document.getElementById(`status-${messageId}`);
+        if (!statusElement) return;
+
+        const statusMap = {
+          [MessageStatus.SENDING]:
+            '<i class="fas fa-clock status-sending"></i> Sending...',
+          [MessageStatus.SENT]: '<i class="fas fa-check status-sent"></i> Sent',
+          [MessageStatus.DELIVERED]:
+            '<i class="fas fa-check-double status-delivered"></i> Delivered',
+          [MessageStatus.ERROR]:
+            '<i class="fas fa-exclamation-circle status-error"></i> Error',
+        };
+
+        statusElement.innerHTML =
+          statusMap[status] || statusMap[MessageStatus.ERROR];
+      }
+
+      // Offline Queue Management
+      function updateOfflineIndicator() {
+        const indicator = document.getElementById("offlineIndicator");
+        const queueCount = document.getElementById("queueCount");
+
+        if (!isOnline) {
+          indicator.style.display = "block";
+          queueCount.textContent = messageQueue.length;
+        } else {
+          indicator.style.display = "none";
+        }
+      }
+
+      async function processQueue() {
+        if (!isOnline || messageQueue.length === 0) return;
+
+        while (messageQueue.length > 0) {
+          const { message, messageId, caseType, caseDescription } =
+            messageQueue[0];
+          try {
+            updateMessageStatus(messageId, MessageStatus.SENDING);
+            await sendMessage(message, caseType, caseDescription);
+            updateMessageStatus(messageId, MessageStatus.DELIVERED);
+            messageQueue.shift();
+            updateOfflineIndicator();
+          } catch (error) {
+            updateMessageStatus(messageId, MessageStatus.ERROR);
+            break;
+          }
+        }
+      }
+
+      // Load Chat History
+      async function loadChatHistory() {
+        if (!currentSessionId) return;
+
+        showLoading();
+        try {
+          const response = await fetch(
+            `${API_URL}/history/${currentSessionId}`,
+            {
+              headers: {
+                "X-API-Key": API_KEY,
+              },
+            }
+          );
+
+          const data = await response.json();
+          const messagesDiv = document.getElementById("chatMessages");
+          messagesDiv.innerHTML = ""; // Clear existing messages
+
+          data.history.forEach((msg) => {
+            addMessage(msg.content, msg.role === "assistant");
+          });
+        } catch (error) {
+          showError("Error al cargar el historial del chat");
+        } finally {
+          hideLoading();
+        }
+      }
+
+      // Enhanced Message Sending
+      async function sendMessage(
+        message,
+        caseType = null,
+        caseDescription = null
+      ) {
+        const messageId = addMessage(message, false);
+
+        if (!isOnline) {
+          messageQueue.push({ message, messageId, caseType, caseDescription });
+          updateMessageStatus(messageId, MessageStatus.SENDING);
+          updateOfflineIndicator();
+          return;
+        }
+
+        showTypingIndicator();
+
+        try {
+          updateMessageStatus(messageId, MessageStatus.SENDING);
+          const response = await fetch(`${API_URL}/chat`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "X-API-Key": API_KEY,
+            },
+            body: JSON.stringify({
+              message,
+              session_id: currentSessionId,
+              case_type: caseType,
+              case_description: caseDescription,
+            }),
+          });
+
+          if (!response.ok) throw new Error("Error en el envío del mensaje");
+
+          const data = await response.json();
+          updateMessageStatus(messageId, MessageStatus.DELIVERED);
+          currentSessionId = data.session_id;
+          addMessage(data.message, true);
+        } catch (error) {
+          updateMessageStatus(messageId, MessageStatus.ERROR);
+          showError(error.message);
+        } finally {
+          hideTypingIndicator();
+        }
+      }
+
+      // Initialize chat with history loading
+      document.addEventListener("DOMContentLoaded", async () => {
+        if (currentSessionId) {
+          await loadChatHistory();
+        } else {
+          addBotMessage(
+            "¡Hola! Soy tu asistente legal virtual especializado en derecho colombiano. ¿En qué puedo ayudarte hoy?"
+          );
+        }
+      });
+
+      // Event Listeners
+      window.addEventListener("online", () => {
+        isOnline = true;
+        updateOfflineIndicator();
+        processQueue();
+      });
+
+      window.addEventListener("offline", () => {
+        isOnline = false;
+        updateOfflineIndicator();
+      });
+
+      // Message handling
+      function addMessage(content, isBot = false) {
+        const messageId = Date.now().toString();
+        const messagesDiv = document.getElementById("chatMessages");
+        const messageDiv = document.createElement("div");
+        messageDiv.className = `message ${isBot ? "bot" : "user"}`;
+
+        const time = new Date().toLocaleTimeString([], {
+          hour: "2-digit",
+          minute: "2-digit",
+        });
+
+        messageDiv.innerHTML = `
+          <div class="message-content">
+            <p>${content}</p>
+            ${
+              !isBot
+                ? `<div class="message-status" id="status-${messageId}"></div>`
+                : ""
+            }
+          </div>
+          <small class="message-time">${time}</small>
+        `;
+
+        messagesDiv.appendChild(messageDiv);
+        messagesDiv.scrollTop = messagesDiv.scrollHeight;
+
+        if (!isBot) {
+          updateMessageStatus(messageId, MessageStatus.SENDING);
+          return messageId;
+        }
+      }
+
+      function addBotMessage(content) {
+        addMessage(content, true);
+      }
+
+      function addUserMessage(content) {
+        addMessage(content, false);
+      }
+
+      // Event Listeners
+      document.getElementById("sendMessage").addEventListener("click", () => {
+        const input = document.getElementById("messageInput");
+        const message = input.value.trim();
+
+        if (message) {
+          addUserMessage(message);
+          sendMessage(message);
+          input.value = "";
+        }
+      });
+
+      document
+        .getElementById("messageInput")
+        .addEventListener("keypress", (e) => {
+          if (e.key === "Enter") {
+            e.preventDefault();
+            document.getElementById("sendMessage").click();
+          }
+        });
+
+      document.querySelectorAll(".quick-action").forEach((button) => {
+        button.addEventListener("click", () => {
+          const type = button.dataset.type;
+          const message = `Necesito información sobre derecho ${type.toLowerCase()}`;
+          addUserMessage(message);
+          sendMessage(message, type);
+        });
+      });
+
+      document
+        .getElementById("caseEvaluationForm")
+        .addEventListener("submit", async (e) => {
+          e.preventDefault();
+          const caseType = document.getElementById("caseType").value;
+          const caseDescription =
+            document.getElementById("caseDescription").value;
+
+          if (caseType && caseDescription) {
+            const message = `Necesito evaluar un caso de derecho ${caseType.toLowerCase()}: ${caseDescription}`;
+            addUserMessage(message);
+            sendMessage(message, caseType, caseDescription);
+          }
+        });
+
+      // Error Handling
+      function showError(message) {
+        const errorToast = document.getElementById("errorToast");
+        const errorToastBody = document.getElementById("errorToastBody");
+        errorToastBody.textContent = message;
+        const toast = new bootstrap.Toast(errorToast);
+        toast.show();
+      }
+    </script>
+  </body>
+</html>

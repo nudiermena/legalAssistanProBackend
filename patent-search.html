@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Búsqueda de Patentes - LegalTechAI</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+      rel="stylesheet" />
+    <link
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
+      rel="stylesheet" />
+    <link rel="stylesheet" href="patent-search.css" />
+  </head>
+  <body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary mb-4">
+      <div class="container">
+        <a class="navbar-brand" href="index.html">
+          <i class="fas fa-chevron-left me-2"></i>
+          LegalTechAI
+        </a>
+        <span class="navbar-text text-white">
+          Asistente de Búsqueda de Patentes y Marcas
+        </span>
+      </div>
+    </nav>
+
+    <div class="container">
+      <!-- Search Section -->
+      <div class="card mb-4">
+        <div class="card-body">
+          <div class="search-container">
+            <div class="search-type-tabs mb-4">
+              <button class="search-tab active">
+                <i class="fas fa-lightbulb me-2"></i>Patentes
+              </button>
+              <button class="search-tab">
+                <i class="fas fa-trademark me-2"></i>Marcas
+              </button>
+            </div>
+            <div class="search-input-group">
+              <div class="input-group mb-3">
+                <input
+                  type="text"
+                  class="form-control"
+                  placeholder="Ingrese descripción o términos clave..." />
+                <button class="btn btn-primary">
+                  <i class="fas fa-search me-2"></i>Buscar
+                </button>
+              </div>
+              <div class="search-filters">
+                <button class="filter-chip active">
+                  <i class="fas fa-globe me-1"></i>Global
+                </button>
+                <button class="filter-chip">
+                  <i class="fas fa-calendar me-1"></i>Últimos 5 años
+                </button>
+                <button class="filter-chip">
+                  <i class="fas fa-industry me-1"></i>Tecnología
+                </button>
+                <button class="filter-chip">
+                  <i class="fas fa-plus-circle"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="row">
+        <!-- Main Results Area -->
+        <div class="col-md-8">
+          <!-- Similarity Analysis -->
+          <div class="card mb-4">
+            <div
+              class="card-header d-flex justify-content-between align-items-center">
+              <h5 class="mb-0">
+                <i class="fas fa-chart-bar me-2"></i>
+                Análisis de Similitud
+              </h5>
+              <div class="header-actions">
+                <button class="btn btn-sm btn-outline-primary">
+                  <i class="fas fa-download me-1"></i>Exportar
+                </button>
+              </div>
+            </div>
+            <div class="card-body">
+              <div class="similarity-results">
+                <div class="result-item high-similarity">
+                  <div class="similarity-badge">85%</div>
+                  <div class="result-content">
+                    <h6>Patente US10234567B2</h6>
+                    <p>
+                      Sistema y método para procesamiento de datos utilizando
+                      inteligencia artificial...
+                    </p>
+                    <div class="result-meta">
+                      <span><i class="fas fa-calendar me-1"></i>2022</span>
+                      <span
+                        ><i class="fas fa-building me-1"></i>Tech Corp.</span
+                      >
+                      <span><i class="fas fa-globe me-1"></i>USPTO</span>
+                    </div>
+                  </div>
+                  <div class="result-actions">
+                    <button class="btn btn-sm btn-outline-primary">
+                      Ver Detalles
+                    </button>
+                  </div>
+                </div>
+                <div class="result-item medium-similarity">
+                  <div class="similarity-badge">65%</div>
+                  <div class="result-content">
+                    <h6>Patente EP9876543A1</h6>
+                    <p>
+                      Método para el análisis predictivo de datos usando redes
+                      neuronales...
+                    </p>
+                    <div class="result-meta">
+                      <span><i class="fas fa-calendar me-1"></i>2021</span>
+                      <span
+                        ><i class="fas fa-building me-1"></i>AI Solutions</span
+                      >
+                      <span><i class="fas fa-globe me-1"></i>EPO</span>
+                    </div>
+                  </div>
+                  <div class="result-actions">
+                    <button class="btn btn-sm btn-outline-primary">
+                      Ver Detalles
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Prior Art Analysis -->
+          <div class="card mb-4">
+            <div class="card-header">
+              <h5 class="mb-0">
+                <i class="fas fa-history me-2"></i>
+                Análisis de Arte Previo
+              </h5>
+            </div>
+            <div class="card-body">
+              <div class="timeline">
+                <div class="timeline-item">
+                  <div class="timeline-marker"></div>
+                  <div class="timeline-content">
+                    <div class="timeline-date">2020</div>
+                    <h6>Primera Publicación Relacionada</h6>
+                    <p>Método básico de procesamiento de datos...</p>
+                  </div>
+                </div>
+                <div class="timeline-item">
+                  <div class="timeline-marker active"></div>
+                  <div class="timeline-content">
+                    <div class="timeline-date">2022</div>
+                    <h6>Innovación Clave</h6>
+                    <p>Implementación de IA en el proceso...</p>
+                  </div>
+                </div>
+                <div class="timeline-item">
+                  <div class="timeline-marker future"></div>
+                  <div class="timeline-content">
+                    <div class="timeline-date">2024</div>
+                    <h6>Su Invención</h6>
+                    <p>Mejoras significativas en el proceso...</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Sidebar -->
+        <div class="col-md-4">
+          <!-- Availability Check -->
+          <div class="card mb-4">
+            <div class="card-header">
+              <h5 class="mb-0">
+                <i class="fas fa-check-circle me-2"></i>
+                Verificación de Disponibilidad
+              </h5>
+            </div>
+            <div class="card-body">
+              <div class="availability-status">
+                <div class="status-indicator warning">
+                  <i class="fas fa-exclamation-triangle"></i>
+                </div>
+                <div class="status-details">
+                  <h6>Riesgo Moderado</h6>
+                  <p>
+                    Existen patentes similares que requieren revisión detallada
+                  </p>
+                </div>
+              </div>
+              <div class="jurisdiction-list mt-3">
+                <div class="jurisdiction-item">
+                  <span>Estados Unidos</span>
+                  <span class="badge bg-warning">Verificar</span>
+                </div>
+                <div class="jurisdiction-item">
+                  <span>Unión Europea</span>
+                  <span class="badge bg-success">Disponible</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Risk Report -->
+          <div class="card">
+            <div class="card-header">
+              <h5 class="mb-0">
+                <i class="fas fa-shield-alt me-2"></i>
+                Informe de Riesgo
+              </h5>
+            </div>
+            <div class="card-body">
+              <div class="risk-summary">
+                <div class="risk-item">
+                  <div class="risk-label">Riesgo de Infracción</div>
+                  <div class="progress">
+                    <div
+                      class="progress-bar bg-warning"
+                      role="progressbar"
+                      style="width: 65%"></div>
+                  </div>
+                  <small class="text-muted">Medio (65%)</small>
+                </div>
+                <div class="risk-item">
+                  <div class="risk-label">Novedad</div>
+                  <div class="progress">
+                    <div
+                      class="progress-bar bg-success"
+                      role="progressbar"
+                      style="width: 85%"></div>
+                  </div>
+                  <small class="text-muted">Alta (85%)</small>
+                </div>
+              </div>
+              <div class="recommendations mt-3">
+                <h6>Recomendaciones</h6>
+                <ul class="recommendation-list">
+                  <li>Realizar búsqueda exhaustiva en USPTO</li>
+                  <li>Consultar con experto en patentes</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  </body>
+</html>

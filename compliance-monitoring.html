@@ -1,0 +1,930 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Sistema de Monitoreo de Cumplimiento - LegalTechAI</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+      rel="stylesheet" />
+    <link
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
+      rel="stylesheet" />
+    <link rel="stylesheet" href="compliance-monitoring.css" />
+  </head>
+  <body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-success mb-4">
+      <div class="container">
+        <a class="navbar-brand" href="index.html">
+          <i class="fas fa-chevron-left me-2"></i>
+          LegalTechAI
+        </a>
+        <span class="navbar-text text-white">
+          Sistema de Monitoreo de Cumplimiento
+        </span>
+      </div>
+    </nav>
+
+    <div class="container">
+      <!-- Dashboard Overview -->
+      <div class="row mb-4">
+        <div class="col-md-3">
+          <div class="card stat-card">
+            <div class="card-body">
+              <div class="stat-icon bg-success-light">
+                <i class="fas fa-check-circle"></i>
+              </div>
+              <h6 class="stat-title">Nivel de Cumplimiento</h6>
+              <h3 class="stat-value">98%</h3>
+              <p class="stat-change positive">
+                <i class="fas fa-arrow-up"></i> 2.3%
+              </p>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="card stat-card">
+            <div class="card-body">
+              <div class="stat-icon bg-warning-light">
+                <i class="fas fa-bell"></i>
+              </div>
+              <h6 class="stat-title">Alertas Activas</h6>
+              <h3 class="stat-value">12</h3>
+              <p class="stat-change neutral">
+                <i class="fas fa-minus"></i> Sin cambios
+              </p>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="card stat-card">
+            <div class="card-body">
+              <div class="stat-icon bg-info-light">
+                <i class="fas fa-clipboard-check"></i>
+              </div>
+              <h6 class="stat-title">Tareas Pendientes</h6>
+              <h3 class="stat-value">8</h3>
+              <p class="stat-change negative">
+                <i class="fas fa-arrow-up"></i> 3 nuevas
+              </p>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="card stat-card">
+            <div class="card-body">
+              <div class="stat-icon bg-danger-light">
+                <i class="fas fa-exclamation-triangle"></i>
+              </div>
+              <h6 class="stat-title">Riesgos Identificados</h6>
+              <h3 class="stat-value">3</h3>
+              <p class="stat-change negative">
+                <i class="fas fa-arrow-up"></i> 1 nuevo
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="row">
+        <!-- Main Monitoring Area -->
+        <div class="col-md-8">
+          <!-- Recent Regulatory Changes -->
+          <div class="card mb-4">
+            <div
+              class="card-header d-flex justify-content-between align-items-center">
+              <h5 class="mb-0">
+                <i class="fas fa-history me-2"></i>
+                Cambios Regulatorios Recientes
+              </h5>
+              <div class="btn-group">
+                <button class="btn btn-outline-success btn-sm">
+                  <i class="fas fa-filter me-1"></i>
+                  Filtrar
+                </button>
+                <button class="btn btn-outline-success btn-sm">
+                  <i class="fas fa-download me-1"></i>
+                  Exportar
+                </button>
+              </div>
+            </div>
+            <div class="card-body">
+              <div class="regulatory-changes">
+                <div class="change-item">
+                  <div class="change-status">
+                    <span class="badge bg-warning">Nuevo</span>
+                  </div>
+                  <div class="change-content">
+                    <h6>Actualización Normativa 2024/01</h6>
+                    <p>Nuevos requisitos de protección de datos personales</p>
+                    <small class="text-muted">Hace 2 horas</small>
+                  </div>
+                  <div class="change-actions">
+                    <button class="btn btn-sm btn-outline-success">
+                      Ver Detalles
+                    </button>
+                  </div>
+                </div>
+                <div class="change-item">
+                  <div class="change-status">
+                    <span class="badge bg-info">En Proceso</span>
+                  </div>
+                  <div class="change-content">
+                    <h6>Directiva de Seguridad Digital</h6>
+                    <p>Implementación de nuevas medidas de ciberseguridad</p>
+                    <small class="text-muted">Hace 1 día</small>
+                  </div>
+                  <div class="change-actions">
+                    <button class="btn btn-sm btn-outline-success">
+                      Ver Detalles
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Compliance Checklist -->
+          <div class="card">
+            <div class="card-header">
+              <h5 class="mb-0">
+                <i class="fas fa-tasks me-2"></i>
+                Lista de Verificación de Cumplimiento
+              </h5>
+            </div>
+            <div class="card-body">
+              <div class="checklist">
+                <div class="checklist-item completed">
+                  <div class="form-check">
+                    <input class="form-check-input" type="checkbox" checked />
+                    <label class="form-check-label">
+                      Actualizar política de privacidad
+                    </label>
+                  </div>
+                  <span class="badge bg-success">Completado</span>
+                </div>
+                <div class="checklist-item in-progress">
+                  <div class="form-check">
+                    <input class="form-check-input" type="checkbox" />
+                    <label class="form-check-label">
+                      Implementar nuevos controles de seguridad
+                    </label>
+                  </div>
+                  <span class="badge bg-warning">En Proceso</span>
+                </div>
+                <div class="checklist-item pending">
+                  <div class="form-check">
+                    <input class="form-check-input" type="checkbox" />
+                    <label class="form-check-label">
+                      Revisar procedimientos internos
+                    </label>
+                  </div>
+                  <span class="badge bg-danger">Pendiente</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Sidebar -->
+        <div class="col-md-4">
+          <!-- Alert Center -->
+          <div class="card mb-4">
+            <div class="card-header">
+              <h5 class="mb-0">
+                <i class="fas fa-bell me-2"></i>
+                Centro de Alertas
+              </h5>
+            </div>
+            <div class="card-body">
+              <div class="alert-list">
+                <div class="alert-item high">
+                  <i class="fas fa-exclamation-circle"></i>
+                  <div class="alert-content">
+                    <h6>Alerta de Alto Riesgo</h6>
+                    <p>Actualización crítica de seguridad pendiente</p>
+                    <small>Hace 30 minutos</small>
+                  </div>
+                </div>
+                <div class="alert-item medium">
+                  <i class="fas fa-exclamation-triangle"></i>
+                  <div class="alert-content">
+                    <h6>Alerta de Riesgo Medio</h6>
+                    <p>Revisión de documentación requerida</p>
+                    <small>Hace 2 horas</small>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Impact Analysis -->
+          <div class="card mb-4">
+            <div class="card-header">
+              <h5 class="mb-0">
+                <i class="fas fa-chart-line me-2"></i>
+                Análisis de Impacto
+              </h5>
+            </div>
+            <div class="card-body">
+              <div class="impact-analysis">
+                <div class="impact-item">
+                  <h6>Impacto Operacional</h6>
+                  <div class="progress mb-2">
+                    <div
+                      class="progress-bar bg-warning"
+                      role="progressbar"
+                      style="width: 65%"></div>
+                  </div>
+                  <small class="text-muted"
+                    >Medio - 65% de procesos afectados</small
+                  >
+                </div>
+                <div class="impact-item">
+                  <h6>Impacto Financiero</h6>
+                  <div class="progress mb-2">
+                    <div
+                      class="progress-bar bg-success"
+                      role="progressbar"
+                      style="width: 25%"></div>
+                  </div>
+                  <small class="text-muted"
+                    >Bajo - 25% de impacto estimado</small
+                  >
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Configuration -->
+          <div class="card">
+            <div class="card-header">
+              <h5 class="mb-0">
+                <i class="fas fa-cog me-2"></i>
+                Configuración de Monitoreo
+              </h5>
+            </div>
+            <div class="card-body">
+              <div class="form-check form-switch mb-3">
+                <input class="form-check-input" type="checkbox" checked />
+                <label class="form-check-label"> Alertas en tiempo real </label>
+              </div>
+              <div class="form-check form-switch mb-3">
+                <input class="form-check-input" type="checkbox" checked />
+                <label class="form-check-label">
+                  Notificaciones por email
+                </label>
+              </div>
+              <div class="form-check form-switch">
+                <input class="form-check-input" type="checkbox" checked />
+                <label class="form-check-label"> Informes automáticos </label>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+      // Initialize compliance monitoring
+      document.addEventListener("DOMContentLoaded", async function () {
+        try {
+          // Initial data load
+          await loadComplianceData();
+
+          // Set up real-time monitoring if enabled
+          const realTimeSwitch = document.querySelector(
+            'input[aria-label="Alertas en tiempo real"]'
+          );
+          if (realTimeSwitch && realTimeSwitch.checked) {
+            setInterval(loadComplianceData, 300000); // Refresh every 5 minutes
+          }
+
+          // Add event listeners for filter and export buttons
+          setupEventListeners();
+        } catch (error) {
+          console.error("Error initializing compliance monitoring:", error);
+          showError("Error al inicializar el monitoreo de cumplimiento");
+        }
+      });
+
+      async function loadComplianceData() {
+        try {
+          showLoading();
+
+          // Prepare company data
+          const companyData = {
+            name: "LegalTechAI",
+            industry: "Legal Services",
+            region: "Latin America",
+            compliance_categories: [
+              "data_protection",
+              "cybersecurity",
+              "regulatory",
+            ],
+            company_size: "medium",
+            jurisdiction: "general",
+          };
+
+          // Make API request
+          const response = await fetch("/api/v1/compliance/monitor", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "X-API-Key": localStorage.getItem("apiKey") || "",
+            },
+            body: JSON.stringify({
+              company_data: companyData,
+              categories: ["data_protection", "cybersecurity", "regulatory"],
+              include_tasks: true,
+              include_risks: true,
+              include_alerts: true,
+            }),
+          });
+
+          if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+          }
+
+          const data = await response.json();
+
+          // Update UI with compliance data
+          updateComplianceMetrics(data.metrics);
+          updateRegulatoryChanges(data.regulatory_changes);
+          updateComplianceTasks(data.tasks);
+          updateAlerts(data.alerts);
+          updateRiskAssessment(data.risk_assessment);
+        } catch (error) {
+          console.error("Error loading compliance data:", error);
+          showError("Error al cargar datos de cumplimiento");
+        } finally {
+          hideLoading();
+        }
+      }
+
+      function updateComplianceMetrics(metrics) {
+        if (!metrics) return;
+
+        // Update overall compliance
+        const complianceLevel = document.querySelector(
+          ".stat-card:nth-child(1) .stat-value"
+        );
+        if (complianceLevel) {
+          complianceLevel.textContent = `${Math.round(
+            metrics.overall_compliance
+          )}%`;
+        }
+
+        // Update areas of concern
+        const areasOfConcern = metrics.areas_of_concern;
+        if (areasOfConcern && areasOfConcern.length > 0) {
+          const tasksCard = document.querySelector(".stat-card:nth-child(3)");
+          if (tasksCard) {
+            const taskCount = document.querySelector(
+              ".stat-card:nth-child(3) .stat-value"
+            );
+            if (taskCount) {
+              taskCount.textContent = areasOfConcern.length.toString();
+            }
+            const taskChange = document.querySelector(
+              ".stat-card:nth-child(3) .stat-change"
+            );
+            if (taskChange) {
+              taskChange.innerHTML = `<i class="fas fa-arrow-up"></i> ${areasOfConcern.length} pendientes`;
+            }
+          }
+        }
+
+        // Update recommended actions
+        const recommendedActions = metrics.recommended_actions;
+        if (recommendedActions && recommendedActions.length > 0) {
+          // Add a new section for recommended actions if it doesn't exist
+          let actionsContainer = document.querySelector(".recommended-actions");
+          if (!actionsContainer) {
+            const mainCol = document.querySelector(".col-md-8");
+            if (mainCol) {
+              actionsContainer = document.createElement("div");
+              actionsContainer.className = "card mb-4 recommended-actions";
+              actionsContainer.innerHTML = `
+                <div class="card-header">
+                  <h5 class="mb-0">
+                    <i class="fas fa-lightbulb me-2"></i>
+                    Acciones Recomendadas
+                  </h5>
+                </div>
+                <div class="card-body">
+                  <ul class="list-group"></ul>
+                </div>
+              `;
+              mainCol.insertBefore(actionsContainer, mainCol.firstChild);
+            }
+          }
+
+          const actionsList = actionsContainer.querySelector(".list-group");
+          if (actionsList) {
+            actionsList.innerHTML = recommendedActions
+              .map(
+                (action) => `
+              <li class="list-group-item">
+                <i class="fas fa-check-circle text-success me-2"></i>
+                ${action}
+              </li>
+            `
+              )
+              .join("");
+          }
+        }
+      }
+
+      function updateRegulatoryChanges(changes) {
+        if (!changes || !changes.length) return;
+
+        const container = document.querySelector(".regulatory-changes");
+        if (!container) return;
+
+        container.innerHTML = changes
+          .map(
+            (change) => `
+            <div class="change-item">
+                <div class="change-status">
+                    <span class="badge bg-${getStatusBadgeColor(
+                      change.status
+                    )}">${change.status}</span>
+                </div>
+                <div class="change-content">
+                    <h6>${change.title}</h6>
+                    <p>${change.description}</p>
+                    <small class="text-muted">Fecha límite: ${formatDate(
+                      change.deadline
+                    )}</small>
+                </div>
+                <div class="change-actions">
+                    <button class="btn btn-sm btn-outline-success" onclick="viewChangeDetails('${
+                      change.id
+                    }')">
+                        Ver Detalles
+                    </button>
+                </div>
+            </div>
+        `
+          )
+          .join("");
+      }
+
+      function updateComplianceTasks(tasks) {
+        if (!tasks || !tasks.length) return;
+
+        const container = document.querySelector(".checklist");
+        if (!container) return;
+
+        container.innerHTML = tasks
+          .map(
+            (task) => `
+            <div class="checklist-item ${task.status.toLowerCase()}">
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" ${
+                      task.status === "Completed" ? "checked" : ""
+                    }
+                           onchange="updateTaskStatus('${
+                             task.id
+                           }', this.checked)" />
+                    <label class="form-check-label">
+                        ${task.title}
+                        <small class="text-muted d-block">Vence: ${formatDate(
+                          task.due_date
+                        )}</small>
+                    </label>
+                </div>
+                <span class="badge bg-${getStatusBadgeColor(task.status)}">${
+              task.status
+            }</span>
+            </div>
+        `
+          )
+          .join("");
+      }
+
+      function updateAlerts(alerts) {
+        if (!alerts || !alerts.length) return;
+
+        const container = document.querySelector(".alert-list");
+        if (!container) return;
+
+        container.innerHTML = alerts
+          .map(
+            (alert) => `
+            <div class="alert-item ${alert.severity.toLowerCase()}">
+                <i class="fas ${getAlertIcon(alert.severity)}"></i>
+                <div class="alert-content">
+                    <h6>${alert.title}</h6>
+                    <p>${alert.description}</p>
+                    <small>${formatDate(alert.created_at)}</small>
+                    ${
+                      alert.due_date
+                        ? `<small class="text-danger d-block">Vence: ${formatDate(
+                            alert.due_date
+                          )}</small>`
+                        : ""
+                    }
+                </div>
+            </div>
+        `
+          )
+          .join("");
+
+        // Update alert count in stats
+        const alertCount = document.querySelector(
+          ".stat-card:nth-child(2) .stat-value"
+        );
+        if (alertCount) {
+          alertCount.textContent = alerts.length.toString();
+        }
+      }
+
+      function updateRiskAssessment(assessment) {
+        if (!assessment) return;
+
+        // Update risk count in stats
+        const riskCount = document.querySelector(
+          ".stat-card:nth-child(4) .stat-value"
+        );
+        if (riskCount) {
+          const highRisks = Object.values(assessment.risk_factors).filter(
+            (factor) => factor.level === "High" || factor.level === "Critical"
+          ).length;
+          riskCount.textContent = highRisks.toString();
+        }
+
+        // Update operational impact
+        const operationalImpact = document.querySelector(
+          ".impact-item:nth-child(1) .progress-bar"
+        );
+        if (operationalImpact) {
+          const impactPercentage = calculateImpactPercentage(
+            assessment.risk_factors.operational
+          );
+          operationalImpact.style.width = `${impactPercentage}%`;
+          operationalImpact.parentElement.nextElementSibling.textContent = `${getRiskLevelText(
+            assessment.risk_factors.operational
+          )} - ${impactPercentage}% de procesos afectados`;
+        }
+
+        // Update financial impact
+        const financialImpact = document.querySelector(
+          ".impact-item:nth-child(2) .progress-bar"
+        );
+        if (financialImpact) {
+          const impactPercentage = calculateImpactPercentage(
+            assessment.risk_factors.financial
+          );
+          financialImpact.style.width = `${impactPercentage}%`;
+          financialImpact.parentElement.nextElementSibling.textContent = `${getRiskLevelText(
+            assessment.risk_factors.financial
+          )} - ${impactPercentage}% de impacto estimado`;
+        }
+      }
+
+      // Utility functions
+      function getStatusBadgeColor(status) {
+        const colors = {
+          Completed: "success",
+          "In Progress": "warning",
+          Pending: "danger",
+          New: "info",
+        };
+        return colors[status] || "secondary";
+      }
+
+      function getAlertIcon(severity) {
+        const icons = {
+          Critical: "fa-exclamation-circle",
+          High: "fa-exclamation-triangle",
+          Medium: "fa-exclamation",
+          Low: "fa-info-circle",
+        };
+        return icons[severity] || "fa-info-circle";
+      }
+
+      function formatDate(dateString) {
+        const date = new Date(dateString);
+        return date.toLocaleDateString("es-ES", {
+          day: "2-digit",
+          month: "2-digit",
+          year: "numeric",
+          hour: "2-digit",
+          minute: "2-digit",
+        });
+      }
+
+      function calculateImpactPercentage(riskFactor) {
+        const levels = {
+          Critical: 100,
+          High: 75,
+          Medium: 50,
+          Low: 25,
+        };
+        return levels[riskFactor] || 0;
+      }
+
+      function getRiskLevelText(riskLevel) {
+        const texts = {
+          Critical: "Crítico",
+          High: "Alto",
+          Medium: "Medio",
+          Low: "Bajo",
+        };
+        return texts[riskLevel] || "Desconocido";
+      }
+
+      function showLoading() {
+        // Create loading overlay if it doesn't exist
+        let loadingOverlay = document.querySelector(".loading-overlay");
+        if (!loadingOverlay) {
+          loadingOverlay = document.createElement("div");
+          loadingOverlay.className = "loading-overlay";
+          loadingOverlay.innerHTML = `
+            <div class="spinner-border text-success" role="status">
+              <span class="visually-hidden">Cargando...</span>
+            </div>
+            <p class="mt-2">Actualizando datos de cumplimiento...</p>
+          `;
+          document.body.appendChild(loadingOverlay);
+        }
+        loadingOverlay.style.display = "flex";
+      }
+
+      function hideLoading() {
+        const loadingOverlay = document.querySelector(".loading-overlay");
+        if (loadingOverlay) {
+          loadingOverlay.style.display = "none";
+        }
+      }
+
+      function showError(message) {
+        // Create error toast if it doesn't exist
+        let errorToast = document.querySelector(".error-toast");
+        if (!errorToast) {
+          errorToast = document.createElement("div");
+          errorToast.className = "toast error-toast";
+          errorToast.setAttribute("role", "alert");
+          errorToast.setAttribute("aria-live", "assertive");
+          errorToast.setAttribute("aria-atomic", "true");
+          errorToast.innerHTML = `
+            <div class="toast-header bg-danger text-white">
+              <i class="fas fa-exclamation-circle me-2"></i>
+              <strong class="me-auto">Error</strong>
+              <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast" aria-label="Close"></button>
+            </div>
+            <div class="toast-body"></div>
+          `;
+          document.body.appendChild(errorToast);
+        }
+
+        errorToast.querySelector(".toast-body").textContent = message;
+        const bsToast = new bootstrap.Toast(errorToast);
+        bsToast.show();
+      }
+
+      function setupEventListeners() {
+        // Filter button
+        const filterBtn = document.querySelector(
+          'button[aria-label="Filtrar"]'
+        );
+        if (filterBtn) {
+          filterBtn.addEventListener("click", function () {
+            // Show filter modal
+            const filterModal = new bootstrap.Modal(
+              document.getElementById("filterModal")
+            );
+            filterModal.show();
+          });
+        }
+
+        // Export button
+        const exportBtn = document.querySelector(
+          'button[aria-label="Exportar"]'
+        );
+        if (exportBtn) {
+          exportBtn.addEventListener("click", async function () {
+            try {
+              const response = await fetch("/api/v1/compliance/export", {
+                method: "GET",
+                headers: {
+                  "X-API-Key": localStorage.getItem("apiKey") || "",
+                },
+              });
+
+              if (!response.ok) throw new Error("Error al exportar datos");
+
+              const blob = await response.blob();
+              const url = window.URL.createObjectURL(blob);
+              const a = document.createElement("a");
+              a.href = url;
+              a.download = `compliance_report_${
+                new Date().toISOString().split("T")[0]
+              }.xlsx`;
+              document.body.appendChild(a);
+              a.click();
+              window.URL.revokeObjectURL(url);
+            } catch (error) {
+              showError("Error al exportar el reporte de cumplimiento");
+            }
+          });
+        }
+
+        // Configuration switches
+        const configSwitches = document.querySelectorAll(".form-check-input");
+        configSwitches.forEach((switch_) => {
+          switch_.addEventListener("change", async function () {
+            try {
+              const settingName = this.nextElementSibling.textContent.trim();
+              const isEnabled = this.checked;
+              await updateConfiguration(settingName, isEnabled);
+
+              // If real-time monitoring is toggled, handle the interval
+              if (settingName === "Alertas en tiempo real") {
+                if (isEnabled) {
+                  window.monitoringInterval = setInterval(
+                    loadComplianceData,
+                    300000
+                  );
+                } else {
+                  clearInterval(window.monitoringInterval);
+                }
+              }
+            } catch (error) {
+              showError("Error al actualizar la configuración");
+              // Revert the switch state
+              this.checked = !this.checked;
+            }
+          });
+        });
+      }
+
+      async function updateConfiguration(setting, enabled) {
+        try {
+          const response = await fetch("/api/v1/compliance/config", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "X-API-Key": localStorage.getItem("apiKey") || "",
+            },
+            body: JSON.stringify({
+              setting_name: setting,
+              enabled: enabled,
+            }),
+          });
+
+          if (!response.ok)
+            throw new Error("Error al actualizar configuración");
+
+          // Show success toast
+          showSuccess(`Configuración "${setting}" actualizada correctamente`);
+        } catch (error) {
+          throw new Error("Error al actualizar la configuración");
+        }
+      }
+
+      async function viewChangeDetails(changeId) {
+        try {
+          const response = await fetch(
+            `/api/v1/compliance/regulatory-changes/${changeId}`,
+            {
+              headers: {
+                "X-API-Key": localStorage.getItem("apiKey") || "",
+              },
+            }
+          );
+
+          if (!response.ok) throw new Error("Error al cargar detalles");
+
+          const changeDetails = await response.json();
+
+          // Show details in modal
+          const detailsModal = document.getElementById("changeDetailsModal");
+          if (detailsModal) {
+            detailsModal.querySelector(".modal-title").textContent =
+              changeDetails.title;
+            detailsModal.querySelector(".modal-body").innerHTML = `
+              <div class="change-details">
+                <p class="mb-3">${changeDetails.description}</p>
+                <h6>Requisitos de Implementación:</h6>
+                <ul class="mb-3">
+                  ${changeDetails.implementation_requirements
+                    .map((req) => `<li>${req}</li>`)
+                    .join("")}
+                </ul>
+                <div class="d-flex justify-content-between align-items-center">
+                  <span class="badge bg-${getStatusBadgeColor(
+                    changeDetails.status
+                  )}">${changeDetails.status}</span>
+                  <small class="text-muted">Fecha límite: ${formatDate(
+                    changeDetails.deadline
+                  )}</small>
+                </div>
+              </div>
+            `;
+            const modal = new bootstrap.Modal(detailsModal);
+            modal.show();
+          }
+        } catch (error) {
+          showError("Error al cargar los detalles del cambio regulatorio");
+        }
+      }
+
+      async function updateTaskStatus(taskId, completed) {
+        try {
+          const response = await fetch(`/api/v1/compliance/tasks/${taskId}`, {
+            method: "PATCH",
+            headers: {
+              "Content-Type": "application/json",
+              "X-API-Key": localStorage.getItem("apiKey") || "",
+            },
+            body: JSON.stringify({
+              status: completed ? "Completed" : "Pending",
+            }),
+          });
+
+          if (!response.ok) throw new Error("Error al actualizar tarea");
+
+          // Refresh compliance data to update UI
+          await loadComplianceData();
+
+          // Show success message
+          showSuccess(
+            `Tarea ${completed ? "completada" : "pendiente"} correctamente`
+          );
+        } catch (error) {
+          showError("Error al actualizar el estado de la tarea");
+          // Revert checkbox state
+          const checkbox = document.querySelector(
+            `input[onchange*="${taskId}"]`
+          );
+          if (checkbox) checkbox.checked = !completed;
+        }
+      }
+
+      function showSuccess(message) {
+        // Create success toast if it doesn't exist
+        let successToast = document.querySelector(".success-toast");
+        if (!successToast) {
+          successToast = document.createElement("div");
+          successToast.className = "toast success-toast";
+          successToast.setAttribute("role", "alert");
+          successToast.setAttribute("aria-live", "assertive");
+          successToast.setAttribute("aria-atomic", "true");
+          successToast.innerHTML = `
+            <div class="toast-header bg-success text-white">
+              <i class="fas fa-check-circle me-2"></i>
+              <strong class="me-auto">Éxito</strong>
+              <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast" aria-label="Close"></button>
+            </div>
+            <div class="toast-body"></div>
+          `;
+          document.body.appendChild(successToast);
+        }
+
+        successToast.querySelector(".toast-body").textContent = message;
+        const bsToast = new bootstrap.Toast(successToast);
+        bsToast.show();
+      }
+    </script>
+    <style>
+      .loading-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(255, 255, 255, 0.8);
+        display: none;
+        justify-content: center;
+        align-items: center;
+        flex-direction: column;
+        z-index: 9999;
+      }
+
+      .toast {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        z-index: 9999;
+      }
+
+      .change-details ul {
+        list-style-type: none;
+        padding-left: 0;
+      }
+
+      .change-details ul li {
+        padding: 8px 0;
+        border-bottom: 1px solid #eee;
+      }
+
+      .change-details ul li:last-child {
+        border-bottom: none;
+      }
+    </style>
+  </body>
+</html>

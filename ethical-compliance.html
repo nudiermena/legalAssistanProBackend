@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Plataforma de Cumplimiento Ético - LegalTechAI</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+      rel="stylesheet" />
+    <link
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
+      rel="stylesheet" />
+    <link rel="stylesheet" href="ethical-compliance.css" />
+  </head>
+  <body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary mb-4">
+      <div class="container">
+        <a class="navbar-brand" href="index.html">
+          <i class="fas fa-chevron-left me-2"></i>
+          LegalTechAI
+        </a>
+        <span class="navbar-text text-white">
+          Plataforma de Cumplimiento Ético y Denuncias
+        </span>
+      </div>
+    </nav>
+
+    <div class="container">
+      <!-- Dashboard Overview -->
+      <div class="row mb-4">
+        <div class="col-md-3">
+          <div class="stat-card">
+            <div class="stat-icon">
+              <i class="fas fa-exclamation-triangle"></i>
+            </div>
+            <div class="stat-content">
+              <h3>12</h3>
+              <p>Denuncias Activas</p>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="stat-card">
+            <div class="stat-icon">
+              <i class="fas fa-shield-alt"></i>
+            </div>
+            <div class="stat-content">
+              <h3>98%</h3>
+              <p>Cumplimiento Ético</p>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="stat-card">
+            <div class="stat-icon">
+              <i class="fas fa-chart-line"></i>
+            </div>
+            <div class="stat-content">
+              <h3>3</h3>
+              <p>Riesgos Detectados</p>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="stat-card">
+            <div class="stat-icon">
+              <i class="fas fa-clock"></i>
+            </div>
+            <div class="stat-content">
+              <h3>24h</h3>
+              <p>Tiempo Respuesta</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="row">
+        <!-- Main Content -->
+        <div class="col-md-8">
+          <!-- Anonymous Reporting -->
+          <div class="card mb-4">
+            <div class="card-header">
+              <h5 class="mb-0">
+                <i class="fas fa-user-secret me-2"></i>
+                Sistema de Denuncias Anónimas
+              </h5>
+            </div>
+            <div class="card-body">
+              <div class="report-form">
+                <div class="form-group mb-3">
+                  <label class="form-label">Tipo de Denuncia</label>
+                  <select class="form-select">
+                    <option>Corrupción</option>
+                    <option>Discriminación</option>
+                    <option>Irregularidades Financieras</option>
+                    <option>Violación de Políticas</option>
+                  </select>
+                </div>
+                <div class="form-group mb-3">
+                  <label class="form-label">Descripción</label>
+                  <textarea
+                    class="form-control"
+                    rows="4"
+                    placeholder="Describa los hechos..."></textarea>
+                </div>
+                <div class="form-group mb-3">
+                  <label class="form-label">Evidencias (opcional)</label>
+                  <input type="file" class="form-control" multiple />
+                </div>
+                <button class="btn btn-primary">
+                  <i class="fas fa-paper-plane me-2"></i>
+                  Enviar Denuncia
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- AI Analysis -->
+          <div class="card">
+            <div class="card-header">
+              <h5 class="mb-0">
+                <i class="fas fa-robot me-2"></i>
+                Análisis de Denuncias con IA
+              </h5>
+            </div>
+            <div class="card-body">
+              <div class="analysis-list">
+                <div class="analysis-item">
+                  <div class="analysis-header">
+                    <div class="analysis-icon">
+                      <i class="fas fa-file-alt"></i>
+                    </div>
+                    <div class="analysis-title">
+                      <h6>Denuncia #1234</h6>
+                      <span class="badge bg-warning">En Análisis</span>
+                    </div>
+                  </div>
+                  <div class="analysis-content">
+                    <div class="analysis-metrics">
+                      <div class="metric">
+                        <span class="label">Riesgo</span>
+                        <span class="value high">Alto</span>
+                      </div>
+                      <div class="metric">
+                        <span class="label">Urgencia</span>
+                        <span class="value medium">Media</span>
+                      </div>
+                      <div class="metric">
+                        <span class="label">Confianza IA</span>
+                        <span class="value">85%</span>
+                      </div>
+                    </div>
+                    <div class="analysis-summary">
+                      <p>
+                        Análisis preliminar sugiere posible violación de
+                        políticas internas...
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Sidebar -->
+        <div class="col-md-4">
+          <!-- Risk Assessment -->
+          <div class="card mb-4">
+            <div class="card-header">
+              <h5 class="mb-0">
+                <i class="fas fa-chart-pie me-2"></i>
+                Evaluación de Riesgos
+              </h5>
+            </div>
+            <div class="card-body">
+              <div class="risk-meter">
+                <div class="risk-level" style="width: 65%"></div>
+              </div>
+              <div class="risk-factors mt-3">
+                <div class="risk-factor">
+                  <div class="factor-header">
+                    <span>Riesgo de Fraude</span>
+                    <span class="badge bg-danger">Alto</span>
+                  </div>
+                  <div class="progress">
+                    <div
+                      class="progress-bar bg-danger"
+                      style="width: 75%"></div>
+                  </div>
+                </div>
+                <div class="risk-factor">
+                  <div class="factor-header">
+                    <span>Violación de Políticas</span>
+                    <span class="badge bg-warning">Medio</span>
+                  </div>
+                  <div class="progress">
+                    <div
+                      class="progress-bar bg-warning"
+                      style="width: 45%"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Compliance Monitoring -->
+          <div class="card">
+            <div class="card-header">
+              <h5 class="mb-0">
+                <i class="fas fa-check-circle me-2"></i>
+                Cumplimiento Normativo
+              </h5>
+            </div>
+            <div class="card-body">
+              <div class="compliance-list">
+                <div class="compliance-item">
+                  <div class="compliance-icon success">
+                    <i class="fas fa-check"></i>
+                  </div>
+                  <div class="compliance-text">
+                    <h6>Políticas Internas</h6>
+                    <p>98% de cumplimiento</p>
+                  </div>
+                </div>
+                <div class="compliance-item">
+                  <div class="compliance-icon warning">
+                    <i class="fas fa-exclamation-triangle"></i>
+                  </div>
+                  <div class="compliance-text">
+                    <h6>Regulaciones Externas</h6>
+                    <p>Necesita revisión</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  </body>
+</html>
