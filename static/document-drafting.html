@@ -1,0 +1,1137 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Generación de Documentos Legales - LegalTechAI</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+      rel="stylesheet" />
+    <link
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
+      rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <style>
+      :root {
+        --primary-color: #2c3e50;
+        --secondary-color: #3498db;
+        --accent-color: #e74c3c;
+        --background-color: #f8f9fa;
+        --border-color: #dee2e6;
+      }
+
+      body {
+        background-color: var(--background-color);
+        color: var(--primary-color);
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+      }
+
+      .navbar {
+        background-color: var(--primary-color);
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      }
+
+      .navbar-brand {
+        color: white !important;
+        font-weight: 600;
+      }
+
+      .container {
+        max-width: 1400px;
+        padding: 2rem 1rem;
+      }
+
+      .page-title {
+        color: var(--primary-color);
+        font-weight: 600;
+        margin-bottom: 2rem;
+        padding-bottom: 1rem;
+        border-bottom: 2px solid var(--secondary-color);
+      }
+
+      .card {
+        border: none;
+        border-radius: 10px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        transition: transform 0.2s ease;
+      }
+
+      .card:hover {
+        transform: translateY(-5px);
+      }
+
+      .card-header {
+        background-color: var(--primary-color);
+        color: white;
+        border-radius: 10px 10px 0 0 !important;
+        padding: 1rem 1.5rem;
+      }
+
+      .card-title {
+        margin: 0;
+        font-weight: 500;
+      }
+
+      .card-body {
+        padding: 1.5rem;
+      }
+
+      .form-label {
+        font-weight: 500;
+        color: var(--primary-color);
+        margin-bottom: 0.5rem;
+      }
+
+      .form-control,
+      .form-select {
+        border: 1px solid var(--border-color);
+        border-radius: 5px;
+        padding: 0.75rem;
+        transition: border-color 0.2s ease;
+      }
+
+      .form-control:focus,
+      .form-select:focus {
+        border-color: var(--secondary-color);
+        box-shadow: 0 0 0 0.2rem rgba(52, 152, 219, 0.25);
+      }
+
+      .document-preview {
+        background-color: white;
+        border: 1px solid var(--border-color);
+        border-radius: 10px;
+        padding: 2rem;
+        margin-top: 1rem;
+        white-space: pre-wrap;
+        font-family: "Courier New", Courier, monospace;
+        font-size: 0.9rem;
+        line-height: 1.6;
+        max-height: 600px;
+        overflow-y: auto;
+      }
+
+      .validation-warning {
+        color: #f39c12;
+      }
+
+      .validation-error {
+        color: var(--accent-color);
+      }
+
+      .parameter-group {
+        background-color: white;
+        border-radius: 10px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        border: 1px solid var(--border-color);
+      }
+
+      .loading {
+        display: none;
+        text-align: center;
+        padding: 3rem;
+        background-color: rgba(255, 255, 255, 0.9);
+        border-radius: 10px;
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        z-index: 1000;
+      }
+
+      .loading-spinner {
+        width: 3rem;
+        height: 3rem;
+        margin-bottom: 1rem;
+        color: var(--secondary-color);
+      }
+
+      .btn {
+        padding: 0.75rem 1.5rem;
+        border-radius: 5px;
+        font-weight: 500;
+        transition: all 0.2s ease;
+      }
+
+      .btn-primary {
+        background-color: var(--secondary-color);
+        border-color: var(--secondary-color);
+      }
+
+      .btn-primary:hover {
+        background-color: #2980b9;
+        border-color: #2980b9;
+        transform: translateY(-2px);
+      }
+
+      .btn-success {
+        background-color: #2ecc71;
+        border-color: #2ecc71;
+      }
+
+      .btn-success:hover {
+        background-color: #27ae60;
+        border-color: #27ae60;
+        transform: translateY(-2px);
+      }
+
+      .validation-alert {
+        border-radius: 10px;
+        margin-bottom: 1.5rem;
+      }
+
+      .validation-list {
+        margin: 0;
+        padding-left: 1.5rem;
+      }
+
+      .validation-list li {
+        margin-bottom: 0.5rem;
+      }
+
+      .validation-list li:last-child {
+        margin-bottom: 0;
+      }
+
+      .document-type-select {
+        margin-bottom: 2rem;
+      }
+
+      .preview-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1.5rem;
+      }
+
+      .preview-title {
+        margin: 0;
+        color: var(--primary-color);
+      }
+
+      @media (max-width: 768px) {
+        .container {
+          padding: 1rem;
+        }
+
+        .card {
+          margin-bottom: 1.5rem;
+        }
+
+        .document-preview {
+          max-height: 400px;
+        }
+      }
+
+      .markdown-content {
+        font-family: Arial, sans-serif;
+        line-height: 1.6;
+        padding: 20px;
+      }
+
+      .markdown-content h1,
+      .markdown-content h2,
+      .markdown-content h3 {
+        color: #2c3e50;
+        border-bottom: 1px solid #eee;
+        padding-bottom: 0.3em;
+        margin-top: 1em;
+      }
+
+      .markdown-content h1 {
+        font-size: 1.8em;
+      }
+      .markdown-content h2 {
+        font-size: 1.5em;
+      }
+      .markdown-content h3 {
+        font-size: 1.3em;
+      }
+
+      .markdown-content strong {
+        color: #34495e;
+        font-weight: 600;
+      }
+
+      .markdown-content em {
+        font-style: italic;
+      }
+
+      .markdown-content hr {
+        border: 0;
+        border-top: 1px solid #eee;
+        margin: 20px 0;
+      }
+
+      .markdown-content ul,
+      .markdown-content ol {
+        padding-left: 20px;
+        margin: 10px 0;
+      }
+
+      .markdown-content li {
+        margin: 5px 0;
+      }
+
+      .markdown-content blockquote {
+        border-left: 4px solid #ddd;
+        margin: 10px 0;
+        padding: 10px 20px;
+        background-color: #f9f9f9;
+        color: #666;
+      }
+
+      .markdown-content code {
+        background-color: #f5f5f5;
+        padding: 2px 4px;
+        border-radius: 3px;
+        font-family: monospace;
+      }
+
+      .markdown-content pre {
+        background-color: #f5f5f5;
+        padding: 15px;
+        border-radius: 5px;
+        overflow-x: auto;
+      }
+
+      .markdown-content pre code {
+        background-color: transparent;
+        padding: 0;
+      }
+
+      .markdown-content table {
+        border-collapse: collapse;
+        width: 100%;
+        margin: 10px 0;
+      }
+
+      .markdown-content th,
+      .markdown-content td {
+        border: 1px solid #ddd;
+        padding: 8px;
+        text-align: left;
+      }
+
+      .markdown-content th {
+        background-color: #f5f5f5;
+      }
+
+      .markdown-content tr:nth-child(even) {
+        background-color: #f9f9f9;
+      }
+
+      .preview-actions {
+        display: flex;
+        gap: 0.5rem;
+      }
+
+      .btn-info {
+        background-color: #17a2b8;
+        border-color: #17a2b8;
+        color: white;
+      }
+
+      .btn-info:hover {
+        background-color: #138496;
+        border-color: #117a8b;
+        transform: translateY(-2px);
+      }
+
+      .toast {
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        z-index: 1000;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark mb-4">
+      <div class="container">
+        <a class="navbar-brand" href="/dashboard">
+          <i class="fas fa-gavel me-2"></i>LegalTechAI
+        </a>
+      </div>
+    </nav>
+
+    <div class="container">
+      <h1 class="page-title">
+        <i class="fas fa-file-alt me-2"></i>Generación de Documentos Legales
+      </h1>
+
+      <div class="row">
+        <!-- Formulario de Generación -->
+        <div class="col-md-4">
+          <div class="card">
+            <div class="card-header">
+              <h5 class="card-title">
+                <i class="fas fa-cog me-2"></i>Parámetros del Documento
+              </h5>
+            </div>
+            <div class="card-body">
+              <form id="documentForm">
+                <!-- Tipo de Documento -->
+                <div class="document-type-select">
+                  <label for="documentType" class="form-label">
+                    <i class="fas fa-file me-2"></i>Tipo de Documento
+                  </label>
+                  <select class="form-select" id="documentType" required>
+                    <option value="">Seleccione un tipo...</option>
+                    <option value="contrato_laboral">
+                      <i class="fas fa-briefcase me-2"></i>Contrato de Trabajo
+                    </option>
+                    <option value="contrato_prestacion_servicios">
+                      <i class="fas fa-handshake me-2"></i>Contrato de
+                      Prestación de Servicios
+                    </option>
+                    <option value="contrato_arrendamiento">
+                      <i class="fas fa-home me-2"></i>Contrato de Arrendamiento
+                    </option>
+                    <option value="contrato_compraventa">
+                      <i class="fas fa-shopping-cart me-2"></i>Contrato de
+                      Compraventa
+                    </option>
+                    <option value="poder_general">
+                      <i class="fas fa-user-shield me-2"></i>Poder General
+                    </option>
+                    <option value="poder_especial">
+                      <i class="fas fa-user-lock me-2"></i>Poder Especial
+                    </option>
+                    <option value="derecho_peticion">
+                      <i class="fas fa-envelope-open-text me-2"></i>Derecho de
+                      Petición
+                    </option>
+                    <option value="acta_constitucion">
+                      <i class="fas fa-building me-2"></i>Acta de Constitución
+                    </option>
+                    <option value="estatutos_sociedad">
+                      <i class="fas fa-file-contract me-2"></i>Estatutos de
+                      Sociedad
+                    </option>
+                    <option value="acuerdo_confidencialidad">
+                      <i class="fas fa-lock me-2"></i>Acuerdo de
+                      Confidencialidad
+                    </option>
+                  </select>
+                </div>
+
+                <!-- Parámetros Dinámicos -->
+                <div id="parametersContainer">
+                  <!-- Los parámetros se cargarán dinámicamente según el tipo de documento -->
+                </div>
+
+                <!-- Idioma -->
+                <div class="mb-4">
+                  <label for="language" class="form-label">
+                    <i class="fas fa-language me-2"></i>Idioma
+                  </label>
+                  <select class="form-select" id="language">
+                    <option value="es">Español</option>
+                    <option value="en">English</option>
+                  </select>
+                </div>
+
+                <button type="submit" class="btn btn-primary w-100">
+                  <i class="fas fa-file-alt me-2"></i>Generar Documento
+                </button>
+              </form>
+            </div>
+          </div>
+        </div>
+
+        <!-- Vista Previa del Documento -->
+        <div class="col-md-8">
+          <div class="card">
+            <div class="card-header">
+              <div class="preview-header">
+                <h5 class="preview-title">
+                  <i class="fas fa-eye me-2"></i>Vista Previa del Documento
+                </h5>
+                <div class="preview-actions">
+                  <button id="shareBtn" class="btn btn-info me-2" disabled>
+                    <i class="fas fa-share-alt me-2"></i>Compartir
+                  </button>
+                  <button id="downloadBtn" class="btn btn-success" disabled>
+                    <i class="fas fa-download me-2"></i>Descargar
+                  </button>
+                </div>
+              </div>
+            </div>
+            <div class="card-body position-relative">
+              <!-- Indicador de Carga -->
+              <div id="loading" class="loading">
+                <div class="spinner-border loading-spinner" role="status">
+                  <span class="visually-hidden">Cargando...</span>
+                </div>
+                <p class="mt-3">Generando documento...</p>
+              </div>
+
+              <!-- Validación -->
+              <div
+                id="validation"
+                class="validation-alert alert alert-info"
+                style="display: none">
+                <h6 class="mb-3">
+                  <i class="fas fa-clipboard-check me-2"></i>Validación del
+                  Documento:
+                </h6>
+                <ul id="validationList" class="validation-list"></ul>
+              </div>
+
+              <!-- Contenido del Documento -->
+              <div
+                id="documentPreview"
+                class="document-preview markdown-content"
+                style="display: none">
+                <!-- El contenido del documento se mostrará aquí -->
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Add toast for notifications -->
+    <div class="toast" role="alert" aria-live="assertive" aria-atomic="true">
+      <div class="toast-header">
+        <i class="fas fa-info-circle me-2"></i>
+        <strong class="me-auto">Notificación</strong>
+        <button
+          type="button"
+          class="btn-close"
+          data-bs-dismiss="toast"
+          aria-label="Close"></button>
+      </div>
+      <div class="toast-body">
+        <!-- Toast message will be inserted here -->
+      </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+      // Definición de parámetros por tipo de documento
+      const documentParameters = {
+        contrato_laboral: [
+          {
+            name: "empleador",
+            label: "Empleador",
+            type: "text",
+            required: true,
+          },
+          {
+            name: "trabajador",
+            label: "Trabajador",
+            type: "text",
+            required: true,
+          },
+          { name: "cargo", label: "Cargo", type: "text", required: true },
+          { name: "salario", label: "Salario", type: "text", required: true },
+          { name: "duracion", label: "Duración", type: "text", required: true },
+          {
+            name: "lugar_trabajo",
+            label: "Lugar de Trabajo",
+            type: "text",
+            required: true,
+          },
+        ],
+        contrato_prestacion_servicios: [
+          {
+            name: "contratante",
+            label: "Contratante",
+            type: "text",
+            required: true,
+          },
+          {
+            name: "contratista",
+            label: "Contratista",
+            type: "text",
+            required: true,
+          },
+          {
+            name: "objeto",
+            label: "Objeto del Contrato",
+            type: "textarea",
+            required: true,
+          },
+          {
+            name: "honorarios",
+            label: "Honorarios",
+            type: "text",
+            required: true,
+          },
+          { name: "duracion", label: "Duración", type: "text", required: true },
+          {
+            name: "lugar_ejecucion",
+            label: "Lugar de Ejecución",
+            type: "text",
+            required: true,
+          },
+        ],
+        contrato_arrendamiento: [
+          {
+            name: "arrendador",
+            label: "Arrendador",
+            type: "text",
+            required: true,
+          },
+          {
+            name: "arrendatario",
+            label: "Arrendatario",
+            type: "text",
+            required: true,
+          },
+          {
+            name: "inmueble",
+            label: "Descripción del Inmueble",
+            type: "textarea",
+            required: true,
+          },
+          {
+            name: "valor_arriendo",
+            label: "Valor del Arriendo",
+            type: "text",
+            required: true,
+          },
+          {
+            name: "duracion",
+            label: "Duración del Contrato",
+            type: "text",
+            required: true,
+          },
+          {
+            name: "garantia",
+            label: "Garantía",
+            type: "text",
+            required: true,
+          },
+        ],
+        contrato_compraventa: [
+          {
+            name: "vendedor",
+            label: "Vendedor",
+            type: "text",
+            required: true,
+          },
+          {
+            name: "comprador",
+            label: "Comprador",
+            type: "text",
+            required: true,
+          },
+          {
+            name: "bien",
+            label: "Descripción del Bien",
+            type: "textarea",
+            required: true,
+          },
+          {
+            name: "precio",
+            label: "Precio",
+            type: "text",
+            required: true,
+          },
+          {
+            name: "forma_pago",
+            label: "Forma de Pago",
+            type: "text",
+            required: true,
+          },
+          {
+            name: "plazo_entrega",
+            label: "Plazo de Entrega",
+            type: "text",
+            required: true,
+          },
+        ],
+        poder_general: [
+          {
+            name: "poderdante",
+            label: "Poderdante",
+            type: "text",
+            required: true,
+          },
+          {
+            name: "apoderado",
+            label: "Apoderado",
+            type: "text",
+            required: true,
+          },
+          {
+            name: "objeto_poder",
+            label: "Objeto del Poder",
+            type: "textarea",
+            required: true,
+          },
+          {
+            name: "duracion",
+            label: "Duración",
+            type: "text",
+            required: true,
+          },
+        ],
+        poder_especial: [
+          {
+            name: "poderdante",
+            label: "Poderdante",
+            type: "text",
+            required: true,
+          },
+          {
+            name: "apoderado",
+            label: "Apoderado",
+            type: "text",
+            required: true,
+          },
+          {
+            name: "acto_especifico",
+            label: "Acto Específico",
+            type: "textarea",
+            required: true,
+          },
+          {
+            name: "duracion",
+            label: "Duración",
+            type: "text",
+            required: true,
+          },
+        ],
+        derecho_peticion: [
+          {
+            name: "peticionario",
+            label: "Peticionario",
+            type: "text",
+            required: true,
+          },
+          {
+            name: "autoridad",
+            label: "Autoridad",
+            type: "text",
+            required: true,
+          },
+          {
+            name: "objeto_peticion",
+            label: "Objeto de la Petición",
+            type: "textarea",
+            required: true,
+          },
+          {
+            name: "hechos",
+            label: "Hechos",
+            type: "textarea",
+            required: true,
+          },
+        ],
+        acta_constitucion: [
+          {
+            name: "nombre_sociedad",
+            label: "Nombre de la Sociedad",
+            type: "text",
+            required: true,
+          },
+          {
+            name: "tipo_sociedad",
+            label: "Tipo de Sociedad",
+            type: "text",
+            required: true,
+          },
+          {
+            name: "capital_social",
+            label: "Capital Social",
+            type: "text",
+            required: true,
+          },
+          {
+            name: "socios",
+            label: "Socios",
+            type: "textarea",
+            required: true,
+          },
+          {
+            name: "objeto_social",
+            label: "Objeto Social",
+            type: "textarea",
+            required: true,
+          },
+        ],
+        estatutos_sociedad: [
+          {
+            name: "nombre_sociedad",
+            label: "Nombre de la Sociedad",
+            type: "text",
+            required: true,
+          },
+          {
+            name: "tipo_sociedad",
+            label: "Tipo de Sociedad",
+            type: "text",
+            required: true,
+          },
+          {
+            name: "capital_social",
+            label: "Capital Social",
+            type: "text",
+            required: true,
+          },
+          {
+            name: "objeto_social",
+            label: "Objeto Social",
+            type: "textarea",
+            required: true,
+          },
+          {
+            name: "duracion",
+            label: "Duración",
+            type: "text",
+            required: true,
+          },
+          {
+            name: "domicilio",
+            label: "Domicilio",
+            type: "text",
+            required: true,
+          },
+        ],
+        acuerdo_confidencialidad: [
+          {
+            name: "parte_1",
+            label: "Primera Parte",
+            type: "text",
+            required: true,
+          },
+          {
+            name: "parte_2",
+            label: "Segunda Parte",
+            type: "text",
+            required: true,
+          },
+          {
+            name: "objeto",
+            label: "Objeto del Acuerdo",
+            type: "textarea",
+            required: true,
+          },
+          {
+            name: "duracion",
+            label: "Duración",
+            type: "text",
+            required: true,
+          },
+          {
+            name: "informacion_confidencial",
+            label: "Información Confidencial",
+            type: "textarea",
+            required: true,
+          },
+        ],
+      };
+
+      // Función para generar los campos del formulario
+      function generateFormFields(documentType) {
+        const container = document.getElementById("parametersContainer");
+        container.innerHTML = "";
+
+        if (!documentType || !documentParameters[documentType]) {
+          return;
+        }
+
+        const parameters = documentParameters[documentType];
+        parameters.forEach((param) => {
+          const div = document.createElement("div");
+          div.className = "mb-3";
+
+          const label = document.createElement("label");
+          label.className = "form-label";
+          label.textContent = param.label;
+          label.htmlFor = param.name;
+
+          let input;
+          if (param.type === "textarea") {
+            input = document.createElement("textarea");
+            input.className = "form-control";
+            input.rows = 3;
+          } else {
+            input = document.createElement("input");
+            input.className = "form-control";
+            input.type = param.type;
+          }
+
+          input.id = param.name;
+          input.name = param.name;
+          input.required = param.required;
+
+          div.appendChild(label);
+          div.appendChild(input);
+          container.appendChild(div);
+        });
+      }
+
+      // Evento para cambiar el tipo de documento
+      document
+        .getElementById("documentType")
+        .addEventListener("change", function (e) {
+          generateFormFields(e.target.value);
+        });
+
+      // Función para mostrar mensajes de validación
+      function showValidation(validation) {
+        const validationDiv = document.getElementById("validation");
+        const validationList = document.getElementById("validationList");
+        validationList.innerHTML = "";
+
+        if (
+          validation.warnings.length > 0 ||
+          validation.missing_elements.length > 0
+        ) {
+          validationDiv.style.display = "block";
+
+          if (validation.missing_elements.length > 0) {
+            const errorLi = document.createElement("li");
+            errorLi.className = "validation-error";
+            errorLi.innerHTML =
+              '<i class="fas fa-exclamation-circle me-2"></i>Elementos requeridos faltantes:';
+            const errorUl = document.createElement("ul");
+            validation.missing_elements.forEach((element) => {
+              const li = document.createElement("li");
+              li.textContent = element;
+              errorUl.appendChild(li);
+            });
+            errorLi.appendChild(errorUl);
+            validationList.appendChild(errorLi);
+          }
+
+          if (validation.warnings.length > 0) {
+            const warningLi = document.createElement("li");
+            warningLi.className = "validation-warning";
+            warningLi.innerHTML =
+              '<i class="fas fa-exclamation-triangle me-2"></i>Advertencias:';
+            const warningUl = document.createElement("ul");
+            validation.warnings.forEach((warning) => {
+              const li = document.createElement("li");
+              li.textContent = warning;
+              warningUl.appendChild(li);
+            });
+            warningLi.appendChild(warningUl);
+            validationList.appendChild(warningLi);
+          }
+        } else {
+          validationDiv.style.display = "none";
+        }
+      }
+
+      // Función para descargar el documento
+      async function downloadDocument(content, documentType) {
+        try {
+          // Show loading indicator
+          document.getElementById("loading").style.display = "block";
+
+          // Call the Word download endpoint
+          const response = await fetch("/download-document", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              content: content,
+              document_type: documentType,
+            }),
+          });
+
+          if (!response.ok) {
+            throw new Error("Error al generar el documento Word");
+          }
+
+          // Get the blob from the response
+          const blob = await response.blob();
+
+          // Create a URL for the blob
+          const url = window.URL.createObjectURL(blob);
+
+          // Create a temporary link element
+          const a = document.createElement("a");
+          a.href = url;
+          a.download = `${documentType}_${
+            new Date().toISOString().split("T")[0]
+          }.docx`;
+
+          // Append to body, click, and cleanup
+          document.body.appendChild(a);
+          a.click();
+          window.URL.revokeObjectURL(url);
+          document.body.removeChild(a);
+
+          showToast("Documento descargado exitosamente");
+        } catch (error) {
+          console.error("Error downloading document:", error);
+          showToast("Error al descargar el documento");
+        } finally {
+          document.getElementById("loading").style.display = "none";
+        }
+      }
+
+      // Add this helper function at the top of your script section
+      function formatParties(parameters, documentType) {
+        const partyMappings = {
+          contrato_laboral: {
+            party1: { field: "empleador", role: "Empleador" },
+            party2: { field: "trabajador", role: "Trabajador" },
+          },
+          contrato_prestacion_servicios: {
+            party1: { field: "contratante", role: "Contratante" },
+            party2: { field: "contratista", role: "Contratista" },
+          },
+          contrato_arrendamiento: {
+            party1: { field: "arrendador", role: "Arrendador" },
+            party2: { field: "arrendatario", role: "Arrendatario" },
+          },
+          // Add other document types as needed
+        };
+
+        const mapping = partyMappings[documentType] || {
+          party1: { field: "parte_1", role: "Parte 1" },
+          party2: { field: "parte_2", role: "Parte 2" },
+        };
+
+        return [
+          {
+            name: parameters[mapping.party1.field] || "",
+            role: mapping.party1.role,
+          },
+          {
+            name: parameters[mapping.party2.field] || "",
+            role: mapping.party2.role,
+          },
+        ];
+      }
+
+      // Add share functionality
+      async function shareDocument(content, documentType) {
+        const title = `Documento Legal - ${documentType
+          .replace(/_/g, " ")
+          .toUpperCase()}`;
+        const text = content;
+        const url = window.location.href;
+
+        try {
+          if (navigator.share) {
+            // Use Web Share API if available
+            await navigator.share({
+              title,
+              text,
+              url,
+            });
+          } else {
+            // Fallback to clipboard copy
+            const plainText = marked.parse(content);
+            await navigator.clipboard.writeText(plainText);
+            showToast("Documento copiado al portapapeles");
+          }
+        } catch (error) {
+          console.error("Error sharing:", error);
+          showToast("Error al compartir el documento");
+        }
+      }
+
+      function showToast(message) {
+        const toastEl = document.querySelector(".toast");
+        const toastBody = toastEl.querySelector(".toast-body");
+        toastBody.textContent = message;
+
+        const toast = new bootstrap.Toast(toastEl);
+        toast.show();
+      }
+
+      // Update the form submission handler
+      document
+        .getElementById("documentForm")
+        .addEventListener("submit", async function (e) {
+          e.preventDefault();
+
+          const documentType = document.getElementById("documentType").value;
+          const language = document.getElementById("language").value;
+
+          // Collect form data
+          const formData = new FormData(this);
+          const parameters = {};
+          for (const [key, value] of formData.entries()) {
+            if (key !== "documentType" && key !== "language") {
+              parameters[key] = value;
+            }
+          }
+
+          // Format the request body according to the API requirements
+          const requestBody = {
+            document_type: documentType,
+            jurisdiction: "Colombia",
+            key_requirements: Object.entries(parameters).map(
+              ([key, value]) => `${key}: ${value}`
+            ),
+            parties: formatParties(parameters, documentType),
+            legal_terms: [],
+            data_processing: {
+              type: "personal",
+              consent: "explicit",
+            },
+          };
+
+          // Show loading indicator
+          document.getElementById("loading").style.display = "block";
+          document.getElementById("documentPreview").style.display = "none";
+          document.getElementById("downloadBtn").disabled = true;
+
+          try {
+            const response = await fetch("/api/v1/draft-document", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify(requestBody),
+            });
+
+            if (!response.ok) {
+              const errorData = await response.json();
+              throw new Error(
+                errorData.detail || "Error en la generación del documento"
+              );
+            }
+
+            const result = await response.json();
+
+            // Show the document with markdown rendering
+            const previewDiv = document.getElementById("documentPreview");
+            if (result.document && result.document.content) {
+              // Parse markdown and render as HTML
+              previewDiv.innerHTML = marked.parse(result.document.content);
+            } else {
+              previewDiv.innerHTML = "<p>No document content available.</p>";
+            }
+            previewDiv.style.display = "block";
+
+            // Show validation
+            showValidation(
+              result.validation || { warnings: [], missing_elements: [] }
+            );
+
+            // Enable share and download buttons
+            const shareBtn = document.getElementById("shareBtn");
+            const downloadBtn = document.getElementById("downloadBtn");
+
+            shareBtn.disabled = false;
+            downloadBtn.disabled = false;
+
+            shareBtn.onclick = () =>
+              shareDocument(result.document.content, documentType);
+            downloadBtn.onclick = () =>
+              downloadDocument(result.document.content, documentType);
+          } catch (error) {
+            console.error("Error details:", error);
+            alert(`Error al generar el documento: ${error.message}`);
+          } finally {
+            document.getElementById("loading").style.display = "none";
+          }
+        });
+    </script>
+  </body>
+</html>

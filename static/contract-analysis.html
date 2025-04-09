@@ -1,0 +1,1526 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Análisis de Contratos - LegalTechAI</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+      rel="stylesheet" />
+    <link
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
+      rel="stylesheet" />
+    <style>
+      .upload-area {
+        border: 2px dashed #dee2e6;
+        border-radius: 8px;
+        transition: all 0.3s ease;
+        cursor: pointer;
+      }
+
+      .upload-area:hover,
+      .upload-area.dragover {
+        border-color: #0d6efd;
+        background-color: rgba(13, 110, 253, 0.05);
+      }
+
+      .document-preview {
+        min-height: 200px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .progress {
+        height: 25px;
+        border-radius: 12px;
+        overflow: hidden;
+      }
+
+      .progress-bar {
+        transition: width 0.6s ease;
+      }
+
+      .metric-item {
+        text-align: center;
+        padding: 15px;
+        border-radius: 8px;
+        background-color: #f8f9fa;
+      }
+
+      .metric-item h3 {
+        color: #0d6efd;
+        font-weight: bold;
+      }
+
+      .card {
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        transition: transform 0.2s ease;
+      }
+
+      .card:hover {
+        transform: translateY(-2px);
+      }
+
+      .btn:disabled {
+        cursor: not-allowed;
+        opacity: 0.7;
+        position: relative;
+      }
+
+      .btn:disabled::after {
+        content: attr(data-tooltip);
+        position: absolute;
+        bottom: 100%;
+        left: 50%;
+        transform: translateX(-50%);
+        padding: 5px 10px;
+        background: rgba(0, 0, 0, 0.8);
+        color: white;
+        border-radius: 4px;
+        font-size: 0.8rem;
+        white-space: nowrap;
+        opacity: 0;
+        transition: opacity 0.2s;
+        pointer-events: none;
+      }
+
+      .btn:disabled:hover::after {
+        opacity: 1;
+      }
+
+      .btn-retry {
+        display: none;
+        margin-top: 10px;
+      }
+
+      .btn-retry.show {
+        display: block;
+      }
+
+      .btn-loading {
+        position: relative;
+        pointer-events: none;
+      }
+
+      .btn-loading::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: inherit;
+      }
+
+      .error-details {
+        display: none;
+        margin-top: 10px;
+        padding: 10px;
+        background: #fff3f3;
+        border: 1px solid #dc3545;
+        border-radius: 4px;
+        font-size: 0.9rem;
+      }
+
+      .error-details.show {
+        display: block;
+      }
+
+      .form-check-input:checked {
+        background-color: #0d6efd;
+        border-color: #0d6efd;
+      }
+
+      .contract-preview {
+        width: 100%;
+      }
+
+      .metadata-item {
+        padding: 10px;
+        background-color: #f8f9fa;
+        border-radius: 6px;
+        margin-bottom: 10px;
+      }
+
+      .metadata-item small {
+        display: block;
+        margin-bottom: 4px;
+      }
+
+      .content-preview {
+        max-height: 500px;
+        overflow-y: auto;
+        padding: 15px;
+        background-color: #f8f9fa;
+        border-radius: 6px;
+        font-size: 0.9rem;
+        line-height: 1.6;
+      }
+
+      .content-preview::-webkit-scrollbar {
+        width: 8px;
+      }
+
+      .content-preview::-webkit-scrollbar-track {
+        background: #f1f1f1;
+        border-radius: 4px;
+      }
+
+      .content-preview::-webkit-scrollbar-thumb {
+        background: #888;
+        border-radius: 4px;
+      }
+
+      .content-preview::-webkit-scrollbar-thumb:hover {
+        background: #555;
+      }
+
+      .stat-item {
+        padding: 10px;
+        background-color: #f8f9fa;
+        border-radius: 6px;
+      }
+
+      .stat-item p {
+        font-size: 1.2rem;
+        font-weight: bold;
+        color: #0d6efd;
+      }
+
+      .content-header {
+        padding-bottom: 10px;
+        border-bottom: 1px solid #dee2e6;
+      }
+
+      .pdf-preview {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .pdf-page {
+        background: white;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        margin-bottom: 10px;
+        max-width: 100%;
+      }
+
+      .pdf-controls {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 10px;
+      }
+
+      .pdf-page-number {
+        font-size: 0.9rem;
+        color: #666;
+      }
+
+      .loading-pdf {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 10px;
+        padding: 20px;
+      }
+
+      .loading-pdf i {
+        font-size: 2rem;
+        color: #0d6efd;
+        animation: spin 1s linear infinite;
+      }
+
+      @keyframes spin {
+        0% {
+          transform: rotate(0deg);
+        }
+        100% {
+          transform: rotate(360deg);
+        }
+      }
+
+      .loading-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(255, 255, 255, 0.9);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 1000;
+      }
+
+      .spinner-border {
+        width: 3rem;
+        height: 3rem;
+      }
+
+      .analysis-content {
+        padding: 20px;
+      }
+
+      .analysis-section {
+        margin-bottom: 25px;
+        padding: 15px;
+        background-color: #f8f9fa;
+        border-radius: 8px;
+      }
+
+      .analysis-section h5 {
+        color: #0d6efd;
+        margin-bottom: 15px;
+      }
+
+      .analysis-section ul {
+        margin: 0;
+        padding: 0;
+      }
+
+      .analysis-section li {
+        padding: 8px;
+        border-bottom: 1px solid #dee2e6;
+      }
+
+      .analysis-section li:last-child {
+        border-bottom: none;
+      }
+
+      .alert {
+        padding: 12px 20px;
+        border-radius: 6px;
+      }
+    </style>
+  </head>
+  <body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary mb-4">
+      <div class="container">
+        <a class="navbar-brand" href="/dashboard">
+          <i class="fas fa-chevron-left me-2"></i>
+          LegalTechAI
+        </a>
+        <span class="navbar-text text-white"> Análisis de Contratos </span>
+      </div>
+    </nav>
+
+    <div class="container">
+      <!-- Upload Section -->
+      <div class="row mb-4">
+        <div class="col-12">
+          <div class="upload-area p-5 text-center">
+            <i class="fas fa-file-upload fa-3x mb-3"></i>
+            <h3>Subir Contrato</h3>
+            <p class="text-muted">
+              Arrastra y suelta archivos aquí o haz clic para seleccionar
+            </p>
+            <input
+              type="file"
+              id="contract-upload"
+              class="d-none"
+              accept=".pdf,.doc,.docx" />
+            <button
+              class="btn btn-primary btn-lg mt-3"
+              onclick="document.getElementById('contract-upload').click()">
+              Seleccionar Archivo
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Analysis Options -->
+      <div class="row mb-4">
+        <div class="col-md-4">
+          <div class="card h-100">
+            <div class="card-body">
+              <h5 class="card-title">
+                <i class="fas fa-shield-alt me-2"></i>
+                Evaluación de Riesgos
+              </h5>
+              <div class="form-check mb-2">
+                <input
+                  class="form-check-input"
+                  type="checkbox"
+                  id="risk-financial"
+                  checked />
+                <label class="form-check-label" for="risk-financial">
+                  Riesgos Financieros
+                </label>
+              </div>
+              <div class="form-check mb-2">
+                <input
+                  class="form-check-input"
+                  type="checkbox"
+                  id="risk-legal"
+                  checked />
+                <label class="form-check-label" for="risk-legal">
+                  Riesgos Legales
+                </label>
+              </div>
+              <div class="form-check mb-2">
+                <input
+                  class="form-check-input"
+                  type="checkbox"
+                  id="risk-compliance"
+                  checked />
+                <label class="form-check-label" for="risk-compliance">
+                  Riesgos de Cumplimiento
+                </label>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="card h-100">
+            <div class="card-body">
+              <h5 class="card-title">
+                <i class="fas fa-file-contract me-2"></i>
+                Extracción de Cláusulas
+              </h5>
+              <div class="form-check mb-2">
+                <input
+                  class="form-check-input"
+                  type="checkbox"
+                  id="clause-important"
+                  checked />
+                <label class="form-check-label" for="clause-important">
+                  Cláusulas Importantes
+                </label>
+              </div>
+              <div class="form-check mb-2">
+                <input
+                  class="form-check-input"
+                  type="checkbox"
+                  id="clause-obligations"
+                  checked />
+                <label class="form-check-label" for="clause-obligations">
+                  Obligaciones
+                </label>
+              </div>
+              <div class="form-check mb-2">
+                <input
+                  class="form-check-input"
+                  type="checkbox"
+                  id="clause-termination"
+                  checked />
+                <label class="form-check-label" for="clause-termination">
+                  Términos de Finalización
+                </label>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="card h-100">
+            <div class="card-body">
+              <h5 class="card-title">
+                <i class="fas fa-check-circle me-2"></i>
+                Verificación de Cumplimiento
+              </h5>
+              <div class="form-check mb-2">
+                <input
+                  class="form-check-input"
+                  type="checkbox"
+                  id="compliance-regulatory"
+                  checked />
+                <label class="form-check-label" for="compliance-regulatory">
+                  Normativa Regulatoria
+                </label>
+              </div>
+              <div class="form-check mb-2">
+                <input
+                  class="form-check-input"
+                  type="checkbox"
+                  id="compliance-internal"
+                  checked />
+                <label class="form-check-label" for="compliance-internal">
+                  Políticas Internas
+                </label>
+              </div>
+              <div class="form-check mb-2">
+                <input
+                  class="form-check-input"
+                  type="checkbox"
+                  id="compliance-industry"
+                  checked />
+                <label class="form-check-label" for="compliance-industry">
+                  Estándares de la Industria
+                </label>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Results Section -->
+      <div class="row">
+        <div class="col-md-8">
+          <div class="card mb-4">
+            <div class="card-header">
+              <h5 class="mb-0">
+                <i class="fas fa-file-alt me-2"></i>
+                Vista Previa del Contrato
+              </h5>
+            </div>
+            <div class="card-body">
+              <!-- Add loading indicator -->
+              <div id="loading" class="loading-overlay" style="display: none">
+                <div class="text-center">
+                  <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Analizando...</span>
+                  </div>
+                  <p class="mt-2">Analizando contrato...</p>
+                </div>
+              </div>
+
+              <div class="document-preview">
+                <!-- Initial Upload State -->
+                <div
+                  class="text-center text-muted py-5"
+                  id="initial-upload-state">
+                  <i class="fas fa-file-pdf fa-3x mb-3"></i>
+                  <p>Sube un contrato para comenzar el análisis</p>
+                </div>
+
+                <!-- Contract Preview State -->
+                <div
+                  class="contract-preview d-none"
+                  id="contract-preview-state">
+                  <div class="contract-metadata mb-4">
+                    <div class="row">
+                      <div class="col-md-6">
+                        <div class="metadata-item">
+                          <small class="text-muted">Nombre del Documento</small>
+                          <p class="mb-0" id="contract-name">-</p>
+                        </div>
+                      </div>
+                      <div class="col-md-6">
+                        <div class="metadata-item">
+                          <small class="text-muted">Tipo de Documento</small>
+                          <p class="mb-0" id="contract-type">-</p>
+                        </div>
+                      </div>
+                      <div class="col-md-6">
+                        <div class="metadata-item">
+                          <small class="text-muted">Tamaño</small>
+                          <p class="mb-0" id="contract-size">-</p>
+                        </div>
+                      </div>
+                      <div class="col-md-6">
+                        <div class="metadata-item">
+                          <small class="text-muted">Fecha de Subida</small>
+                          <p class="mb-0" id="contract-date">-</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="contract-content">
+                    <div class="content-header mb-3">
+                      <h6 class="mb-0">Contenido del Contrato</h6>
+                    </div>
+                    <div class="content-preview" id="contract-content">
+                      <!-- Content will be loaded here -->
+                    </div>
+                  </div>
+
+                  <div class="contract-stats mt-4">
+                    <div class="row">
+                      <div class="col-md-4">
+                        <div class="stat-item text-center">
+                          <small class="text-muted">Páginas</small>
+                          <p class="mb-0" id="contract-pages">-</p>
+                        </div>
+                      </div>
+                      <div class="col-md-4">
+                        <div class="stat-item text-center">
+                          <small class="text-muted">Palabras</small>
+                          <p class="mb-0" id="contract-words">-</p>
+                        </div>
+                      </div>
+                      <div class="col-md-4">
+                        <div class="stat-item text-center">
+                          <small class="text-muted">Caracteres</small>
+                          <p class="mb-0" id="contract-chars">-</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="card mb-4">
+            <div class="card-header">
+              <h5 class="mb-0">
+                <i class="fas fa-chart-pie me-2"></i>
+                Resumen del Análisis
+              </h5>
+            </div>
+            <div class="card-body">
+              <!-- Risk Level -->
+              <div class="mb-3">
+                <label class="form-label">Nivel de Riesgo General</label>
+                <div class="risk-meter progress">
+                  <div
+                    class="progress-bar"
+                    role="progressbar"
+                    style="width: 0%"></div>
+                </div>
+              </div>
+
+              <!-- Metrics -->
+              <div class="row text-center">
+                <div class="col-md-4 metric-item" data-metric="clausulas">
+                  <p class="text-muted mb-1">Cláusulas Analizadas</p>
+                  <h3 class="mb-0">0</h3>
+                </div>
+                <div class="col-md-4 metric-item" data-metric="riesgos">
+                  <p class="text-muted mb-1">Riesgos Identificados</p>
+                  <h3 class="mb-0">0</h3>
+                </div>
+                <div class="col-md-4 metric-item" data-metric="cumplimiento">
+                  <p class="text-muted mb-1">Cumplimiento</p>
+                  <h3 class="mb-0">0%</h3>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <h5 class="mb-0">
+                <i class="fas fa-tasks me-2"></i>
+                Acciones
+              </h5>
+            </div>
+            <div class="card-body">
+              <button
+                class="btn btn-primary w-100 mb-2"
+                disabled
+                data-tooltip="Sube un contrato para comenzar el análisis">
+                <i class="fas fa-play me-2"></i>
+                Iniciar Análisis
+              </button>
+              <button
+                class="btn btn-outline-primary w-100 mb-2"
+                disabled
+                data-tooltip="Realiza el análisis primero para descargar el reporte">
+                <i class="fas fa-download me-2"></i>
+                Descargar Reporte
+              </button>
+              <button
+                class="btn btn-outline-secondary w-100"
+                disabled
+                data-tooltip="Realiza el análisis primero para compartir los resultados">
+                <i class="fas fa-share-alt me-2"></i>
+                Compartir Resultados
+              </button>
+              <button
+                class="btn btn-outline-danger w-100 btn-retry"
+                style="display: none">
+                <i class="fas fa-redo me-2"></i>
+                Reintentar Análisis
+              </button>
+              <div class="error-details"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script>
+      // Add these functions to handle contract analysis
+      let clientId = "client_" + Math.random().toString(36).substr(2, 9);
+
+      async function uploadContract(file) {
+        try {
+          // Update metadata immediately when file is selected
+          updateContractMetadata(file);
+
+          // Create FormData for file upload
+          const formData = new FormData();
+          formData.append("file", file);
+
+          // Show contract preview state
+          document
+            .getElementById("initial-upload-state")
+            .classList.add("d-none");
+          document
+            .getElementById("contract-preview-state")
+            .classList.remove("d-none");
+
+          // If it's a PDF, show preview
+          if (file.type === "application/pdf") {
+            const reader = new FileReader();
+            reader.onload = async function (e) {
+              const pdfData = new Uint8Array(e.target.result);
+              // Display PDF preview using PDF.js (already included in the HTML)
+              const loadingTask = pdfjsLib.getDocument({ data: pdfData });
+              const pdf = await loadingTask.promise;
+
+              // Update contract stats
+              document.getElementById("contract-pages").textContent =
+                pdf.numPages;
+
+              // Extract text for preview
+              let text = "";
+              for (let i = 1; i <= pdf.numPages; i++) {
+                const page = await pdf.getPage(i);
+                const textContent = await page.getTextContent();
+                text +=
+                  textContent.items.map((item) => item.str).join(" ") + "\n";
+              }
+
+              document.getElementById("contract-content").textContent = text;
+              document.getElementById("contract-words").textContent =
+                text.split(/\s+/).length;
+              document.getElementById("contract-chars").textContent =
+                text.length;
+            };
+            reader.readAsArrayBuffer(file);
+          }
+
+          // Enable the "Iniciar Análisis" button
+          enableAnalysisButton();
+        } catch (error) {
+          console.error("Error:", error);
+          showError("Error processing file: " + error.message);
+          document.getElementById("loading").style.display = "none";
+        }
+      }
+
+      function updateContractMetadata(file) {
+        document.getElementById("contract-name").textContent = file.name;
+        document.getElementById("contract-type").textContent = getFileExtension(
+          file.name
+        );
+        document.getElementById("contract-size").textContent = formatFileSize(
+          file.size
+        );
+        document.getElementById("contract-date").textContent =
+          new Date().toLocaleDateString();
+      }
+
+      function getFileExtension(filename) {
+        return filename.slice(((filename.lastIndexOf(".") - 1) >>> 0) + 2);
+      }
+
+      function formatFileSize(bytes) {
+        if (bytes === 0) return "0 Bytes";
+        const k = 1024;
+        const sizes = ["Bytes", "KB", "MB", "GB"];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
+      }
+
+      function enableAnalysisButton() {
+        const analysisButton = document.querySelector(
+          ".btn-primary[data-tooltip]"
+        );
+        if (analysisButton) {
+          analysisButton.removeAttribute("disabled");
+          analysisButton.removeAttribute("data-tooltip");
+
+          analysisButton.onclick = async () => {
+            const fileInput = document.getElementById("contract-upload");
+            const file = fileInput.files[0];
+            if (file) {
+              try {
+                // Show loading state
+                document.getElementById("loading").style.display = "flex";
+
+                // Disable the analysis button while processing
+                analysisButton.disabled = true;
+                analysisButton.innerHTML =
+                  '<span class="spinner-border spinner-border-sm me-2"></span>Analizando...';
+
+                // Analyze the contract
+                const result = await analyzeContract(file);
+
+                // Display results
+                displayAnalysisResults(result);
+
+                // Enable action buttons
+                enableActionButtons();
+              } catch (error) {
+                console.error("Error details:", error);
+                showError(
+                  `Error analyzing contract: ${
+                    error.message || "Unknown error occurred"
+                  }`
+                );
+              } finally {
+                // Hide loading state
+                document.getElementById("loading").style.display = "none";
+
+                // Reset analysis button
+                analysisButton.disabled = false;
+                analysisButton.innerHTML =
+                  '<i class="fas fa-play me-2"></i>Iniciar Análisis';
+              }
+            }
+          };
+        }
+      }
+
+      async function analyzeContract(file) {
+        try {
+          // Create FormData object to send the file
+          const formData = new FormData();
+          formData.append("file", file);
+
+          // Get selected analysis options
+          const analysisOptions = {
+            risk_analysis: {
+              financial: document.getElementById("risk-financial").checked,
+              legal: document.getElementById("risk-legal").checked,
+              compliance: document.getElementById("risk-compliance").checked,
+            },
+            clause_extraction: {
+              important: document.getElementById("clause-important").checked,
+              obligations:
+                document.getElementById("clause-obligations").checked,
+              termination:
+                document.getElementById("clause-termination").checked,
+            },
+            compliance_check: {
+              regulatory: document.getElementById("compliance-regulatory")
+                .checked,
+              internal: document.getElementById("compliance-internal").checked,
+              industry: document.getElementById("compliance-industry").checked,
+            },
+          };
+
+          // Append analysis options to FormData
+          formData.append("analysis_options", JSON.stringify(analysisOptions));
+          formData.append("jurisdiction", "Colombia");
+          formData.append("language", "es");
+
+          const response = await fetch("/contract-review/analyze", {
+            method: "POST",
+            body: formData,
+          });
+
+          if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(
+              errorData.detail?.message || "Error analyzing contract"
+            );
+          }
+
+          const result = await response.json();
+          window.currentAnalysisResult = result;
+          return result;
+        } catch (error) {
+          console.error("Analysis error:", error);
+          throw error;
+        }
+      }
+
+      function displayAnalysisResults(result) {
+        const contentArea = document.getElementById("contract-content");
+        const analysisResults = result.data.analysis_results;
+
+        // Create the main container
+        let html = '<div class="analysis-results p-4">';
+
+        // Add Risk Assessment Section
+        html += `
+            <div class="section mb-4">
+                <h4 class="mb-3">Evaluación de Riesgos</h4>
+                <div class="alert ${getRiskAlertClass(
+                  analysisResults.risk_assessment.nivel_riesgo
+                )}">
+                    <strong>Nivel de Riesgo:</strong> ${
+                      analysisResults.risk_assessment.nivel_riesgo ||
+                      "No determinado"
+                    }
+                </div>
+                ${formatRisksList(
+                  analysisResults.risk_assessment.riesgos_identificados,
+                  analysisResults.risk_assessment.impacto_potencial
+                )}
+            </div>
+        `;
+
+        // Add Extracted Clauses Section if any exist
+        if (hasExtractedClauses(analysisResults.extracted_clauses)) {
+          html += `
+                <div class="section mb-4">
+                    <h4 class="mb-3">Cláusulas Extraídas</h4>
+                    ${formatClausesList(analysisResults.extracted_clauses)}
+                </div>
+            `;
+        }
+
+        // Add Compliance Analysis Section if there's meaningful data
+        if (hasComplianceData(analysisResults.compliance_analysis)) {
+          html += `
+                <div class="section mb-4">
+                    <h4 class="mb-3">Análisis de Cumplimiento</h4>
+                    <div class="alert ${getComplianceAlertClass(
+                      analysisResults.compliance_analysis.status
+                    )}">
+                        <strong>Estado:</strong> ${getComplianceStatus(
+                          analysisResults.compliance_analysis.status
+                        )}
+                    </div>
+                    ${formatComplianceIssues(
+                      analysisResults.compliance_analysis
+                    )}
+                </div>
+            `;
+        }
+
+        html += "</div>";
+        contentArea.innerHTML = html;
+
+        // Update metrics
+        updateMetrics(analysisResults);
+      }
+
+      // Helper functions
+      function getRiskAlertClass(riskLevel) {
+        switch (riskLevel?.toLowerCase()) {
+          case "alto":
+            return "alert-danger";
+          case "medio":
+            return "alert-warning";
+          case "bajo":
+            return "alert-success";
+          default:
+            return "alert-info";
+        }
+      }
+
+      function formatRisksList(risks, impacto) {
+        if (!risks || risks.length === 0) {
+          return "<p>No se identificaron riesgos específicos.</p>";
+        }
+        return `
+            <div class="mt-3">
+                <strong>Riesgos Identificados:</strong>
+                <ul class="list-group mt-2">
+                    ${risks
+                      .map(
+                        (risk) => `
+                        <li class="list-group-item">
+                            <div class="d-flex flex-column">
+                                <div>
+                                    <i class="fas fa-exclamation-triangle text-warning me-2"></i>
+                                    <strong>${risk}</strong>
+                                </div>
+                                ${
+                                  impacto && impacto[risk]
+                                    ? `
+                                    <div class="mt-2 ms-4 text-muted">
+                                        <small><i class="fas fa-info-circle me-1"></i> Impacto: ${impacto[risk]}</small>
+                                    </div>
+                                `
+                                    : ""
+                                }
+                            </div>
+                        </li>
+                    `
+                      )
+                      .join("")}
+                </ul>
+            </div>
+        `;
+      }
+
+      function formatClausesList(clauses) {
+        if (
+          !clauses ||
+          (!clauses.clausulas_criticas?.length &&
+            !clauses.obligaciones?.length &&
+            !clauses.terminos_finalizacion?.length)
+        ) {
+          return "<p>No se encontraron cláusulas relevantes.</p>";
+        }
+
+        let html = "";
+
+        if (clauses.clausulas_criticas?.length) {
+          html += `
+              <div class="mb-3">
+                  <h5>Cláusulas Críticas</h5>
+                  <ul class="list-group">
+                      ${clauses.clausulas_criticas
+                        .map(
+                          (clause) => `
+                          <li class="list-group-item">
+                              <i class="fas fa-gavel text-primary me-2"></i>
+                              ${clause}
+                          </li>
+                      `
+                        )
+                        .join("")}
+                  </ul>
+                </div>
+            `;
+        }
+
+        if (clauses.obligaciones?.length) {
+          html += `
+              <div class="mb-3">
+                  <h5>Obligaciones</h5>
+                  <ul class="list-group">
+                      ${clauses.obligaciones
+                        .map(
+                          (obligation) => `
+                          <li class="list-group-item">
+                              <i class="fas fa-tasks text-info me-2"></i>
+                              ${obligation}
+                          </li>
+                      `
+                        )
+                        .join("")}
+                  </ul>
+              </div>
+          `;
+        }
+
+        if (clauses.terminos_finalizacion?.length) {
+          html += `
+              <div class="mb-3">
+                  <h5>Términos de Finalización</h5>
+                  <ul class="list-group">
+                      ${clauses.terminos_finalizacion
+                        .map(
+                          (term) => `
+                          <li class="list-group-item">
+                              <i class="fas fa-door-open text-danger me-2"></i>
+                              ${term}
+                          </li>
+                      `
+                        )
+                        .join("")}
+                  </ul>
+              </div>
+          `;
+        }
+
+        return html;
+      }
+
+      function formatComplianceIssues(compliance) {
+        let html = "";
+
+        if (compliance.incumplimientos?.length) {
+          html += `
+              <div class="mt-3">
+                  <h5>Incumplimientos Detectados</h5>
+                  <ul class="list-group">
+                      ${compliance.incumplimientos
+                        .map(
+                          (issue) => `
+                          <li class="list-group-item">
+                              <i class="fas fa-times-circle text-danger me-2"></i>
+                              ${issue}
+                          </li>
+                      `
+                        )
+                        .join("")}
+                  </ul>
+              </div>
+          `;
+        }
+
+        if (compliance.recomendaciones?.length) {
+          html += `
+              <div class="mt-3">
+                  <h5>Recomendaciones</h5>
+                  <ul class="list-group">
+                      ${compliance.recomendaciones
+                        .map(
+                          (rec) => `
+                          <li class="list-group-item">
+                              <i class="fas fa-lightbulb text-warning me-2"></i>
+                              ${rec}
+                          </li>
+                      `
+                        )
+                        .join("")}
+                  </ul>
+              </div>
+          `;
+        }
+
+        return html;
+      }
+
+      function updateMetrics(results) {
+        // Update risk level in the risk meter
+        const riskLevel = results.risk_assessment?.nivel_riesgo || "medio";
+        const riskBar = document.querySelector(".risk-meter .progress-bar");
+        if (riskBar) {
+          riskBar.style.width = getRiskPercentage(riskLevel);
+          riskBar.className = `progress-bar bg-${getRiskColor(riskLevel)}`;
+        }
+
+        // Get all metric items
+        const clausulasAnalizada = document.querySelector(
+          '[data-metric="clausulas"]'
+        );
+        const riesgosIdentificados = document.querySelector(
+          '[data-metric="riesgos"]'
+        );
+        const cumplimiento = document.querySelector(
+          '[data-metric="cumplimiento"]'
+        );
+
+        if (clausulasAnalizada) {
+          // Count total analyzed clauses
+          const totalClauses =
+            (results.extracted_clauses?.clausulas_criticas?.length || 0) +
+            (results.extracted_clauses?.obligaciones?.length || 0) +
+            (results.extracted_clauses?.terminos_finalizacion?.length || 0);
+          clausulasAnalizada.querySelector("h3").textContent =
+            totalClauses.toString();
+        }
+
+        if (riesgosIdentificados) {
+          // Count identified risks
+          const totalRisks =
+            results.risk_assessment?.riesgos_identificados?.length || 0;
+          riesgosIdentificados.querySelector("h3").textContent =
+            totalRisks.toString();
+        }
+
+        if (cumplimiento) {
+          // Set compliance percentage
+          let compliancePercentage;
+          switch (results.compliance_analysis?.status) {
+            case "compliant":
+              compliancePercentage = "100%";
+              break;
+            case "non_compliant":
+              compliancePercentage = "0%";
+              break;
+            case "unknown":
+            default:
+              // If there are recommendations or non-compliances, show a partial percentage
+              if (
+                results.compliance_analysis?.incumplimientos?.length > 0 ||
+                results.compliance_analysis?.recomendaciones?.length > 0
+              ) {
+                compliancePercentage = "50%";
+              } else {
+                compliancePercentage = "N/A";
+              }
+          }
+          cumplimiento.querySelector("h3").textContent = compliancePercentage;
+        }
+      }
+
+      function getRiskPercentage(riskLevel) {
+        switch (riskLevel.toLowerCase()) {
+          case "alto":
+            return "100%";
+          case "medio":
+            return "50%";
+          case "bajo":
+            return "25%";
+          default:
+            return "0%";
+        }
+      }
+
+      function getRiskColor(riskLevel) {
+        switch (riskLevel.toLowerCase()) {
+          case "alto":
+            return "danger";
+          case "medio":
+            return "warning";
+          case "bajo":
+            return "success";
+          default:
+            return "info";
+        }
+      }
+
+      function enableActionButtons() {
+        const downloadButton = document.querySelector(
+          'button[data-tooltip*="descargar"]'
+        );
+        const shareButton = document.querySelector(
+          'button[data-tooltip*="compartir"]'
+        );
+
+        if (downloadButton) {
+          downloadButton.removeAttribute("disabled");
+          downloadButton.removeAttribute("data-tooltip");
+          downloadButton.onclick = downloadReport;
+        }
+
+        if (shareButton) {
+          shareButton.removeAttribute("disabled");
+          shareButton.removeAttribute("data-tooltip");
+          shareButton.onclick = shareResults;
+        }
+      }
+
+      async function downloadReport() {
+        try {
+          const result = getCurrentAnalysisResult(); // Store the analysis result in a variable
+          if (!result) {
+            throw new Error("No hay resultados de análisis disponibles");
+          }
+
+          // Create the report content
+          const reportContent = generateReportContent(result);
+
+          // Create Blob and download
+          const blob = new Blob([reportContent], { type: "text/html" });
+          const url = window.URL.createObjectURL(blob);
+          const a = document.createElement("a");
+          a.href = url;
+          a.download = `analisis-contrato-${
+            new Date().toISOString().split("T")[0]
+          }.html`;
+          document.body.appendChild(a);
+          a.click();
+          window.URL.revokeObjectURL(url);
+          document.body.removeChild(a);
+        } catch (error) {
+          console.error("Error downloading report:", error);
+          showError("Error al descargar el reporte: " + error.message);
+        }
+      }
+
+      function generateReportContent(result) {
+        return `
+            <!DOCTYPE html>
+            <html lang="es">
+            <head>
+                <meta charset="UTF-8">
+                <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                <title>Análisis de Contrato - Reporte</title>
+                <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+                <style>
+                    body { padding: 20px; }
+                    .header { margin-bottom: 30px; }
+                    .section { margin-bottom: 20px; padding: 15px; border: 1px solid #dee2e6; border-radius: 8px; }
+                    .risk-high { color: #dc3545; }
+                    .risk-medium { color: #ffc107; }
+                    .risk-low { color: #198754; }
+                </style>
+            </head>
+            <body>
+                <div class="container">
+                    <div class="header">
+                        <h1>Reporte de Análisis de Contrato</h1>
+                        <p>Fecha: ${new Date().toLocaleDateString()}</p>
+                    </div>
+
+                    <div class="section">
+                        <h2>1. Identificación de las Partes</h2>
+                        ${formatPartiesForReport(result)}
+                    </div>
+
+                    <div class="section">
+                        <h2>2. Evaluación de Cláusulas</h2>
+                        ${formatClausesForReport(result)}
+                    </div>
+
+                    <div class="section">
+                        <h2>3. Análisis de Riesgos</h2>
+                        ${formatRisksForReport(result)}
+                    </div>
+
+                    <div class="section">
+                        <h2>4. Recomendaciones</h2>
+                        ${formatRecommendationsForReport(result)}
+                    </div>
+
+                    <div class="section">
+                        <h2>5. Cumplimiento Normativo</h2>
+                        ${formatComplianceForReport(result)}
+                    </div>
+
+                    <footer class="mt-5 text-center">
+                        <p>Generado por LegalTechAI - Sistema de Análisis de Contratos</p>
+                    </footer>
+                </div>
+            </body>
+            </html>
+        `;
+      }
+
+      // Helper functions for report formatting
+      function formatPartiesForReport(result) {
+        const parties =
+          result.analysis?.resumen_ejecutivo?.match(
+            /El contrato está firmado entre:[\s\S]*?(?=\n\n)/
+          ) || [];
+        return `
+            <div class="content">
+                ${parties[0] || "No se identificaron las partes del contrato"}
+            </div>
+        `;
+      }
+
+      function formatClausesForReport(result) {
+        const clauses = result.analysis?.clausulas_criticas || [];
+        return `
+            <ul class="list-unstyled">
+                ${
+                  clauses
+                    .map(
+                      (clause) => `
+                    <li class="mb-2">• ${clause}</li>
+                `
+                    )
+                    .join("") ||
+                  "<li>No se identificaron cláusulas críticas</li>"
+                }
+            </ul>
+        `;
+      }
+
+      function formatRisksForReport(result) {
+        const risks = result.risk_assessment?.riesgos_identificados || [];
+        const riskLevel = result.risk_assessment?.nivel_riesgo || "medio";
+        return `
+            <div>
+                <p class="risk-${getRiskColor(riskLevel)}">
+                    Nivel de Riesgo: ${riskLevel.toUpperCase()}
+                </p>
+                <ul class="list-unstyled">
+                    ${
+                      risks
+                        .map(
+                          (risk) => `
+                        <li class="mb-2">• ${risk}</li>
+                    `
+                        )
+                        .join("") ||
+                      "<li>No se identificaron riesgos específicos</li>"
+                    }
+                </ul>
+            </div>
+        `;
+      }
+
+      function formatRecommendationsForReport(result) {
+        const recommendations = result.recommendations || [];
+        return `
+            <ul class="list-unstyled">
+                ${
+                  recommendations
+                    .map(
+                      (rec) => `
+                    <li class="mb-2">• ${rec}</li>
+                `
+                    )
+                    .join("") || "<li>No hay recomendaciones específicas</li>"
+                }
+            </ul>
+        `;
+      }
+
+      function formatComplianceForReport(result) {
+        return `
+            <div>
+                <p>Estado de Cumplimiento: ${
+                  result.colombian_compliance?.status === "compliant"
+                    ? '<span class="text-success">Cumple</span>'
+                    : '<span class="text-danger">No Cumple</span>'
+                }
+                </p>
+                <p>Versión del Marco Normativo: ${
+                  result.colombian_compliance?.framework_version ||
+                  "No especificado"
+                }</p>
+            </div>
+        `;
+      }
+
+      async function shareResults() {
+        try {
+          const result = getCurrentAnalysisResult();
+          if (!result) {
+            throw new Error("No hay resultados de análisis disponibles");
+          }
+
+          // Create share data
+          const shareData = {
+            title: "Análisis de Contrato",
+            text: `Análisis de contrato realizado el ${new Date().toLocaleDateString()}`,
+            url: window.location.href,
+          };
+
+          // Check if the Web Share API is available
+          if (navigator.share) {
+            await navigator.share(shareData);
+          } else {
+            // Fallback: Copy to clipboard
+            const textToCopy = `
+                    Análisis de Contrato - ${new Date().toLocaleDateString()}
+                    
+                    Partes del Contrato:
+                    ${result.analysis?.resumen_ejecutivo || "No disponible"}
+                    
+                    Nivel de Riesgo: ${
+                      result.risk_assessment?.nivel_riesgo || "No especificado"
+                    }
+                    
+                    Estado de Cumplimiento: ${
+                      result.colombian_compliance?.status === "compliant"
+                        ? "Cumple"
+                        : "No Cumple"
+                    }
+                    
+                    Generado por LegalTechAI
+                `;
+
+            await navigator.clipboard.writeText(textToCopy);
+            alert("Resultados copiados al portapapeles");
+          }
+        } catch (error) {
+          console.error("Error sharing results:", error);
+          showError("Error al compartir los resultados: " + error.message);
+        }
+      }
+
+      // Helper function to get current analysis result
+      function getCurrentAnalysisResult() {
+        // You'll need to store the analysis result when it's received
+        // This could be in a global variable or data attribute
+        return window.currentAnalysisResult;
+      }
+
+      // Event Listeners
+      document.addEventListener("DOMContentLoaded", () => {
+        const uploadArea = document.querySelector(".upload-area");
+        const fileInput = document.getElementById("contract-upload");
+
+        uploadArea.addEventListener("dragover", (e) => {
+          e.preventDefault();
+          uploadArea.classList.add("dragover");
+        });
+
+        uploadArea.addEventListener("dragleave", () => {
+          uploadArea.classList.remove("dragover");
+        });
+
+        uploadArea.addEventListener("drop", (e) => {
+          e.preventDefault();
+          uploadArea.classList.remove("dragover");
+          const file = e.dataTransfer.files[0];
+          if (file) {
+            uploadContract(file);
+          }
+        });
+
+        fileInput.addEventListener("change", (e) => {
+          const file = e.target.files[0];
+          if (file) {
+            uploadContract(file);
+          }
+        });
+
+        document.querySelector(".btn-retry").addEventListener("click", () => {
+          document.querySelector(".error-details").classList.remove("show");
+          document.querySelector(".btn-retry").classList.remove("show");
+          document.querySelector(".progress-bar").style.width = "0%";
+        });
+      });
+
+      function showError(message) {
+        const errorDetails = document.querySelector(".error-details");
+        if (errorDetails) {
+          let errorMessage = `
+            <div class="alert alert-danger">
+                <h6>Error de Análisis</h6>
+                <p>${message}</p>
+                <ul>
+                    <li>El documento puede ser demasiado grande, intente con un archivo más pequeño</li>
+                    <li>Verifique que el archivo sea un documento válido</li>
+                    <li>Asegúrese de que el contenido del archivo sea legible</li>
+                </ul>
+                <p class="mb-0">Si el problema persiste, contacte al soporte técnico.</p>
+            </div>
+        `;
+
+          errorDetails.innerHTML = errorMessage;
+          errorDetails.classList.add("show");
+
+          // Show retry button
+          const retryButton = document.querySelector(".btn-retry");
+          if (retryButton) {
+            retryButton.classList.add("show");
+          }
+        }
+      }
+
+      // Add retry functionality
+      document.querySelector(".btn-retry").addEventListener("click", () => {
+        const analysisButton = document.querySelector(
+          ".btn-primary[data-tooltip]"
+        );
+        if (analysisButton) {
+          analysisButton.click();
+        }
+      });
+
+      // Helper functions for compliance analysis
+      function hasExtractedClauses(clauses) {
+        return (
+          clauses &&
+          ((clauses.clausulas_criticas &&
+            clauses.clausulas_criticas.length > 0) ||
+            (clauses.obligaciones && clauses.obligaciones.length > 0) ||
+            (clauses.terminos_finalizacion &&
+              clauses.terminos_finalizacion.length > 0))
+        );
+      }
+
+      function hasComplianceData(compliance) {
+        return (
+          compliance &&
+          (compliance.status !== "unknown" ||
+            (compliance.incumplimientos &&
+              compliance.incumplimientos.length > 0) ||
+            (compliance.recomendaciones &&
+              compliance.recomendaciones.length > 0))
+        );
+      }
+
+      function getComplianceStatus(status) {
+        switch (status) {
+          case "compliant":
+            return "Cumple";
+          case "non_compliant":
+            return "No Cumple";
+          case "unknown":
+          default:
+            return "No Determinado";
+        }
+      }
+
+      function getComplianceAlertClass(status) {
+        switch (status) {
+          case "compliant":
+            return "alert-success";
+          case "non_compliant":
+            return "alert-danger";
+          case "unknown":
+          default:
+            return "alert-info";
+        }
+      }
+    </script>
+  </body>
+</html>

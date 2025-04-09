@@ -1,16 +1,17 @@
-from agno.models.openai import OpenAIChat
+#from agno.models.openai import OpenAIChat
+from agno.models.mistral import MistralChat
 
 # Initialize AI models with appropriate timeouts
-contract_review_model = OpenAIChat(id="gpt-4", timeout=8000)
-legal_research_model = OpenAIChat(id="gpt-4", timeout=8000)
-compliance_model = OpenAIChat(id="gpt-4", timeout=8000)
-chatbot_model = OpenAIChat(id="gpt-4", timeout=5000)
-case_prediction_model = OpenAIChat(id="gpt-4", timeout=5000)
-patent_search_model = OpenAIChat(id="gpt-4", timeout=8000)
-document_drafting_model = OpenAIChat(id="gpt-4", timeout=8000)
-whistleblower_model = OpenAIChat(id="gpt-4", timeout=5000)
-demand_letter_model = OpenAIChat(id="gpt-4")
-legal_diagnosis_model = OpenAIChat(id="gpt-4", timeout=3000)
+contract_review_model = MistralChat(id="mistral-large-latest")
+legal_research_model = MistralChat(id="mistral-large-latest")
+compliance_model = MistralChat(id="mistral-large-latest")
+chatbot_model = MistralChat(id="mistral-large-latest")
+case_prediction_model = MistralChat(id="mistral-large-latest")
+patent_search_model = MistralChat(id="mistral-large-latest")
+document_drafting_model = MistralChat(id="mistral-large-latest")
+whistleblower_model = MistralChat(id="mistral-large-latest")
+demand_letter_model = MistralChat(id="mistral-large-latest")
+legal_diagnosis_model = MistralChat(id="mistral-large-latest")
 
 #contract_review_model = OpenAIChat(id="gpt-4", timeout=8000)
 #legal_research_model = OpenAIChat(id="gpt-4", timeout=8000)
@@ -37,7 +38,7 @@ MODELS = {
     "legal_diagnosis": legal_diagnosis_model
 }
 
-def get_model(model_name: str) -> OpenAIChat:
+def get_model(model_name: str) -> MistralChat:
     """Get an AI model instance by name"""
     if model_name not in MODELS:
         raise ValueError(f"Model {model_name} not found")

@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Perfil - LegalTechAI</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+      rel="stylesheet" />
+    <link
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
+      rel="stylesheet" />
+    <style>
+      :root {
+        --primary-color: #2c3e50;
+        --secondary-color: #3498db;
+        --background-color: #f8f9fa;
+        --accent-color: #e74c3c;
+      }
+
+      body {
+        background-color: var(--background-color);
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+      }
+
+      .profile-container {
+        max-width: 1000px;
+        margin: 2rem auto;
+        padding: 2rem;
+      }
+
+      .profile-header {
+        background: white;
+        border-radius: 10px;
+        padding: 2rem;
+        text-align: center;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        margin-bottom: 2rem;
+      }
+
+      .profile-avatar {
+        width: 150px;
+        height: 150px;
+        border-radius: 50%;
+        margin-bottom: 1rem;
+        border: 4px solid var(--secondary-color);
+        cursor: pointer;
+        transition: transform 0.3s ease;
+      }
+
+      .profile-avatar:hover {
+        transform: scale(1.05);
+      }
+
+      .info-card {
+        background: white;
+        border-radius: 10px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      }
+
+      .badge-custom {
+        background-color: var(--secondary-color);
+        color: white;
+        padding: 0.5rem 1rem;
+        border-radius: 20px;
+        margin: 0.25rem;
+      }
+
+      .activity-item {
+        padding: 1rem;
+        border-bottom: 1px solid #dee2e6;
+      }
+
+      .activity-item:last-child {
+        border-bottom: none;
+      }
+
+      .progress {
+        height: 10px;
+        margin-bottom: 1rem;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-4">
+      <div class="container">
+        <a class="navbar-brand" href="/dashboard">
+          <i class="fas fa-gavel me-2"></i>LegalTechAI
+        </a>
+        <button
+          class="navbar-toggler"
+          type="button"
+          data-bs-toggle="collapse"
+          data-bs-target="#navbarNav">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+          <ul class="navbar-nav ms-auto">
+            <li class="nav-item">
+              <a class="nav-link" href="/dashboard">
+                <i class="fas fa-home me-2"></i>Dashboard
+              </a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link active" href="/dashboard/profile">
+                <i class="fas fa-user me-2"></i>Perfil
+              </a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="/dashboard/settings">
+                <i class="fas fa-cog me-2"></i>Configuración
+              </a>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </nav>
+
+    <div class="container profile-container">
+      <!-- Profile Header -->
+      <div class="profile-header">
+        <img
+          src="https://via.placeholder.com/150"
+          alt="Profile Avatar"
+          class="profile-avatar"
+          id="profileAvatar" />
+        <h2>Juan Pérez</h2>
+        <p class="text-muted mb-2">Abogado Senior en Derecho Corporativo</p>
+        <div class="d-flex justify-content-center gap-2 mb-3">
+          <span class="badge-custom">
+            <i class="fas fa-star me-1"></i>Premium
+          </span>
+          <span class="badge-custom">
+            <i class="fas fa-check-circle me-1"></i>Verificado
+          </span>
+        </div>
+        <button class="btn btn-primary">
+          <i class="fas fa-edit me-2"></i>Editar Perfil
+        </button>
+      </div>
+
+      <div class="row">
+        <!-- Personal Information -->
+        <div class="col-md-4">
+          <div class="info-card">
+            <h4><i class="fas fa-user-circle me-2"></i>Información Personal</h4>
+            <hr />
+            <p><strong>Email:</strong> juan.perez@ejemplo.com</p>
+            <p><strong>Teléfono:</strong> +57 300 123 4567</p>
+            <p><strong>Ubicación:</strong> Bogotá, Colombia</p>
+            <p><strong>Miembro desde:</strong> Enero 2023</p>
+            <p><strong>Idiomas:</strong> Español, Inglés</p>
+          </div>
+
+          <!-- Expertise -->
+          <div class="info-card">
+            <h4><i class="fas fa-brain me-2"></i>Especialidades</h4>
+            <hr />
+            <div class="d-flex flex-wrap gap-2">
+              <span class="badge bg-secondary">Derecho Corporativo</span>
+              <span class="badge bg-secondary">Contratos</span>
+              <span class="badge bg-secondary">Propiedad Intelectual</span>
+              <span class="badge bg-secondary">Derecho Laboral</span>
+              <span class="badge bg-secondary">Fusiones y Adquisiciones</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Statistics and Progress -->
+        <div class="col-md-8">
+          <!-- Performance Stats -->
+          <div class="info-card">
+            <h4>
+              <i class="fas fa-chart-line me-2"></i>Estadísticas de Rendimiento
+            </h4>
+            <hr />
+            <div class="row">
+              <div class="col-md-6 mb-3">
+                <h6>Casos Completados</h6>
+                <div class="progress">
+                  <div class="progress-bar bg-success" style="width: 85%"></div>
+                </div>
+                <small class="text-muted">125 casos</small>
+              </div>
+              <div class="col-md-6 mb-3">
+                <h6>Documentos Generados</h6>
+                <div class="progress">
+                  <div class="progress-bar bg-info" style="width: 92%"></div>
+                </div>
+                <small class="text-muted">347 documentos</small>
+              </div>
+              <div class="col-md-6 mb-3">
+                <h6>Consultas Realizadas</h6>
+                <div class="progress">
+                  <div class="progress-bar bg-primary" style="width: 78%"></div>
+                </div>
+                <small class="text-muted">892 consultas</small>
+              </div>
+              <div class="col-md-6 mb-3">
+                <h6>Satisfacción del Cliente</h6>
+                <div class="progress">
+                  <div class="progress-bar bg-warning" style="width: 95%"></div>
+                </div>
+                <small class="text-muted">4.8/5.0</small>
+              </div>
+            </div>
+          </div>
+
+          <!-- Recent Activity -->
+          <div class="info-card">
+            <h4><i class="fas fa-history me-2"></i>Actividad Reciente</h4>
+            <hr />
+            <div class="activity-item">
+              <i class="fas fa-file-alt text-primary me-2"></i>
+              <strong>Documento Generado:</strong> Contrato de Prestación de
+              Servicios
+              <small class="text-muted float-end">Hace 2 horas</small>
+            </div>
+            <div class="activity-item">
+              <i class="fas fa-search text-info me-2"></i>
+              <strong>Búsqueda:</strong> Jurisprudencia sobre derecho laboral
+              <small class="text-muted float-end">Hace 4 horas</small>
+            </div>
+            <div class="activity-item">
+              <i class="fas fa-balance-scale text-success me-2"></i>
+              <strong>Caso Analizado:</strong> Demanda por despido injustificado
+              <small class="text-muted float-end">Hace 1 día</small>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+      // Handle profile avatar click
+      document
+        .getElementById("profileAvatar")
+        .addEventListener("click", function () {
+          // Simulate file upload click
+          const fileInput = document.createElement("input");
+          fileInput.type = "file";
+          fileInput.accept = "image/*";
+          fileInput.click();
+
+          fileInput.onchange = function (e) {
+            // Handle file upload here
+            console.log("New avatar selected:", e.target.files[0]);
+            // You would typically upload this file to your server here
+          };
+        });
+
+      // Fetch and update activity
+      async function updateActivity() {
+        try {
+          const response = await fetch("/api/dashboard/recent-activity");
+          const activities = await response.json();
+          // Update activity items here
+        } catch (error) {
+          console.error("Error fetching activity:", error);
+        }
+      }
+
+      // Initialize
+      document.addEventListener("DOMContentLoaded", () => {
+        updateActivity();
+      });
+    </script>
+  </body>
+</html>

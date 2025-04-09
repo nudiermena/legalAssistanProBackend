@@ -1,58 +1,101 @@
-from fastapi import APIRouter, Body, HTTPException
-from models.request_models import WhistleblowerAnalysisRequest
-from models.response_models import BaseResponse, format_response, handle_error
-from agents.whistleblower_agent import analyze_whistleblower_report
+from fastapi import APIRouter, HTTPException, Depends
+from pydantic import BaseModel
+from typing import List, Optional, Dict
+from agents.whistleblower_agent import analyze_whistleblower_report, draft_whistleblower_policy
+from config.colombian_compliance import ColombianLegalFramework
 
-router = APIRouter()
+router = APIRouter(prefix="/whistleblower", tags=["whistleblower"])
 
-@router.post(
-    "/api/whistleblower-analysis",
-    response_model=BaseResponse,
-    summary="Whistleblower Report Analysis",
-    description="""
-    Analyzes whistleblower reports to assess severity, credibility, and regulatory
-    implications, providing recommendations for investigation and response.
-    """
-)
-async def whistleblower_analysis_endpoint(
-    request: WhistleblowerAnalysisRequest = Body(
-        ...,
-        example={
-            "report_content": "Allegations of financial misconduct in procurement department",
-            "company_context": {
-                "industry": "Healthcare",
-                "size": "Large",
-                "regulatory_environment": "Heavily regulated"
-            },
-            "applicable_policies": [
-                "Code of Conduct",
-                "Whistleblower Protection Policy",
-                "Anti-Fraud Policy"
-            ],
-            "regulatory_framework": [
-                "Sarbanes-Oxley Act",
-                "False Claims Act"
-            ],
-            "prior_related_issues": [
-                "Previous audit findings in procurement",
-                "Employee training gaps identified"
-            ]
+class WhistleblowerReportRequest(BaseModel):
+    report_content: str
+    report_type: str = "Denuncia administrativa"  # Default to administrative complaint
+    jurisdiction: str = "Colombia"
+    specific_concerns: Optional[List[str]] = None
+    data_processing: Optional[Dict[str, str]] = None
+    legal_terms: Optional[List[str]] = None
+
+    class Config:
+        schema_extra = {
+            "example": {
+                "report_content": "Se ha identificado un posible caso de corrupción...",
+                "report_type": "Denuncia administrativa",
+                "jurisdiction": "Colombia",
+                "specific_concerns": [
+                    "Posible conflicto de interés",
+                    "Irregularidades en contratación"
+                ],
+                "data_processing": {
+                    "type": "sensitive",
+                    "consent": {"provided": True, "date": "2024-03-31"},
+                    "purpose": "investigación administrativa"
+                },
+                "legal_terms": [
+                    "debido proceso",
+                    "derecho de defensa"
+                ]
+            }
         }
-    )
-):
-    """
-    Analyze a whistleblower report to determine its credibility, severity, and
-    appropriate response actions, while ensuring compliance with relevant laws
-    and internal policies.
-    """
+
+class WhistleblowerPolicyRequest(BaseModel):
+    organization_type: str
+    jurisdiction: str = "Colombia"
+    specific_requirements: Optional[List[str]] = None
+    data_processing: Optional[Dict[str, str]] = None
+
+    class Config:
+        schema_extra = {
+            "example": {
+                "organization_type": "Entidad pública",
+                "jurisdiction": "Colombia",
+                "specific_requirements": [
+                    "Ley 1778 de 2016",
+                    "Ley 1952 de 2019"
+                ],
+                "data_processing": {
+                    "type": "confidential",
+                    "retention_period": "5 years",
+                    "security_level": "alto"
+                }
+            }
+        }
+
+@router.post("/report/analyze")
+async def analyze_report(request: WhistleblowerReportRequest):
     try:
         result = await analyze_whistleblower_report(
             report_content=request.report_content,
-            company_context=request.company_context,
-            applicable_policies=request.applicable_policies,
-            regulatory_framework=request.regulatory_framework,
-            prior_related_issues=request.prior_related_issues
+            report_type=request.report_type,
+            jurisdiction=request.jurisdiction,
+            specific_concerns=request.specific_concerns,
+            data_processing=request.data_processing
         )
-        return await format_response({"analysis_report": result})
+        return {
+            "status": "success",
+            "data": result,
+            "colombian_compliance": {
+                "framework": ColombianLegalFramework.FRAMEWORK_VERSION,
+                "principles": ColombianLegalFramework.CONSTITUTIONAL_PRINCIPLES
+            }
+        }
     except Exception as e:
-        raise HTTPException(status_code=500, detail=await handle_error(e)) 
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.post("/policy/draft")
+async def draft_policy(request: WhistleblowerPolicyRequest):
+    try:
+        result = await draft_whistleblower_policy(
+            organization_type=request.organization_type,
+            jurisdiction=request.jurisdiction,
+            specific_requirements=request.specific_requirements,
+            data_processing=request.data_processing
+        )
+        return {
+            "status": "success",
+            "data": result,
+            "colombian_compliance": {
+                "framework": ColombianLegalFramework.FRAMEWORK_VERSION,
+                "principles": ColombianLegalFramework.CONSTITUTIONAL_PRINCIPLES
+            }
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e)) 

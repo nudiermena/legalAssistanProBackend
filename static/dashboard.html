@@ -1,0 +1,558 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{{ page_title }}</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+      rel="stylesheet" />
+    <link
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
+      rel="stylesheet" />
+    <style>
+      :root {
+        --primary-color: #2c3e50;
+        --secondary-color: #3498db;
+        --accent-color: #e74c3c;
+        --background-color: #f8f9fa;
+        --border-color: #dee2e6;
+      }
+
+      body {
+        background-color: var(--background-color);
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+      }
+
+      .dashboard-container {
+        padding: 2rem;
+      }
+
+      .service-card {
+        background: white;
+        border-radius: 10px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+        height: 100%;
+      }
+
+      .service-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+      }
+
+      .service-icon {
+        font-size: 2.5rem;
+        color: var(--secondary-color);
+        margin-bottom: 1rem;
+      }
+
+      .service-title {
+        color: var(--primary-color);
+        font-size: 1.2rem;
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+      }
+
+      .service-description {
+        color: #666;
+        font-size: 0.9rem;
+        margin-bottom: 1rem;
+      }
+
+      .stats-container {
+        background: white;
+        border-radius: 10px;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      }
+
+      .stat-item {
+        text-align: center;
+      }
+
+      .stat-number {
+        font-size: 1.8rem;
+        font-weight: 600;
+        color: var(--secondary-color);
+      }
+
+      .stat-label {
+        color: #666;
+        font-size: 0.9rem;
+      }
+
+      .navbar {
+        background-color: var(--primary-color);
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      }
+
+      .navbar-brand {
+        color: white !important;
+        font-weight: 600;
+      }
+
+      .nav-link {
+        color: rgba(255, 255, 255, 0.8) !important;
+      }
+
+      .nav-link:hover {
+        color: white !important;
+      }
+
+      .btn-primary {
+        background-color: var(--secondary-color);
+        border-color: var(--secondary-color);
+      }
+
+      .btn-primary:hover {
+        background-color: #2980b9;
+        border-color: #2980b9;
+      }
+
+      .recent-activity {
+        background: white;
+        border-radius: 10px;
+        padding: 1.5rem;
+        margin-top: 2rem;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      }
+
+      .activity-item {
+        padding: 0.75rem 0;
+        border-bottom: 1px solid var(--border-color);
+      }
+
+      .activity-item:last-child {
+        border-bottom: none;
+      }
+
+      .activity-icon {
+        color: var(--secondary-color);
+        margin-right: 0.5rem;
+      }
+
+      .activity-time {
+        color: #666;
+        font-size: 0.8rem;
+      }
+
+      .message {
+        max-width: 80%;
+        padding: 10px 15px;
+        border-radius: 10px;
+        margin-bottom: 10px;
+      }
+
+      .user-message {
+        background: var(--secondary-color);
+        color: white;
+        margin-left: auto;
+      }
+
+      .bot-message {
+        background: #f8f9fa;
+        border: 1px solid var(--border-color);
+      }
+
+      .typing-indicator {
+        display: none;
+        padding: 10px;
+        background: #f8f9fa;
+        border-radius: 10px;
+        margin-bottom: 10px;
+      }
+
+      .typing-indicator span {
+        height: 8px;
+        width: 8px;
+        float: left;
+        margin: 0 1px;
+        background-color: var(--secondary-color);
+        display: block;
+        border-radius: 50%;
+        opacity: 0.4;
+        animation: typing 1s infinite;
+      }
+
+      @keyframes typing {
+        0% {
+          transform: translateY(0px);
+        }
+        50% {
+          transform: translateY(-5px);
+        }
+        100% {
+          transform: translateY(0px);
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark mb-4">
+      <div class="container">
+        <a class="navbar-brand" href="/">
+          <i class="fas fa-gavel me-2"></i>LegalTechAI
+        </a>
+        <button
+          class="navbar-toggler"
+          type="button"
+          data-bs-toggle="collapse"
+          data-bs-target="#navbarNav">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+          <ul class="navbar-nav ms-auto">
+            <li class="nav-item">
+              <a class="nav-link active" href="/dashboard">
+                <i class="fas fa-home me-2"></i>Dashboard
+              </a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="/dashboard/profile">
+                <i class="fas fa-user me-2"></i>Perfil
+              </a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="/dashboard/settings">
+                <i class="fas fa-cog me-2"></i>Configuración
+              </a>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </nav>
+
+    <div class="container dashboard-container">
+      <!-- Statistics Section -->
+      <div class="stats-container row mb-4">
+        <div class="col-md-3 stat-item">
+          <div class="stat-number" id="consultas">175</div>
+          <div class="stat-label">Consultas Realizadas</div>
+        </div>
+        <div class="col-md-3 stat-item">
+          <div class="stat-number" id="documentos">52</div>
+          <div class="stat-label">Documentos Generados</div>
+        </div>
+        <div class="col-md-3 stat-item">
+          <div class="stat-number" id="contratos">92</div>
+          <div class="stat-label">Análisis de Contratos</div>
+        </div>
+        <div class="col-md-3 stat-item">
+          <div class="stat-number" id="predicciones">240</div>
+          <div class="stat-label">Predicciones de Casos</div>
+        </div>
+      </div>
+
+      <!-- Services Grid -->
+      <div class="row g-4">
+        <!-- Legal Research Service -->
+        <div class="col-md-6 col-lg-3">
+          <div class="service-card p-4 text-center">
+            <i class="fas fa-search service-icon"></i>
+            <h3 class="service-title">Investigación Legal</h3>
+            <p class="service-description">
+              Búsqueda y análisis de jurisprudencia, normativa y doctrina legal.
+            </p>
+            <a href="/dashboard/legal-research" class="btn btn-primary"
+              >Acceder</a
+            >
+          </div>
+        </div>
+
+        <!-- Case Prediction Service -->
+        <div class="col-md-6 col-lg-3">
+          <div class="service-card p-4 text-center">
+            <i class="fas fa-balance-scale service-icon"></i>
+            <h3 class="service-title">Predicción de Casos</h3>
+            <p class="service-description">
+              Análisis predictivo de resultados en casos legales.
+            </p>
+            <a href="/dashboard/case-prediction" class="btn btn-primary"
+              >Acceder</a
+            >
+          </div>
+        </div>
+
+        <!-- Contract Analysis Service -->
+        <div class="col-md-6 col-lg-3">
+          <div class="service-card p-4 text-center">
+            <i class="fas fa-file-contract service-icon"></i>
+            <h3 class="service-title">Análisis de Contratos</h3>
+            <p class="service-description">
+              Revisión y análisis automatizado de documentos contractuales.
+            </p>
+            <a href="/dashboard/contract-review" class="btn btn-primary"
+              >Acceder</a
+            >
+          </div>
+        </div>
+
+        <!-- Document Drafting Service -->
+        <div class="col-md-6 col-lg-3">
+          <div class="service-card p-4 text-center">
+            <i class="fas fa-file-alt service-icon"></i>
+            <h3 class="service-title">Generación de Documentos</h3>
+            <p class="service-description">
+              Creación automatizada de documentos legales.
+            </p>
+            <a href="/dashboard/document-drafting" class="btn btn-primary"
+              >Acceder</a
+            >
+          </div>
+        </div>
+      </div>
+
+      <!-- Recent Activity -->
+      <div class="recent-activity">
+        <h4 class="mb-4">
+          <i class="fas fa-history me-2"></i>Actividad Reciente
+        </h4>
+        <div id="activity-list">
+          <!-- Activity items will be dynamically loaded here -->
+        </div>
+      </div>
+    </div>
+
+    <div
+      class="chat-widget"
+      style="
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        width: 350px;
+        z-index: 1000;
+        display: none;
+      ">
+      <div
+        class="chat-container"
+        style="
+          height: 500px;
+          background: white;
+          border-radius: 10px;
+          box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+          overflow: hidden;
+          display: grid;
+          grid-template-rows: auto 1fr auto;
+        ">
+        <div
+          class="chat-header"
+          style="background: var(--primary-color); color: white; padding: 15px">
+          <div class="d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">
+              <i class="fas fa-robot me-2"></i>Asistente Legal
+            </h5>
+            <button class="btn btn-link text-white" onclick="toggleChat()">
+              <i class="fas fa-times"></i>
+            </button>
+          </div>
+        </div>
+        <div
+          class="chat-messages"
+          id="chatMessages"
+          style="overflow-y: auto; padding: 15px"></div>
+        <div
+          class="chat-input-container"
+          style="padding: 15px; border-top: 1px solid var(--border-color)">
+          <div class="input-group">
+            <input
+              type="text"
+              id="messageInput"
+              class="form-control"
+              placeholder="Escribe tu consulta..." />
+            <button
+              class="btn btn-primary"
+              onclick="sendMessage()"
+              id="sendButton">
+              <i class="fas fa-paper-plane"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Chat Toggle Button -->
+      <button
+        class="btn btn-primary rounded-circle"
+        onclick="toggleChat()"
+        style="
+          position: fixed;
+          bottom: 20px;
+          right: 20px;
+          width: 60px;
+          height: 60px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        "
+        id="chatToggle">
+        <i class="fas fa-comment"></i>
+      </button>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+      // Function to fetch and update recent activity
+      async function updateRecentActivity() {
+        try {
+          const response = await fetch("/api/recent-activity");
+          const activities = await response.json();
+
+          const activityList = document.getElementById("activity-list");
+          activityList.innerHTML = activities
+            .map(
+              (activity) => `
+            <div class="activity-item">
+              <i class="fas ${activity.icon} activity-icon"></i>
+              <span>${activity.description}</span>
+              <span class="activity-time float-end">${activity.time}</span>
+            </div>
+          `
+            )
+            .join("");
+        } catch (error) {
+          console.error("Error fetching recent activity:", error);
+        }
+      }
+
+      // Function to update statistics
+      async function updateStats() {
+        try {
+          const response = await fetch("/api/dashboard-stats");
+          const stats = await response.json();
+
+          Object.entries(stats).forEach(([key, value]) => {
+            const element = document.querySelector(
+              `.stat-number[data-stat="${key}"]`
+            );
+            if (element) {
+              element.textContent = value;
+            }
+          });
+        } catch (error) {
+          console.error("Error updating stats:", error);
+        }
+      }
+
+      // Initialize dashboard
+      document.addEventListener("DOMContentLoaded", () => {
+        updateRecentActivity();
+        updateStats();
+
+        // Update stats every 30 seconds
+        setInterval(updateStats, 30000);
+        // Update activity every minute
+        setInterval(updateRecentActivity, 60000);
+      });
+
+      let clientId = "client_" + Math.random().toString(36).substr(2, 9);
+      let conversationId = null;
+
+      function toggleChat() {
+        const chatWidget = document.querySelector(
+          ".chat-widget .chat-container"
+        );
+        const chatToggle = document.getElementById("chatToggle");
+
+        if (chatWidget.style.display === "none" || !chatWidget.style.display) {
+          chatWidget.style.display = "grid";
+          chatToggle.style.display = "none";
+          document.getElementById("messageInput").focus();
+        } else {
+          chatWidget.style.display = "none";
+          chatToggle.style.display = "flex";
+        }
+      }
+
+      async function sendMessage() {
+        const input = document.getElementById("messageInput");
+        const message = input.value.trim();
+
+        if (!message) return;
+
+        // Add user message
+        addMessage("Usuario", message, "user");
+        input.value = "";
+
+        try {
+          const response = await fetch("/legal-chat/consulta", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Accept: "application/json",
+            },
+            body: JSON.stringify({
+              client_id: clientId,
+              message: message,
+              conversation_id: conversationId,
+              data_processing: {
+                type: "personal",
+                consent: "accepted",
+              },
+            }),
+          });
+
+          if (!response.ok) throw new Error("Error en la consulta");
+
+          const data = await response.json();
+          conversationId = data.conversation_id;
+
+          // Add bot response
+          const content = data.response?.content || data.response;
+          addMessage("Asistente Legal", content, "bot", data);
+        } catch (error) {
+          console.error("Error:", error);
+          addMessage(
+            "Sistema",
+            "Error al procesar la consulta. Por favor, intente nuevamente.",
+            "bot"
+          );
+        }
+      }
+
+      function addMessage(sender, content, type, data = null) {
+        const messagesDiv = document.getElementById("chatMessages");
+        const messageDiv = document.createElement("div");
+        messageDiv.className = `message ${type}-message`;
+
+        let messageContent = `<strong>${sender}:</strong> ${content}`;
+
+        if (data && data.references) {
+          messageContent +=
+            '<div class="references" style="font-size: 0.8em; margin-top: 5px; color: #666;">';
+          if (data.references.normativa) {
+            messageContent += `<div>Referencias: ${data.references.normativa.join(
+              ", "
+            )}</div>`;
+          }
+          messageContent += "</div>";
+        }
+
+        messageDiv.innerHTML = messageContent;
+        messagesDiv.appendChild(messageDiv);
+        messagesDiv.scrollTop = messagesDiv.scrollHeight;
+      }
+
+      // Handle enter key
+      document
+        .getElementById("messageInput")
+        .addEventListener("keypress", (e) => {
+          if (e.key === "Enter" && !e.shiftKey) {
+            e.preventDefault();
+            sendMessage();
+          }
+        });
+
+      // Initialize chat with welcome message
+      document.addEventListener("DOMContentLoaded", () => {
+        addMessage(
+          "Sistema",
+          "Bienvenido al Asistente Legal AI. ¿En qué puedo ayudarte?",
+          "bot"
+        );
+      });
+    </script>
+  </body>
+</html>

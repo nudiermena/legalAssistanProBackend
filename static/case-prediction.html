@@ -1,0 +1,1151 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Predicción de Casos - LegalTechAI</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+      rel="stylesheet" />
+    <link
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
+      rel="stylesheet" />
+    <link rel="stylesheet" href="/static/css/case-prediction.css" />
+  </head>
+  <body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-danger mb-4">
+      <div class="container">
+        <a class="navbar-brand" href="/dashboard">
+          <i class="fas fa-chevron-left me-2"></i>
+          LegalTechAI
+        </a>
+        <span class="navbar-text text-white">
+          Predicción de Casos y Análisis de Litigios
+        </span>
+      </div>
+    </nav>
+
+    <div class="container">
+      <!-- Case Input Form -->
+      <div class="card mb-4">
+        <div class="card-header">
+          <h5 class="mb-0">
+            <i class="fas fa-file-alt me-2"></i>
+            Detalles del Caso
+          </h5>
+        </div>
+        <div class="card-body">
+          <form id="casePredictionForm">
+            <div class="row">
+              <div class="col-md-6 mb-3">
+                <label for="case_type" class="form-label">Tipo de Caso *</label>
+                <select
+                  class="form-select"
+                  id="case_type"
+                  name="case_type"
+                  required>
+                  <option value="">Seleccione un tipo de caso</option>
+                  <option value="proceso_laboral">Laboral</option>
+                  <option value="proceso_civil">Civil</option>
+                  <option value="proceso_penal">Penal</option>
+                  <option value="proceso_administrativo">Administrativo</option>
+                  <option value="proceso_comercial">Comercial</option>
+                </select>
+              </div>
+              <div class="col-md-6 mb-3">
+                <label for="jurisdiction" class="form-label"
+                  >Jurisdicción</label
+                >
+                <input
+                  disabled
+                  type="text"
+                  class="form-control"
+                  id="jurisdiction"
+                  name="jurisdiction"
+                  value="Colombia"
+                  required />
+              </div>
+            </div>
+
+            <div class="mb-3">
+              <label for="key_facts" class="form-label"
+                >Hechos Relevantes *</label
+              >
+              <textarea
+                class="form-control"
+                id="key_facts"
+                name="key_facts"
+                rows="3"
+                required
+                placeholder="Ingrese los hechos relevantes (uno por línea)"></textarea>
+            </div>
+
+            <div class="mb-3">
+              <label for="legal_issues" class="form-label"
+                >Problemas Jurídicos *</label
+              >
+              <textarea
+                class="form-control"
+                id="legal_issues"
+                name="legal_issues"
+                rows="3"
+                required
+                placeholder="Ingrese los problemas jurídicos (uno por línea)"></textarea>
+            </div>
+
+            <div class="row">
+              <div class="col-md-6 mb-3">
+                <label for="judge_name" class="form-label"
+                  >Nombre del Juez</label
+                >
+                <input
+                  type="text"
+                  class="form-control"
+                  id="judge_name"
+                  name="judge_name" />
+              </div>
+              <div class="col-md-6 mb-3">
+                <label for="opposing_counsel" class="form-label"
+                  >Contraparte</label
+                >
+                <input
+                  type="text"
+                  class="form-control"
+                  id="opposing_counsel"
+                  name="opposing_counsel" />
+              </div>
+            </div>
+
+            <div class="mb-3">
+              <label for="relevant_precedents" class="form-label"
+                >Precedentes Relevantes</label
+              >
+              <textarea
+                class="form-control"
+                id="relevant_precedents"
+                name="relevant_precedents"
+                rows="2"
+                placeholder="Ingrese los precedentes relevantes (uno por línea)"></textarea>
+            </div>
+
+            <div class="mb-3">
+              <label for="administrative_procedure" class="form-label"
+                >Procedimiento Administrativo</label
+              >
+              <select
+                class="form-select"
+                id="administrative_procedure"
+                name="administrative_procedure">
+                <option value="">Seleccione un procedimiento</option>
+                <option value="conciliacion">Conciliación</option>
+                <option value="recurso_reposicion">
+                  Recurso de Reposición
+                </option>
+                <option value="recurso_apelacion">Recurso de Apelación</option>
+                <option value="tutela">Acción de Tutela</option>
+                <option value="derecho_peticion">Derecho de Petición</option>
+                <option value="proceso_ejecutivo">Proceso Ejecutivo</option>
+                <option value="proceso_ordinario">Proceso Ordinario</option>
+                <option value="proceso_verbal">Proceso Verbal</option>
+                <option value="proceso_abreviado">Proceso Abreviado</option>
+                <option value="ninguno">Ninguno</option>
+              </select>
+            </div>
+
+            <div class="mb-3">
+              <label for="legal_terms" class="form-label"
+                >Términos Jurídicos</label
+              >
+              <textarea
+                class="form-control"
+                id="legal_terms"
+                name="legal_terms"
+                rows="2"
+                placeholder="Ingrese los términos jurídicos relevantes (uno por línea)"></textarea>
+            </div>
+
+            <div class="text-end">
+              <button type="submit" class="btn btn-danger">
+                <i class="fas fa-chart-line me-2"></i>
+                Obtener Predicción
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- Loading Indicator -->
+      <div id="loading" class="text-center mb-4" style="display: none">
+        <div class="spinner-border text-danger" role="status">
+          <span class="visually-hidden">Cargando...</span>
+        </div>
+        <p class="mt-2">Analizando caso y generando predicción...</p>
+      </div>
+
+      <!-- Case Overview Stats -->
+      <div class="row mb-4" id="predictionResults" style="display: none">
+        <div class="col-md-3">
+          <div class="card stat-card">
+            <div class="card-body">
+              <div class="stat-icon bg-danger-light">
+                <i class="fas fa-balance-scale"></i>
+              </div>
+              <h6 class="stat-title">Probabilidad de Éxito</h6>
+              <h3 class="stat-value">75%</h3>
+              <div class="progress mt-2" style="height: 6px">
+                <div
+                  class="progress-bar bg-danger"
+                  role="progressbar"
+                  style="width: 75%"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="card stat-card">
+            <div class="card-body">
+              <div class="stat-icon bg-warning-light">
+                <i class="fas fa-chart-line"></i>
+              </div>
+              <h6 class="stat-title">Riesgo Estimado</h6>
+              <h3 class="stat-value">Medio</h3>
+              <div class="progress mt-2" style="height: 6px">
+                <div
+                  class="progress-bar bg-warning"
+                  role="progressbar"
+                  style="width: 50%"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="card stat-card">
+            <div class="card-body">
+              <div class="stat-icon bg-info-light">
+                <i class="fas fa-clock"></i>
+              </div>
+              <h6 class="stat-title">Duración Estimada</h6>
+              <h3 class="stat-value">8 meses</h3>
+              <div class="progress mt-2" style="height: 6px">
+                <div
+                  class="progress-bar bg-info"
+                  role="progressbar"
+                  style="width: 60%"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="card stat-card">
+            <div class="card-body">
+              <div class="stat-icon bg-success-light">
+                <i class="fas fa-dollar-sign"></i>
+              </div>
+              <h6 class="stat-title">Valor Estimado</h6>
+              <h3 class="stat-value">$50K</h3>
+              <div class="progress mt-2" style="height: 6px">
+                <div
+                  class="progress-bar bg-success"
+                  role="progressbar"
+                  style="width: 85%"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="row">
+        <!-- Main Analysis Area -->
+        <div class="col-md-8">
+          <!-- Predictive Analysis -->
+          <div class="card mb-4">
+            <div class="card-header">
+              <h5 class="mb-0">
+                <i class="fas fa-chart-pie me-2"></i>
+                Análisis Predictivo
+              </h5>
+            </div>
+            <div class="card-body">
+              <div class="analysis-chart mb-4">
+                <div class="chart-placeholder">
+                  <div class="chart-circle">
+                    <div class="chart-percentage">75%</div>
+                    <div class="chart-label">Probabilidad de Éxito</div>
+                  </div>
+                </div>
+                <div class="key-factors mt-4">
+                  <h6>Factores Clave</h6>
+                  <div class="factor-item">
+                    <div
+                      class="d-flex justify-content-between align-items-center">
+                      <span>Precedentes Favorables</span>
+                      <span class="badge bg-success">Alto</span>
+                    </div>
+                    <div class="progress mt-2" style="height: 6px">
+                      <div
+                        class="progress-bar bg-success"
+                        role="progressbar"
+                        style="width: 85%"></div>
+                    </div>
+                  </div>
+                  <div class="factor-item mt-3">
+                    <div
+                      class="d-flex justify-content-between align-items-center">
+                      <span>Fortaleza de Evidencia</span>
+                      <span class="badge bg-warning">Medio</span>
+                    </div>
+                    <div class="progress mt-2" style="height: 6px">
+                      <div
+                        class="progress-bar bg-warning"
+                        role="progressbar"
+                        style="width: 60%"></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Strategic Recommendations -->
+          <div class="card mb-4">
+            <div class="card-header">
+              <h5 class="mb-0">
+                <i class="fas fa-lightbulb me-2"></i>
+                Recomendaciones Estratégicas
+              </h5>
+            </div>
+            <div class="card-body">
+              <div class="recommendation-list">
+                <div class="recommendation-item">
+                  <div class="recommendation-priority high">
+                    <i class="fas fa-exclamation-circle"></i>
+                  </div>
+                  <div class="recommendation-content">
+                    <h6>Fortalecer Evidencia Documental</h6>
+                    <p>
+                      Recopilar documentación adicional para respaldar
+                      argumentos clave.
+                    </p>
+                    <div class="recommendation-actions">
+                      <button class="btn btn-sm btn-outline-danger">
+                        Ver Detalles
+                      </button>
+                      <button class="btn btn-sm btn-outline-secondary">
+                        Marcar Completado
+                      </button>
+                    </div>
+                  </div>
+                </div>
+                <div class="recommendation-item">
+                  <div class="recommendation-priority medium">
+                    <i class="fas fa-exclamation-triangle"></i>
+                  </div>
+                  <div class="recommendation-content">
+                    <h6>Preparar Testigos Clave</h6>
+                    <p>
+                      Identificar y preparar testimonios relevantes para el
+                      caso.
+                    </p>
+                    <div class="recommendation-actions">
+                      <button class="btn btn-sm btn-outline-danger">
+                        Ver Detalles
+                      </button>
+                      <button class="btn btn-sm btn-outline-secondary">
+                        Marcar Completado
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Sidebar -->
+        <div class="col-md-4">
+          <!-- Risk Assessment -->
+          <div class="card mb-4">
+            <div class="card-header">
+              <h5 class="mb-0">
+                <i class="fas fa-exclamation-triangle me-2"></i>
+                Evaluación de Riesgos
+              </h5>
+            </div>
+            <div class="card-body">
+              <div class="risk-meter mb-4">
+                <div class="risk-level" style="width: 50%">
+                  <span>Riesgo Medio</span>
+                </div>
+              </div>
+              <div class="risk-factors">
+                <div class="risk-item">
+                  <div class="d-flex justify-content-between">
+                    <span>Riesgo Procesal</span>
+                    <span class="badge bg-warning">Medio</span>
+                  </div>
+                  <div class="progress mt-2" style="height: 6px">
+                    <div
+                      class="progress-bar bg-warning"
+                      role="progressbar"
+                      style="width: 50%"></div>
+                  </div>
+                </div>
+                <div class="risk-item mt-3">
+                  <div class="d-flex justify-content-between">
+                    <span>Riesgo Financiero</span>
+                    <span class="badge bg-danger">Alto</span>
+                  </div>
+                  <div class="progress mt-2" style="height: 6px">
+                    <div
+                      class="progress-bar bg-danger"
+                      role="progressbar"
+                      style="width: 75%"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Similar Cases -->
+          <div class="card">
+            <div class="card-header">
+              <h5 class="mb-0">
+                <i class="fas fa-copy me-2"></i>
+                Casos Similares
+              </h5>
+            </div>
+            <div class="card-body">
+              <div class="similar-cases">
+                <div class="case-item">
+                  <div class="case-status success">
+                    <i class="fas fa-check-circle"></i>
+                  </div>
+                  <div class="case-content">
+                    <h6>Caso #2024-156</h6>
+                    <p>Resolución favorable en 6 meses</p>
+                    <small class="text-muted">Similitud: 85%</small>
+                  </div>
+                </div>
+                <div class="case-item">
+                  <div class="case-status warning">
+                    <i class="fas fa-exclamation-circle"></i>
+                  </div>
+                  <div class="case-content">
+                    <h6>Caso #2023-892</h6>
+                    <p>Resolución parcial en 12 meses</p>
+                    <small class="text-muted">Similitud: 72%</small>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Add Modal for Recommendation Details -->
+    <div class="modal fade" id="recommendationModal" tabindex="-1">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">Detalles de la Recomendación</h5>
+            <button
+              type="button"
+              class="btn-close"
+              data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body">
+            <div class="recommendation-details">
+              <h6 class="recommendation-title mb-3"></h6>
+              <div class="recommendation-description mb-3"></div>
+              <div class="recommendation-metadata">
+                <div class="metadata-item mb-2">
+                  <strong>Prioridad:</strong>
+                  <span class="priority-badge"></span>
+                </div>
+                <div class="metadata-item mb-2">
+                  <strong>Estado:</strong>
+                  <span class="status-badge"></span>
+                </div>
+                <div class="metadata-item">
+                  <strong>Fecha límite estimada:</strong>
+                  <span class="deadline"></span>
+                </div>
+              </div>
+              <hr />
+              <div class="implementation-steps">
+                <h6>Pasos de Implementación:</h6>
+                <ul class="steps-list"></ul>
+              </div>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button
+              type="button"
+              class="btn btn-secondary"
+              data-bs-dismiss="modal">
+              Cerrar
+            </button>
+            <button type="button" class="btn btn-success mark-completed-btn">
+              <i class="fas fa-check me-2"></i>Marcar como Completado
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Toast for Notifications -->
+    <div class="toast-container position-fixed top-0 end-0 p-3">
+      <div
+        id="notificationToast"
+        class="toast"
+        role="alert"
+        aria-live="assertive"
+        aria-atomic="true">
+        <div class="toast-header">
+          <i class="fas fa-info-circle me-2"></i>
+          <strong class="me-auto">Notificación</strong>
+          <button
+            type="button"
+            class="btn-close"
+            data-bs-dismiss="toast"></button>
+        </div>
+        <div class="toast-body"></div>
+      </div>
+    </div>
+
+    <script>
+      // Store recommendations data globally
+      let currentRecommendations = [];
+      let selectedRecommendationId = null;
+
+      // Function to handle form submission
+      async function handleCasePrediction(event) {
+        event.preventDefault();
+
+        // Show loading state
+        document.getElementById("loading").style.display = "block";
+        document.getElementById("predictionResults").style.display = "none";
+
+        try {
+          const formData = new FormData(event.target);
+
+          // Prepare the request data
+          const caseData = {
+            case_type: formData.get("case_type"),
+            jurisdiction: formData.get("jurisdiction") || "Colombia",
+            key_facts: formData.get("key_facts")
+              ? formData
+                  .get("key_facts")
+                  .split("\n")
+                  .filter((fact) => fact.trim())
+              : [],
+            legal_issues: formData.get("legal_issues")
+              ? formData
+                  .get("legal_issues")
+                  .split("\n")
+                  .filter((issue) => issue.trim())
+              : [],
+            judge_name: formData.get("judge_name") || null,
+            opposing_counsel: formData.get("opposing_counsel") || null,
+            relevant_precedents: formData.get("relevant_precedents")
+              ? formData
+                  .get("relevant_precedents")
+                  .split("\n")
+                  .filter((p) => p.trim())
+              : null,
+            // Only include administrative_procedure if a value is selected
+            administrative_procedure:
+              formData.get("administrative_procedure") || null,
+            legal_terms: formData.get("legal_terms")
+              ? formData
+                  .get("legal_terms")
+                  .split("\n")
+                  .filter((term) => term.trim())
+              : null,
+          };
+
+          // Remove null values from the request
+          Object.keys(caseData).forEach(
+            (key) => caseData[key] === null && delete caseData[key]
+          );
+
+          console.log("Sending data:", caseData); // Debug log
+
+          const response = await fetch("/case-prediction/analyze", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Accept: "application/json",
+            },
+            body: JSON.stringify(caseData),
+          });
+
+          if (!response.ok) {
+            const errorData = await response.json();
+            console.error("Error response:", errorData); // Debug log
+            throw new Error(
+              errorData.detail?.message ||
+                `Error de validación: ${response.status}`
+            );
+          }
+
+          const prediction = await response.json();
+
+          // Show results section
+          document.getElementById("predictionResults").style.display = "flex";
+
+          // Update UI with prediction results
+          updatePredictionUI(prediction);
+
+          showNotification("success", "Análisis completado exitosamente");
+        } catch (error) {
+          console.error("Error:", error);
+          showNotification(
+            "error",
+            "Error al procesar el caso: " + error.message
+          );
+        } finally {
+          document.getElementById("loading").style.display = "none";
+        }
+      }
+
+      // Function to update UI with prediction results
+      function updatePredictionUI(prediction) {
+        try {
+          // Update main stats cards
+          const statCards = document.querySelectorAll(".stat-card");
+          if (statCards.length >= 4) {
+            // Probability of Success
+            const successCard = statCards[0];
+            successCard.querySelector(
+              ".stat-value"
+            ).textContent = `${prediction.success_probability}%`;
+            successCard.querySelector(
+              ".progress-bar"
+            ).style.width = `${prediction.success_probability}%`;
+
+            // Risk Level
+            const riskCard = statCards[1];
+            riskCard.querySelector(".stat-value").textContent =
+              prediction.prediction.risk_level;
+            riskCard.querySelector(".progress-bar").style.width = "50%";
+
+            // Duration
+            const durationCard = statCards[2];
+            durationCard.querySelector(".stat-value").textContent =
+              prediction.prediction.estimated_duration.display;
+            durationCard.querySelector(".progress-bar").style.width = "60%";
+
+            // Value
+            const valueCard = statCards[3];
+            valueCard.querySelector(".stat-value").textContent =
+              prediction.prediction.estimated_value;
+            valueCard.querySelector(".progress-bar").style.width = "85%";
+          }
+
+          // Update main analysis chart
+          const chartCircle = document.querySelector(".chart-circle");
+          if (chartCircle) {
+            const chartPercentage =
+              chartCircle.querySelector(".chart-percentage");
+            if (chartPercentage) {
+              chartPercentage.textContent = `${prediction.success_probability}%`;
+            }
+          }
+
+          // Update key factors
+          const keyFactorsContainer = document.querySelector(".key-factors");
+          if (keyFactorsContainer && prediction.key_factors) {
+            let factorsHTML = "<h6>Factores Clave</h6>";
+            prediction.key_factors.forEach((factor) => {
+              factorsHTML += `
+                    <div class="factor-item mt-3">
+                    <div class="d-flex justify-content-between align-items-center">
+                            <span>${factor.factor}</span>
+                            <span class="badge bg-${
+                              factor.importance === "Alto"
+                                ? "success"
+                                : "warning"
+                            }">${factor.importance}</span>
+                    </div>
+                    <div class="progress mt-2" style="height: 6px">
+                            <div class="progress-bar bg-${
+                              factor.importance === "Alto"
+                                ? "success"
+                                : "warning"
+                            }"
+                                 role="progressbar"
+                                 style="width: ${factor.percentage}%"></div>
+                    </div>
+                    </div>`;
+            });
+            keyFactorsContainer.innerHTML = factorsHTML;
+          }
+
+          // Update recommendations
+          const recommendationsList = document.querySelector(
+            ".recommendation-list"
+          );
+          if (recommendationsList && prediction.strategic_recommendations) {
+            recommendationsList.innerHTML = prediction.strategic_recommendations
+              .map(
+                (rec) => `
+                <div class="recommendation-item" data-id="${rec.title}">
+                    <div class="recommendation-priority ${rec.priority}">
+                        <i class="fas ${
+                          rec.priority === "high"
+                            ? "fa-exclamation-circle"
+                            : "fa-exclamation-triangle"
+                        }"></i>
+                    </div>
+                    <div class="recommendation-content">
+                        <h6>${rec.title}</h6>
+                        <p>${rec.description}</p>
+                        <div class="recommendation-actions">
+                            <button class="btn btn-sm btn-outline-danger" onclick="viewRecommendationDetails('${
+                              rec.title
+                            }')">
+                                Ver Detalles
+                            </button>
+                            <button class="btn btn-sm btn-outline-secondary" onclick="toggleRecommendationStatus('${
+                              rec.title
+                            }')">
+                                ${
+                                  rec.status === "completed"
+                                    ? "Marcar Pendiente"
+                                    : "Marcar Completado"
+                                }
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `
+              )
+              .join("");
+          }
+
+          // Update risk assessment
+          const riskAssessmentSection = document.querySelector(".risk-meter");
+          if (riskAssessmentSection) {
+            riskAssessmentSection.innerHTML = `
+                <div class="risk-level" style="width: 50%">
+                    <span>Riesgo ${prediction.prediction.risk_level}</span>
+                </div>`;
+          }
+
+          const riskFactorsSection = document.querySelector(".risk-factors");
+          if (riskFactorsSection && prediction.risk_factors) {
+            riskFactorsSection.innerHTML = prediction.risk_factors
+              .map(
+                (risk) => `
+                <div class="risk-item mt-3">
+                    <div class="d-flex justify-content-between">
+                        <span>${risk.name}</span>
+                        <span class="badge bg-${
+                          risk.level === "alto" ? "danger" : "warning"
+                        }">${
+                  risk.level.charAt(0).toUpperCase() + risk.level.slice(1)
+                }</span>
+                    </div>
+                    <div class="progress mt-2" style="height: 6px">
+                        <div class="progress-bar bg-${
+                          risk.level === "alto" ? "danger" : "warning"
+                        }"
+                             role="progressbar"
+                             style="width: ${risk.percentage}%"></div>
+                    </div>
+                    <small class="text-muted">${risk.description}</small>
+                </div>
+            `
+              )
+              .join("");
+          }
+
+          // Update similar cases
+          const similarCasesSection = document.querySelector(".similar-cases");
+          if (similarCasesSection && prediction.similar_cases) {
+            similarCasesSection.innerHTML = prediction.similar_cases
+              .map(
+                (case_) => `
+                <div class="case-item">
+                    <div class="case-status ${case_.outcome}">
+                        <i class="fas fa-${
+                          case_.outcome === "success" ? "check" : "exclamation"
+                        }-circle"></i>
+                    </div>
+                    <div class="case-content">
+                        <h6>${case_.title}</h6>
+                        <p>${case_.summary}</p>
+                        <small class="text-muted">Similitud: ${
+                          case_.similarity
+                        }%</small>
+                    </div>
+                </div>
+            `
+              )
+              .join("");
+          }
+
+          // Store recommendations data globally for modal use
+          if (prediction.strategic_recommendations) {
+            currentRecommendations = prediction.strategic_recommendations.map(
+              (rec, index) => ({
+                id: rec.title,
+                title: rec.title,
+                description: rec.description,
+                priority: rec.priority,
+                status: rec.status,
+                deadline: new Date(
+                  Date.now() + (index + 1) * 7 * 24 * 60 * 60 * 1000
+                ).toISOString(),
+                steps: prediction.strategy?.actions || [],
+              })
+            );
+          }
+
+          // Show the results section
+          const resultsSection = document.getElementById("predictionResults");
+          if (resultsSection) {
+            resultsSection.style.display = "flex";
+          }
+        } catch (error) {
+          console.error("Error updating UI:", error);
+          showNotification(
+            "error",
+            "Error al actualizar la interfaz: " + error.message
+          );
+        }
+      }
+
+      // Function to view recommendation details
+      function viewRecommendationDetails(recommendationId) {
+        const recommendation = currentRecommendations.find(
+          (rec) => rec.id === recommendationId
+        );
+        if (!recommendation) return;
+
+        selectedRecommendationId = recommendationId;
+
+        // Get modal elements
+        const modal = new bootstrap.Modal(
+          document.getElementById("recommendationModal")
+        );
+        const modalTitle = document.querySelector(".recommendation-title");
+        const modalDescription = document.querySelector(
+          ".recommendation-description"
+        );
+        const priorityBadge = document.querySelector(".priority-badge");
+        const statusBadge = document.querySelector(".status-badge");
+        const deadline = document.querySelector(".deadline");
+        const stepsList = document.querySelector(".steps-list");
+        const markCompletedBtn = document.querySelector(".mark-completed-btn");
+
+        // Update modal content
+        modalTitle.textContent = recommendation.title;
+        modalDescription.textContent = recommendation.description;
+        priorityBadge.innerHTML = `<span class="badge bg-${
+          recommendation.priority === "high" ? "danger" : "warning"
+        }">${recommendation.priority === "high" ? "Alta" : "Media"}</span>`;
+        statusBadge.innerHTML = `<span class="badge bg-${
+          recommendation.status === "completed" ? "success" : "secondary"
+        }">${
+          recommendation.status === "completed" ? "Completado" : "Pendiente"
+        }</span>`;
+        deadline.textContent = new Date(
+          recommendation.deadline
+        ).toLocaleDateString("es-ES", {
+          day: "2-digit",
+          month: "2-digit",
+          year: "numeric",
+        });
+
+        // Update steps list
+        stepsList.innerHTML = recommendation.steps
+          .map(
+            (step) => `
+          <li class="mb-2">${step}</li>
+        `
+          )
+          .join("");
+
+        // Update button text based on status
+        markCompletedBtn.innerHTML = `<i class="fas ${
+          recommendation.status === "completed" ? "fa-undo" : "fa-check"
+        } me-2"></i>${
+          recommendation.status === "completed"
+            ? "Marcar como Pendiente"
+            : "Marcar como Completado"
+        }`;
+        markCompletedBtn.onclick = () =>
+          toggleRecommendationStatus(recommendationId, true);
+
+        // Show modal
+        modal.show();
+      }
+
+      // Function to toggle recommendation status
+      async function toggleRecommendationStatus(
+        recommendationId,
+        fromModal = false
+      ) {
+        const recommendation = currentRecommendations.find(
+          (rec) => rec.id === recommendationId
+        );
+        if (!recommendation) return;
+
+        const newStatus =
+          recommendation.status === "completed" ? "pending" : "completed";
+
+        try {
+          // Update status in the UI
+          recommendation.status = newStatus;
+
+          // Update the button text
+          const recommendationItem = document.querySelector(
+            `[data-id="${recommendationId}"]`
+          );
+          if (recommendationItem) {
+            const statusBtn =
+              recommendationItem.querySelector(".toggle-status-btn");
+            if (statusBtn) {
+              statusBtn.textContent =
+                newStatus === "completed"
+                  ? "Marcar Pendiente"
+                  : "Marcar Completado";
+            }
+          }
+
+          // If called from modal, update modal content
+          if (fromModal) {
+            const modal = document.getElementById("recommendationModal");
+            if (modal) {
+              const statusBadge = modal.querySelector(".status-badge");
+              const markCompletedBtn = modal.querySelector(
+                ".mark-completed-btn"
+              );
+
+              if (statusBadge) {
+                statusBadge.innerHTML = `<span class="badge bg-${
+                  newStatus === "completed" ? "success" : "secondary"
+                }">${
+                  newStatus === "completed" ? "Completado" : "Pendiente"
+                }</span>`;
+              }
+
+              if (markCompletedBtn) {
+                markCompletedBtn.innerHTML = `<i class="fas ${
+                  newStatus === "completed" ? "fa-undo" : "fa-check"
+                } me-2"></i>${
+                  newStatus === "completed"
+                    ? "Marcar como Pendiente"
+                    : "Marcar como Completado"
+                }`;
+              }
+            }
+          }
+
+          // Show success notification
+          showNotification(
+            "success",
+            `Recomendación marcada como ${
+              newStatus === "completed" ? "completada" : "pendiente"
+            }`
+          );
+        } catch (error) {
+          console.error("Error updating recommendation status:", error);
+          showNotification(
+            "error",
+            "Error al actualizar el estado de la recomendación"
+          );
+        }
+      }
+
+      // Function to show notifications
+      function showNotification(type, message) {
+        const toast = document.getElementById("notificationToast");
+        const toastBody = toast.querySelector(".toast-body");
+
+        // Update toast content
+        toastBody.textContent = message;
+
+        // Update toast header style
+        const toastHeader = toast.querySelector(".toast-header");
+        toastHeader.className = `toast-header ${
+          type === "success" ? "bg-success" : "bg-danger"
+        } text-white`;
+
+        // Show toast
+        const bsToast = new bootstrap.Toast(toast);
+        bsToast.show();
+      }
+
+      // Add event listener to the form
+      document
+        .getElementById("casePredictionForm")
+        .addEventListener("submit", handleCasePrediction);
+
+      // Add function to update laws section
+      function updateLawsUI(lawsData) {
+        const relevantLawsTextarea = document.querySelector(
+          'textarea[name="legal_terms"]'
+        );
+        if (!relevantLawsTextarea) return;
+
+        // Format laws data for display
+        const formattedLaws = lawsData.leyes
+          .map((ley) => {
+            return `${ley.nombre}\nArtículos: ${ley.articulos.join(
+              ", "
+            )}\nRelevancia: ${ley.relevancia}\n`;
+          })
+          .join("\n");
+
+        // Update textarea with formatted laws
+        relevantLawsTextarea.value = formattedLaws;
+
+        // Add a visual indicator that the content was updated
+        relevantLawsTextarea.classList.add("border-success");
+        setTimeout(() => {
+          relevantLawsTextarea.classList.remove("border-success");
+        }, 2000);
+      }
+
+      // Add function to update similar cases section
+      function updateSimilarCasesUI(casesData) {
+        const previousRulingsTextarea = document.querySelector(
+          'textarea[name="relevant_precedents"]'
+        );
+        if (!previousRulingsTextarea) return;
+
+        // Format similar cases data for display
+        const formattedCases = casesData.sentencias
+          .map((sentencia) => {
+            return `${sentencia.referencia} - ${sentencia.tribunal}\nFecha: ${sentencia.fecha}\nSimilitud: ${sentencia.similitud}%\nRelevancia: ${sentencia.relevancia}\n`;
+          })
+          .join("\n");
+
+        // Update textarea with formatted cases
+        previousRulingsTextarea.value = formattedCases;
+
+        // Add a visual indicator that the content was updated
+        previousRulingsTextarea.classList.add("border-success");
+        setTimeout(() => {
+          previousRulingsTextarea.classList.remove("border-success");
+        }, 2000);
+
+        // Update similar cases section in the sidebar if it exists
+        const similarCasesContainer = document.querySelector(".similar-cases");
+        if (similarCasesContainer) {
+          similarCasesContainer.innerHTML = casesData.sentencias
+            .map(
+              (sentencia) => `
+            <div class="case-item">
+              <div class="case-status ${
+                parseInt(sentencia.similitud) > 75 ? "success" : "warning"
+              }">
+                <i class="fas fa-${
+                  parseInt(sentencia.similitud) > 75 ? "check" : "exclamation"
+                }-circle"></i>
+              </div>
+              <div class="case-content">
+                <h6>${sentencia.referencia}</h6>
+                <p>${sentencia.relevancia}</p>
+                <small class="text-muted">Similitud: ${
+                  sentencia.similitud
+                }%</small>
+              </div>
+            </div>
+          `
+            )
+            .join("");
+        }
+      }
+
+      // Add some CSS for the success indicator
+      const style = document.createElement("style");
+      style.textContent = `
+        textarea.border-success {
+          border-color: var(--bs-success) !important;
+          transition: border-color 0.3s ease;
+        }
+
+        .case-item {
+          transition: all 0.3s ease;
+        }
+
+        .case-item:hover {
+          background-color: rgba(0,0,0,0.03);
+        }
+
+        .risk-item small {
+          display: block;
+          margin-top: 0.5rem;
+        }
+
+        .recommendation-item {
+          margin-bottom: 1rem;
+          padding: 1rem;
+          border: 1px solid #dee2e6;
+          border-radius: 0.25rem;
+        }
+
+        .recommendation-priority.high {
+          color: var(--bs-danger);
+        }
+
+        .recommendation-priority.medium {
+          color: var(--bs-warning);
+        }
+
+        .case-status.success {
+          color: var(--bs-success);
+        }
+
+        .case-status.warning {
+          color: var(--bs-warning);
+        }
+      `;
+      document.head.appendChild(style);
+    </script>
+
+    <style>
+      .toast-container {
+        z-index: 1051;
+      }
+
+      .recommendation-details .metadata-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      .steps-list {
+        list-style-type: none;
+        padding-left: 0;
+      }
+
+      .steps-list li {
+        position: relative;
+        padding-left: 24px;
+      }
+
+      .steps-list li:before {
+        content: "•";
+        position: absolute;
+        left: 8px;
+        color: var(--bs-danger);
+      }
+
+      .recommendation-item {
+        transition: background-color 0.3s ease;
+      }
+
+      .recommendation-item[data-status="completed"] {
+        background-color: rgba(40, 167, 69, 0.1);
+      }
+    </style>
+  </body>
+</html>

@@ -1,0 +1,812 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Asistente Legal AI</title>
+    <link rel="icon" type="image/x-icon" href="/static/favicon.ico" />
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <style>
+      :root {
+        --primary-color: #2c3e50;
+        --secondary-color: #3498db;
+        --background-color: #f5f6fa;
+        --text-color: #2c3e50;
+        --border-color: #dcdde1;
+      }
+
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+      }
+
+      body {
+        background-color: var(--background-color);
+        color: var(--text-color);
+        height: 100vh;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+      }
+
+      .chat-container {
+        width: 90%;
+        max-width: 1200px;
+        height: 90vh;
+        display: grid;
+        grid-template-columns: 250px 1fr;
+        gap: 20px;
+        background: white;
+        border-radius: 10px;
+        box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+        overflow: hidden;
+      }
+
+      .sidebar {
+        background: var(--primary-color);
+        padding: 20px;
+        color: white;
+        overflow-y: auto;
+      }
+
+      .sidebar h2 {
+        margin-bottom: 20px;
+        font-size: 1.2em;
+        color: #ecf0f1;
+      }
+
+      .practice-areas {
+        list-style: none;
+      }
+
+      .practice-areas li {
+        padding: 10px;
+        cursor: pointer;
+        border-radius: 5px;
+        margin-bottom: 5px;
+        transition: background 0.3s;
+        color: #bdc3c7;
+      }
+
+      .practice-areas li:hover {
+        background: rgba(255, 255, 255, 0.1);
+        color: white;
+      }
+
+      .practice-areas li.active {
+        background: var(--secondary-color);
+        color: white;
+      }
+
+      .chat-main {
+        display: flex;
+        flex-direction: column;
+        padding: 20px;
+        overflow: hidden;
+      }
+
+      .chat-header {
+        padding-bottom: 20px;
+        border-bottom: 1px solid var(--border-color);
+        margin-bottom: 20px;
+      }
+
+      .chat-header h1 {
+        color: var(--primary-color);
+        font-size: 1.5em;
+        margin-bottom: 5px;
+      }
+
+      .chat-header p {
+        color: #7f8c8d;
+        font-size: 0.9em;
+      }
+
+      .chat-messages {
+        flex: 1;
+        overflow-y: auto;
+        padding: 20px;
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+      }
+
+      .message {
+        max-width: 80%;
+        padding: 15px;
+        border-radius: 10px;
+        position: relative;
+        animation: fadeIn 0.3s ease-in-out;
+      }
+
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+          transform: translateY(10px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      .user-message {
+        background: var(--secondary-color);
+        color: white;
+        align-self: flex-end;
+        border-bottom-right-radius: 5px;
+      }
+
+      .bot-message {
+        background: white;
+        border: 1px solid var(--border-color);
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      }
+
+      .message-time {
+        font-size: 0.8em;
+        opacity: 0.7;
+        margin-top: 5px;
+      }
+
+      .chat-input {
+        display: flex;
+        gap: 10px;
+        padding-top: 20px;
+        border-top: 1px solid var(--border-color);
+      }
+
+      .chat-input input {
+        flex: 1;
+        padding: 15px;
+        border: 1px solid var(--border-color);
+        border-radius: 5px;
+        outline: none;
+        font-size: 1em;
+        transition: border-color 0.3s;
+      }
+
+      .chat-input input:focus {
+        border-color: var(--secondary-color);
+      }
+
+      .chat-input button {
+        padding: 15px 30px;
+        background: var(--secondary-color);
+        color: white;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        transition: background 0.3s;
+        font-weight: bold;
+      }
+
+      .chat-input button:hover {
+        background: #2980b9;
+      }
+
+      .chat-input button:disabled {
+        background: #bdc3c7;
+        cursor: not-allowed;
+      }
+
+      .references {
+        margin-top: 15px;
+        padding-top: 15px;
+        border-top: 1px solid var(--border-color);
+      }
+
+      .references strong {
+        display: block;
+        color: var(--primary-color);
+        margin-top: 10px;
+        margin-bottom: 5px;
+      }
+
+      .references ul {
+        list-style-type: none;
+        padding-left: 0;
+        margin: 5px 0 15px 0;
+      }
+
+      .references li {
+        padding: 3px 0;
+        color: var(--text-color);
+      }
+
+      .references strong:not(:first-child) {
+        margin-top: 15px;
+      }
+
+      .disclaimer {
+        font-size: 0.8em;
+        color: #7f8c8d;
+        margin-top: 10px;
+        font-style: italic;
+      }
+
+      .loading {
+        display: none;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        margin: 20px 0;
+        gap: 10px;
+      }
+
+      .loading.active {
+        display: flex;
+      }
+
+      .loading-text {
+        color: var(--secondary-color);
+        font-size: 0.9em;
+        font-weight: 500;
+      }
+
+      .spinner {
+        width: 40px;
+        height: 40px;
+        border: 3px solid #f3f3f3;
+        border-top: 3px solid var(--secondary-color);
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+      }
+
+      @keyframes spin {
+        0% {
+          transform: rotate(0deg);
+        }
+        100% {
+          transform: rotate(360deg);
+        }
+      }
+
+      .chat-input.disabled input {
+        background-color: #f5f6fa;
+        cursor: not-allowed;
+      }
+
+      .chat-input.disabled button {
+        opacity: 0.7;
+        cursor: not-allowed;
+      }
+
+      .processing-message {
+        display: none;
+        text-align: center;
+        color: var(--secondary-color);
+        font-style: italic;
+        margin: 10px 0;
+      }
+
+      .processing-message.active {
+        display: block;
+      }
+
+      @media (max-width: 768px) {
+        .chat-container {
+          grid-template-columns: 1fr;
+          height: 100vh;
+          width: 100%;
+          border-radius: 0;
+        }
+
+        .sidebar {
+          display: none;
+        }
+      }
+
+      /* Updated loading spinner styles */
+      .spinner-container {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 1000;
+        justify-content: center;
+        align-items: center;
+      }
+
+      .spinner-container.active {
+        display: flex;
+      }
+
+      .spinner-content {
+        background: white;
+        padding: 20px;
+        border-radius: 10px;
+        text-align: center;
+      }
+
+      .spinner {
+        width: 50px;
+        height: 50px;
+        border: 5px solid #f3f3f3;
+        border-top: 5px solid var(--secondary-color);
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+        margin: 0 auto 10px auto;
+      }
+
+      .spinner-text {
+        color: var(--primary-color);
+        font-size: 1em;
+        margin-top: 10px;
+      }
+
+      @keyframes spin {
+        0% {
+          transform: rotate(0deg);
+        }
+        100% {
+          transform: rotate(360deg);
+        }
+      }
+
+      /* New spinner styles */
+      .spinner-overlay {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 1000;
+      }
+
+      .spinner-wrapper {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        text-align: center;
+      }
+
+      .spinner {
+        display: inline-block;
+        width: 50px;
+        height: 50px;
+        border: 5px solid #f3f3f3;
+        border-top: 5px solid #3498db;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+      }
+
+      @keyframes spin {
+        0% {
+          transform: rotate(0deg);
+        }
+        100% {
+          transform: rotate(360deg);
+        }
+      }
+
+      .spinner-text {
+        color: white;
+        margin-top: 10px;
+        font-size: 16px;
+      }
+
+      .spinner-overlay.show {
+        display: block;
+      }
+
+      /* Add styles for markdown content */
+      .markdown-content {
+        line-height: 1.6;
+        color: var(--text-color);
+      }
+
+      .markdown-content h1,
+      .markdown-content h2,
+      .markdown-content h3,
+      .markdown-content h4 {
+        margin-top: 1em;
+        margin-bottom: 0.5em;
+        color: var(--primary-color);
+      }
+
+      .markdown-content p {
+        margin-bottom: 1em;
+      }
+
+      .markdown-content ul,
+      .markdown-content ol {
+        margin-left: 1.5em;
+        margin-bottom: 1em;
+      }
+
+      .markdown-content code {
+        background-color: #f8f9fa;
+        padding: 0.2em 0.4em;
+        border-radius: 3px;
+        font-family: monospace;
+        font-size: 0.9em;
+      }
+
+      .markdown-content pre {
+        background-color: #f8f9fa;
+        padding: 1em;
+        border-radius: 5px;
+        overflow-x: auto;
+        margin-bottom: 1em;
+      }
+
+      .markdown-content blockquote {
+        border-left: 4px solid var(--secondary-color);
+        padding-left: 1em;
+        margin-left: 0;
+        margin-bottom: 1em;
+        color: #666;
+      }
+
+      .markdown-content table {
+        border-collapse: collapse;
+        width: 100%;
+        margin-bottom: 1em;
+      }
+
+      .markdown-content th,
+      .markdown-content td {
+        border: 1px solid #ddd;
+        padding: 8px;
+        text-align: left;
+      }
+
+      .markdown-content th {
+        background-color: #f8f9fa;
+      }
+
+      /* Typing indicator styles */
+      .typing-indicator {
+        display: none;
+        background-color: var(--background-color);
+        padding: 15px;
+        border-radius: 10px;
+        margin-bottom: 10px;
+        align-self: flex-start;
+        max-width: 100px;
+      }
+
+      .typing-indicator span {
+        height: 8px;
+        width: 8px;
+        float: left;
+        margin: 0 1px;
+        background-color: #9e9ea1;
+        display: block;
+        border-radius: 50%;
+        opacity: 0.4;
+      }
+
+      .typing-indicator span:nth-of-type(1) {
+        animation: typing 1s infinite;
+      }
+
+      .typing-indicator span:nth-of-type(2) {
+        animation: typing 1s infinite 0.2s;
+      }
+
+      .typing-indicator span:nth-of-type(3) {
+        animation: typing 1s infinite 0.4s;
+      }
+
+      @keyframes typing {
+        0% {
+          transform: translateY(0px);
+          opacity: 0.4;
+        }
+        50% {
+          transform: translateY(-5px);
+          opacity: 0.8;
+        }
+        100% {
+          transform: translateY(0px);
+          opacity: 0.4;
+        }
+      }
+
+      .typing-text {
+        color: #666;
+        font-size: 0.9em;
+        margin-top: 5px;
+        text-align: center;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="spinner-overlay" id="spinner">
+      <div class="spinner-wrapper">
+        <div class="spinner"></div>
+        <div class="spinner-text">Procesando...</div>
+      </div>
+    </div>
+    <div class="chat-container">
+      <div class="sidebar">
+        <h2>Áreas de Práctica</h2>
+        <ul class="practice-areas" id="practiceAreas">
+          <!-- Will be populated dynamically -->
+        </ul>
+      </div>
+      <div class="chat-main">
+        <div class="chat-header">
+          <h1>Asistente Legal AI</h1>
+          <p>Consulta jurídica virtual con IA</p>
+        </div>
+        <div class="chat-messages" id="chatMessages">
+          <!-- Messages will appear here -->
+        </div>
+        <div class="loading" id="loadingIndicator">
+          <div class="spinner"></div>
+          <div class="loading-text">Procesando tu consulta...</div>
+          <div class="processing-message" id="processingMessage"></div>
+        </div>
+        <div class="typing-indicator" id="typingIndicator">
+          <span></span>
+          <span></span>
+          <span></span>
+          <div class="typing-text">Escribiendo...</div>
+        </div>
+        <div class="chat-input">
+          <input
+            type="text"
+            id="messageInput"
+            placeholder="Escribe tu consulta jurídica..." />
+          <button onclick="sendMessage()" id="sendButton">Enviar</button>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      let clientId = "client_" + Math.random().toString(36).substr(2, 9);
+      let conversationId = null;
+      let selectedArea = null;
+
+      // Add processing messages array
+      const processingMessages = [
+        "Analizando el contexto legal...",
+        "Consultando jurisprudencia relevante...",
+        "Verificando normativa aplicable...",
+        "Preparando recomendaciones...",
+        "Validando cumplimiento normativo...",
+      ];
+
+      let processingInterval;
+
+      async function loadPracticeAreas() {
+        try {
+          const response = await fetch("/legal-chat/areas-practica");
+          const areas = await response.json();
+          const areasList = document.getElementById("practiceAreas");
+
+          for (const [area, subareas] of Object.entries(areas)) {
+            const li = document.createElement("li");
+            li.textContent = area.replace("_", " ").toUpperCase();
+            li.onclick = () => selectPracticeArea(area, li);
+            areasList.appendChild(li);
+          }
+        } catch (error) {
+          console.error("Error loading practice areas:", error);
+          addMessage("Sistema", "Error al cargar áreas de práctica", "bot");
+        }
+      }
+
+      function selectPracticeArea(area, element) {
+        // Remove active class from all areas
+        document.querySelectorAll(".practice-areas li").forEach((li) => {
+          li.classList.remove("active");
+        });
+
+        // Add active class to selected area
+        element.classList.add("active");
+
+        selectedArea = area;
+        addMessage(
+          "Sistema",
+          `Área seleccionada: ${area.replace("_", " ").toUpperCase()}`,
+          "bot"
+        );
+      }
+
+      // Configure marked options
+      marked.setOptions({
+        breaks: true, // Convert line breaks to <br>
+        gfm: true, // Enable GitHub Flavored Markdown
+        headerIds: false,
+        sanitize: false,
+      });
+
+      async function sendMessage() {
+        const input = document.getElementById("messageInput");
+        const button = document.getElementById("sendButton");
+        const spinner = document.getElementById("spinner");
+        const typingIndicator = document.getElementById("typingIndicator");
+        const message = input.value.trim();
+
+        if (!message) return;
+
+        // Show spinner
+        spinner.classList.add("show");
+
+        // Disable input and button
+        input.disabled = true;
+        button.disabled = true;
+
+        // Add user message
+        addMessage("Usuario", message, "user");
+        input.value = "";
+
+        // Show typing indicator
+        typingIndicator.style.display = "block";
+
+        try {
+          const response = await fetch("/legal-chat/consulta", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Accept: "application/json",
+            },
+            body: JSON.stringify({
+              client_id: clientId,
+              message: message,
+              conversation_id: conversationId,
+              practice_area: selectedArea,
+              legal_terms: [],
+              data_processing: {
+                type: "personal",
+                consent: "accepted",
+              },
+            }),
+          });
+
+          if (!response.ok) {
+            throw new Error("Error en la consulta");
+          }
+
+          const data = await response.json();
+          conversationId = data.conversation_id;
+
+          // Hide typing indicator before showing response
+          typingIndicator.style.display = "none";
+
+          // Add bot response
+          const content = data.response?.content || data.response;
+          addMessage("Asistente Legal", content, "bot", data);
+        } catch (error) {
+          console.error("Error:", error);
+          // Hide typing indicator
+          typingIndicator.style.display = "none";
+          addMessage(
+            "Sistema",
+            "Error al procesar la consulta. Por favor, intente nuevamente.",
+            "bot"
+          );
+        } finally {
+          // Hide spinner and re-enable input
+          spinner.classList.remove("show");
+          input.disabled = false;
+          button.disabled = false;
+          input.focus();
+        }
+      }
+
+      function addMessage(sender, content, type, data = null) {
+        const messagesDiv = document.getElementById("chatMessages");
+        const typingIndicator = document.getElementById("typingIndicator");
+        const messageDiv = document.createElement("div");
+        messageDiv.className = `message ${type}-message`;
+
+        let messageContent = `<strong>${sender}:</strong> `;
+
+        if (type === "bot") {
+          // Parse markdown content
+          messageContent += `<div class="markdown-content">${marked.parse(
+            content
+          )}</div>`;
+
+          // Add references in a structured way
+          if (data && data.references) {
+            messageContent += '<div class="references">';
+
+            // Normativa/Referencias
+            if (
+              data.references.normativa &&
+              data.references.normativa.length > 0
+            ) {
+              messageContent += `
+                        <strong>Referencias:</strong>
+                        <ul>
+                            ${data.references.normativa
+                              .map((ref) => `<li>${ref}</li>`)
+                              .join("")}
+                        </ul>
+                    `;
+            }
+
+            // Jurisprudencia
+            if (
+              data.references.jurisprudencia &&
+              data.references.jurisprudencia.length > 0
+            ) {
+              messageContent += `
+                        <strong>Jurisprudencia:</strong>
+                        <ul>
+                            ${data.references.jurisprudencia
+                              .map((ref) => `<li>${ref}</li>`)
+                              .join("")}
+                        </ul>
+                    `;
+            }
+
+            // Doctrina
+            if (
+              data.references.doctrina &&
+              data.references.doctrina.length > 0
+            ) {
+              messageContent += `
+                        <strong>Doctrina:</strong>
+                        <ul>
+                            ${data.references.doctrina
+                              .map((ref) => `<li>${ref}</li>`)
+                              .join("")}
+                        </ul>
+                    `;
+            }
+
+            messageContent += "</div>";
+          }
+
+          // Add disclaimer
+          if (data && data.disclaimer) {
+            messageContent += `<div class="disclaimer">${data.disclaimer}</div>`;
+          }
+        } else {
+          // Regular text for user messages
+          messageContent += content;
+        }
+
+        messageDiv.innerHTML = messageContent;
+
+        // If this is a user message, move the typing indicator after it
+        if (type === "user") {
+          messagesDiv.appendChild(messageDiv);
+          messagesDiv.appendChild(typingIndicator);
+        } else {
+          messagesDiv.appendChild(messageDiv);
+        }
+
+        messageDiv.scrollIntoView({ behavior: "smooth", block: "end" });
+      }
+
+      // Initialize
+      document.addEventListener("DOMContentLoaded", () => {
+        loadPracticeAreas();
+        addMessage(
+          "Sistema",
+          "Bienvenido al Asistente Legal AI. Por favor, seleccione un área de práctica para comenzar.",
+          "bot"
+        );
+
+        // Focus input field
+        document.getElementById("messageInput").focus();
+      });
+
+      // Handle enter key
+      document
+        .getElementById("messageInput")
+        .addEventListener("keypress", (e) => {
+          if (e.key === "Enter" && !e.shiftKey) {
+            e.preventDefault();
+            sendMessage();
+          }
+        });
+    </script>
+  </body>
+</html>
