@@ -3,67 +3,124 @@ from agno.tools.googlesearch import GoogleSearchTools
 from config.database import get_agent_storage
 from config.ai_models import get_model
 from config.knowledge_base import get_knowledge_base
+from config.colombian_compliance import (
+    ColombianLegalFramework,
+    get_legal_term
+)
+from typing import Dict, List, Optional, Any
+from datetime import datetime
 
 def create_legal_research_agent() -> Agent:
     """Create a specialized agent for legal research"""
     return Agent(
-        name="Legal Researcher",
-        role="Legal research specialist",
+        name="Investigador Jurídico",
+        role="Especialista en investigación jurídica",
         model=get_model("legal_research"),
-        tools=[GoogleSearchTools()],
         knowledge=get_knowledge_base(),
         search_knowledge=True,
         storage=get_agent_storage("agent_sessions"),
         instructions=[
-            "Conduct in-depth legal research, summarize case law, and provide insights into statutes, regulations, and legal precedents.",
-            "Infer the language and intent of the document and give me the response or answer in the same language of the document",
-            "Find and cite relevant legal cases and precedents",
-            "Provide detailed research summaries with sources",
-            "Reference specific sections from the uploaded document",
-            "Always search the knowledge base for relevant information"
+            "Realizar investigación jurídica profunda en derecho colombiano",
+            "Analizar jurisprudencia y líneas jurisprudenciales de las Altas Cortes",
+            "Identificar precedentes vinculantes y doctrina probable",
+            "Examinar normatividad vigente y su evolución",
+            "Citar fuentes jurídicas con precisión técnica",
+            "Analizar conceptos de entidades administrativas",
+            "Verificar vigencia y aplicabilidad de normas",
+            "Considerar principios constitucionales relevantes",
+            "Evaluar doctrina autorizada y conceptos jurídicos",
+            "Identificar reformas legislativas recientes",
+            "Analizar impacto de control constitucional",
+            "Examinar precedentes administrativos aplicables",
+            "Verificar interpretaciones vinculantes",
+            "Considerar derecho comparado relevante",
+            "Mantener enfoque en jurisdicción colombiana"
         ],
-        show_tool_calls=True,
         markdown=True
     )
 
 async def conduct_legal_research(
+    research_topic: str,
     jurisdiction: str,
-    legal_issue: str,
-    relevant_facts: list,
+    specific_areas: Optional[List[str]] = None,
+    data_processing: Optional[Dict[str, str]] = None,
+    legal_terms: Optional[List[str]] = None,
     timeframe: str = None,
     case_law_only: bool = False
-) -> str:
-    """Conduct comprehensive legal research on a specific issue"""
+) -> Dict[str, Any]:
+    """Realizar investigación jurídica exhaustiva sobre un tema específico"""
     agent = create_legal_research_agent()
     
-    # Prepare the prompt with all relevant details
-    prompt = f"""I need comprehensive legal research on the following issue:
+    # Get Colombian legal terms if provided
+    legal_terms_dict = {}
+    if legal_terms:
+        legal_terms_dict = {term: get_legal_term(term) for term in legal_terms if get_legal_term(term)}
+    
+    # Update prompt in Spanish
+    prompt = f"""Realizar investigación jurídica exhaustiva sobre el siguiente tema:
 
-JURISDICTION: {jurisdiction}
-ISSUE: {legal_issue}
-RELEVANT FACTS: {', '.join(relevant_facts)}
+TEMA: {research_topic}
+JURISDICCIÓN: {jurisdiction}
 """
+
+    if specific_areas:
+        prompt += f"ÁREAS ESPECÍFICAS: {', '.join(specific_areas)}\n"
     
     if timeframe:
-        prompt += f"TIMEFRAME: {timeframe}\n"
+        prompt += f"PERÍODO DE ANÁLISIS: {timeframe}\n"
     
     if case_law_only:
-        prompt += "Please focus only on case law, not statutes or regulations.\n"
+        prompt += "Enfocarse únicamente en jurisprudencia, no en normatividad.\n"
     
-    prompt += """
-Please provide:
-1. A summary of the current state of the law on this issue
-2. Analysis of 3-5 seminal cases that establish the governing principles
-3. Discussion of any circuit splits or jurisdictional differences
-4. Identification of cases with similar fact patterns to our situation
-5. Counter arguments and contrary authority we should be prepared to address
-6. Statutory or regulatory provisions that interact with this case law
-7. Emerging trends or recent developments that might signal a shift in the courts' approach
-
-For each case, include the full citation, a concise summary of relevant facts, the court's holding, and key reasoning. Emphasize language we might quote in a brief.
+    prompt += f"""
+MARCO JURÍDICO COLOMBIANO:
+- Principios Constitucionales: {', '.join(ColombianLegalFramework.CONSTITUTIONAL_PRINCIPLES)}
+- Fuentes del Derecho:
+  * Constitución Política
+  * Leyes y Decretos
+  * Jurisprudencia de Altas Cortes
+  * Doctrina Autorizada
+  * Conceptos Vinculantes
 """
     
-    # Run the research
-    response = agent.run(prompt)
+    if legal_terms_dict:
+        prompt += "\nTÉRMINOS JURÍDICOS RELEVANTES:\n"
+        for term, definition in legal_terms_dict.items():
+            prompt += f"- {term}: {definition}\n"
     
-    return response.content 
+    # Run the research
+    response = await agent.arun(prompt)
+    
+    # Structure the response in Spanish
+    result = {
+        "research_results": {
+            "analisis_normativo": response.content,
+            "jurisprudencia_relevante": [],
+            "doctrina_aplicable": "",
+            "recomendaciones": []
+        },
+        "legal_framework": {
+            "leyes": [],
+            "decretos": [],
+            "resoluciones": []
+        },
+        "jurisprudence": [],
+        "research_topic": research_topic,
+        "jurisdiction": jurisdiction,
+        "colombian_compliance": {
+            "framework_version": ColombianLegalFramework.FRAMEWORK_VERSION,
+            "constitutional_principles": ColombianLegalFramework.CONSTITUTIONAL_PRINCIPLES,
+            "research_date": datetime.now().isoformat()
+        }
+    }
+    
+    if specific_areas:
+        result["specific_areas"] = specific_areas
+    
+    if data_processing:
+        result["data_processing"] = data_processing
+    
+    if legal_terms_dict:
+        result["legal_terms"] = legal_terms_dict
+    
+    return result 

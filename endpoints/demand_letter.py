@@ -1,62 +1,162 @@
-from fastapi import APIRouter, Body, HTTPException
-from models.request_models import DemandLetterRequest
-from models.response_models import BaseResponse, format_response, handle_error
-from agents.demand_letter_agent import generate_demand_letter
-from agents.document_drafting_agent import draft_document
+from fastapi import APIRouter, HTTPException, Body, Depends
+from typing import List, Optional, Dict, Any, Union
+from pydantic import BaseModel, Field, ConfigDict
+from datetime import datetime
+from agents.demand_letter_agent import draft_demand_letter
+from config.colombian_compliance import ColombianLegalFramework
 
-router = APIRouter()
+router = APIRouter(prefix="/demand-letter", tags=["demands"])
+
+class DemandLetterRequest(BaseModel):
+    model_config = ConfigDict(arbitrary_types_allowed=True)
+
+    situation_description: str = Field(..., description="Descripción de la situación")
+    jurisdiction: str = Field(default="Colombia", description="Jurisdicción")
+    legal_basis: List[str] = Field(..., description="Fundamentos jurídicos")
+    requested_actions: List[str] = Field(..., description="Pretensiones")
+    deadline: Optional[str] = Field(None, description="Plazo")
+    parties: List[Dict[str, str]] = Field(..., description="Partes involucradas")
+    administrative_procedure: Optional[str] = Field(None, description="Procedimiento")
+    legal_terms: Optional[List[str]] = Field(None, description="Términos jurídicos")
+    data_processing: Optional[Dict[str, str]] = Field(None, description="Tratamiento de datos")
+
+    model_config = {
+        "json_schema_extra": {
+            "example": {
+                "situation_description": "Incumplimiento contractual...",
+                "legal_basis": ["Art. 1546 Código Civil"],
+                "requested_actions": ["Cumplimiento del contrato"]
+            }
+        }
+    }
+
+class DemandLetterResponse(BaseModel):
+    model_config = ConfigDict(arbitrary_types_allowed=True)
+
+    letter: Dict[str, Union[str, List[str]]] = Field(..., description="Carta generada")
+    situation_description: str = Field(..., description="Situación")
+    jurisdiction: str = Field(..., description="Jurisdicción")
+    legal_basis: List[str] = Field(..., description="Fundamentos")
+    requested_actions: List[str] = Field(..., description="Pretensiones")
+    deadline: Optional[str] = Field(None, description="Plazo")
+    parties: List[Dict[str, str]] = Field(..., description="Partes")
+    colombian_compliance: Dict[str, Any] = Field(..., description="Cumplimiento")
+    administrative_procedure: Optional[Dict[str, str]] = None
+    legal_terms: Optional[Dict[str, str]] = None
+    data_processing: Optional[Dict[str, str]] = None
+    timestamp: datetime = Field(default_factory=datetime.now)
+
+    model_config = {
+        "json_schema_extra": {
+            "example": {
+                "letter": {
+                    "content": "Mediante la presente...",
+                    "sections": ["Hechos", "Pretensiones"]
+                }
+            }
+        }
+    }
 
 @router.post(
-    "/api/demand-letter",
-    response_model=BaseResponse,
-    summary="Debt Collection Demand Letter Generation",
+    "/generate",
+    response_model=DemandLetterResponse,
+    summary="Generación de Carta de Reclamación",
     description="""
-    Generates legally compliant demand letters for debt collection purposes,
-    incorporating relevant laws and regulations while maintaining professional tone.
+    Genera cartas de reclamación formales según el ordenamiento jurídico
+    colombiano, incluyendo requisitos legales específicos y cumplimiento normativo.
     """
 )
-async def demand_letter_endpoint(
+async def draft_demand_letter_endpoint(
     request: DemandLetterRequest = Body(
         ...,
-        example={
-            "debtor_info": {
-                "name": "John Doe",
-                "address": "123 Main St, Anytown, USA",
-                "account_number": "ACC123456"
-            },
-            "debt_details": {
-                "amount": 5000.00,
-                "due_date": "2024-02-15",
-                "interest_rate": "5%",
-                "late_fees": 250.00
-            },
-            "collection_history": [
-                "Initial invoice sent on 2024-01-15",
-                "Payment reminder sent on 2024-02-01"
-            ],
-            "jurisdiction": "New York",
-            "compliance_requirements": [
-                "Fair Debt Collection Practices Act",
-                "New York State Debt Collection Laws"
-            ],
-            "client_tone_preference": "Professional but firm"
-        }
+        description="Parámetros para la generación de la carta"
     )
 ):
-    """
-    Generate a legally compliant demand letter for debt collection, ensuring
-    adherence to relevant laws and regulations while maintaining appropriate
-    professional tone.
-    """
+    """Genera carta de reclamación con cumplimiento normativo colombiano"""
     try:
-        result = await generate_demand_letter(
-            debtor_info=request.debtor_info,
-            debt_details=request.debt_details,
-            collection_history=request.collection_history,
+        result = await draft_demand_letter(
+            situation_description=request.situation_description,
             jurisdiction=request.jurisdiction,
-            compliance_requirements=request.compliance_requirements,
-            client_tone_preference=request.client_tone_preference
+            legal_basis=request.legal_basis,
+            requested_actions=request.requested_actions,
+            deadline=request.deadline,
+            parties=request.parties,
+            administrative_procedure=request.administrative_procedure,
+            legal_terms=request.legal_terms,
+            data_processing=request.data_processing
         )
-        return await format_response({"demand_letter": result})
+        
+        # Add Colombian compliance details
+        result["colombian_compliance"].update({
+            "framework_version": ColombianLegalFramework.FRAMEWORK_VERSION,
+            "constitutional_principles": ColombianLegalFramework.CONSTITUTIONAL_PRINCIPLES,
+            "letter_date": datetime.now().isoformat(),
+            "validation_status": "Verificado"
+        })
+        
+        # Add administrative procedure details if applicable
+        if request.administrative_procedure:
+            result["administrative_procedure"] = get_administrative_procedure(
+                request.administrative_procedure
+            )
+        
+        return DemandLetterResponse(**result)
+    
     except Exception as e:
-        raise HTTPException(status_code=500, detail=await handle_error(e)) 
+        raise HTTPException(
+            status_code=500,
+            detail={
+                "error": str(e),
+                "message": "Error en la generación de la carta",
+                "timestamp": datetime.now().isoformat()
+            }
+        )
+
+@router.get(
+    "/templates",
+    response_model=Dict[str, List[str]],
+    summary="Plantillas Disponibles",
+    description="Obtiene las plantillas de cartas de reclamación disponibles"
+)
+async def get_demand_letter_templates():
+    """Retorna las plantillas de cartas disponibles"""
+    return {
+        "derecho_civil": [
+            "Incumplimiento contractual",
+            "Responsabilidad civil",
+            "Reclamación de perjuicios"
+        ],
+        "derecho_comercial": [
+            "Cobro de facturas",
+            "Incumplimiento mercantil",
+            "Competencia desleal"
+        ],
+        "derecho_administrativo": [
+            "Derecho de petición",
+            "Recurso de reposición",
+            "Recurso de apelación"
+        ],
+        "derecho_laboral": [
+            "Acoso laboral",
+            "Despido injusto",
+            "Prestaciones sociales"
+        ]
+    }
+
+def get_administrative_procedure(procedure_type: str) -> Dict[str, str]:
+    """Obtiene detalles del procedimiento administrativo"""
+    procedures = {
+        "derecho_peticion": {
+            "termino_respuesta": "15 días hábiles",
+            "fundamento_legal": "Art. 14 Ley 1437 de 2011",
+            "recurso_procedente": "Insistencia",
+            "autoridad_competente": "Misma autoridad"
+        },
+        "recurso_reposicion": {
+            "termino_respuesta": "2 meses",
+            "fundamento_legal": "Art. 76 Ley 1437 de 2011",
+            "recurso_procedente": "Apelación",
+            "autoridad_competente": "Mismo funcionario"
+        }
+    }
+    return procedures.get(procedure_type, {}) 

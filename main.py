@@ -1,8 +1,11 @@
-from fastapi import FastAPI, HTTPException, Body
+from fastapi import FastAPI, HTTPException, Body, Request
 from fastapi.middleware.cors import CORSMiddleware
 from typing import Dict, Any
 from datetime import datetime
 from pydantic import BaseModel
+from fastapi.staticfiles import StaticFiles
+from pathlib import Path
+from fastapi.responses import JSONResponse, HTMLResponse, RedirectResponse
 from endpoints import (
     contract_review,
     legal_research,
@@ -12,8 +15,19 @@ from endpoints import (
     document_drafting,
     whistleblower_analysis,
     demand_letter,
-    legal_diagnosis
+    legal_diagnosis,
+    case_prediction,
+    dashboard
 )
+from endpoints.document_drafting import router as document_router
+from endpoints.legal_research import router as legal_research_router
+from fastapi.templating import Jinja2Templates
+import os
+import logging
+
+# Set up logging
+logging.basicConfig(level=logging.DEBUG)
+logger = logging.getLogger(__name__)
 
 app = FastAPI(
     title="Legal AI Assistant API",
@@ -25,10 +39,32 @@ app = FastAPI(
     version="1.0.0"
 )
 
-# Configure CORS
+# Get the base directory
+BASE_DIR = Path(__file__).resolve().parent
+
+# Log the directories for debugging
+logger.debug(f"Base directory: {BASE_DIR}")
+logger.debug(f"Static directory: {BASE_DIR / 'static'}")
+
+# Set up templates
+templates = Jinja2Templates(directory=str(BASE_DIR / "static"))
+
+# Mount static files - make sure the directories exist
+app.mount(
+    "/static",
+    StaticFiles(directory=str(BASE_DIR / "static")),
+    name="static"
+)
+
+# Create the necessary directories if they don't exist
+static_dir = BASE_DIR / "static"
+css_dir = static_dir / "css"
+css_dir.mkdir(parents=True, exist_ok=True)
+
+# Add CORS middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # In production, replace with specific origins
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -53,34 +89,42 @@ async def handle_error(e: Exception) -> Dict[str, Any]:
         "error": str(e)
     }
 
-@app.get("/")
-async def root():
-    """
-    Root endpoint providing basic API information and available endpoints.
-    """
-    return {
-        "message": "Welcome to the Legal AI Assistant API",
-        "version": "1.0.0",
-        "endpoints": [
-            "/api/contract-review",
-            "/api/legal-research",
-            "/api/regulatory-analysis",
-            "/api/legal-chat",
-            "/api/patent-search",
-            "/api/document-drafting",
-            "/api/whistleblower-analysis",
-            "/api/demand-letter",
-            "/api/legal-diagnosis"
-        ]
-    }
+# Register exception handler
+@app.exception_handler(HTTPException)
+async def http_exception_handler(request, exc):
+    return JSONResponse(
+        status_code=exc.status_code,
+        content={"detail": exc.detail}
+    )
 
 # Include routers
 app.include_router(contract_review.router)
-app.include_router(legal_research.router)
+app.include_router(legal_research_router)
 app.include_router(regulatory_analysis.router)
 app.include_router(legal_chat.router)
 app.include_router(patent_search.router)
-app.include_router(document_drafting.router)
+app.include_router(document_router)
 app.include_router(whistleblower_analysis.router)
 app.include_router(demand_letter.router)
 app.include_router(legal_diagnosis.router)
+app.include_router(case_prediction.router)
+app.include_router(dashboard.router)
+
+# Error handling for 404
+@app.exception_handler(404)
+async def custom_404_handler(request: Request, exc):
+    logger.error(f"404 error for path: {request.url.path}")
+    return templates.TemplateResponse(
+        "404.html",
+        {"request": request},
+        status_code=404
+    )
+
+@app.exception_handler(500)
+async def server_error_handler(request: Request, exc):
+    logger.error(f"500 error for path: {request.url.path}, error: {exc}")
+    return templates.TemplateResponse(
+        "500.html",
+        {"request": request},
+        status_code=500
+    )

@@ -3,89 +3,281 @@ from agno.agent import Agent
 from config.database import get_agent_storage
 from config.ai_models import get_model
 from config.knowledge_base import get_knowledge_base
+from config.colombian_compliance import (
+    ColombianDataProtection,
+    ColombianLegalFramework,
+    get_data_category,
+    validate_consent,
+    get_retention_period
+)
+from typing import Dict, List, Optional
+from datetime import datetime, timedelta
 
 def create_whistleblower_agent() -> Agent:
-    """Create a specialized agent for whistleblower analysis"""
+    """Create a specialized agent for whistleblower protection"""
     return Agent(
-        name="Ethics Analyst",
-        role="Whistleblower report specialist",
+        name="Especialista en Protección al Denunciante",
+        role="Especialista en protección de denunciantes",
         model=get_model("whistleblower"),
         knowledge=get_knowledge_base(),
         search_knowledge=True,
         storage=get_agent_storage("whistleblower_sessions"),
+        instructions=[
+            "Analizar denuncias y brindar orientación de protección",
+            "Garantizar cumplimiento de leyes anticorrupción",
+            "Proteger derechos y confidencialidad del denunciante",
+            "Establecer procedimientos claros de denuncia",
+            "Implementar medidas contra represalias",
+            "Aplicar Ley 1778 de 2016 (Antisoborno)",
+            "Cumplir Ley 1952 de 2019 (CGD)",
+            "Seguir directrices de la Secretaría de Transparencia",
+            "Proteger datos personales según Ley 1581",
+            "Garantizar anonimato cuando sea solicitado",
+            "Asegurar cadena de custodia probatoria",
+            "Mantener reserva de la información",
+            "Implementar canales seguros de denuncia",
+            "Establecer protocolos de investigación",
+            "Garantizar debido proceso"
+        ],
         markdown=True
     )
 
 async def analyze_whistleblower_report(
     report_content: str,
-    company_context: dict,
-    applicable_policies: list,
-    regulatory_framework: list,
-    prior_related_issues: list = None
-) -> dict:
-    """Analyze whistleblower reports for severity, credibility, and regulatory implications"""
+    report_type: str,
+    jurisdiction: str,
+    data_processing: Optional[Dict[str, str]] = None,
+    specific_concerns: Optional[List[str]] = None
+) -> Dict[str, str]:
+    """Analizar denuncia con cumplimiento normativo colombiano"""
     agent = create_whistleblower_agent()
     
-    # Format company context for the prompt
-    company_context_text = "\n".join([f"- {key}: {value}" for key, value in company_context.items()])
-    
-    # Format prior issues if provided
-    prior_issues_text = ""
-    if prior_related_issues:
-        prior_issues_text = "\n".join([f"- {issue.get('description', 'No description')}: {issue.get('outcome', 'No outcome provided')}" for issue in prior_related_issues])
+    # Get data processing details if provided
+    data_compliance = {}
+    if data_processing:
+        data_category = get_data_category(data_processing.get("type", "personal"))
+        retention_period = get_retention_period(data_category)
+        consent_valid = validate_consent(data_processing.get("consent", {}))
+        data_compliance = {
+            "category": data_category.value,
+            "retention_period": retention_period,
+            "consent_valid": consent_valid
+        }
     
     # Prepare the prompt
-    prompt = f"""Analyze the following whistleblower report for severity, credibility, and recommended actions:
+    prompt = f"""Analizar la siguiente denuncia:
 
-REPORT CONTENT:
+TIPO DE DENUNCIA: {report_type}
+JURISDICCIÓN: {jurisdiction}
+
+CONTENIDO DE LA DENUNCIA:
 {report_content}
 
-COMPANY CONTEXT:
-{company_context_text}
+Por favor proporcionar:
+1. Evaluación de validez y credibilidad:
+   - Elementos probatorios
+   - Fuentes de verificación
+   - Consistencia del relato
+   - Documentación soporte
 
-APPLICABLE POLICIES:
-{', '.join(applicable_policies)}
+2. Análisis de posibles infracciones:
+   - Normativa aplicable
+   - Conductas tipificadas
+   - Sanciones previstas
+   - Autoridades competentes
 
-REGULATORY FRAMEWORK:
-{', '.join(regulatory_framework)}
+3. Medidas de protección requeridas:
+   - Protección laboral
+   - Protección física
+   - Reserva de identidad
+   - Garantías procesales
+
+4. Procedimientos de denuncia:
+   - Canales disponibles
+   - Requisitos formales
+   - Términos aplicables
+   - Autoridades receptoras
+
+5. Medidas anti-represalias:
+   - Protecciones laborales
+   - Garantías de estabilidad
+   - Mecanismos de seguimiento
+   - Acciones preventivas
+
+6. Cronograma de investigación:
+   - Etapas procesales
+   - Plazos previstos
+   - Actuaciones requeridas
+   - Términos legales
+
+7. Protección de datos personales:
+   - Tratamiento autorizado
+   - Medidas de seguridad
+   - Período de retención
+   - Derechos del titular
 """
     
-    if prior_related_issues:
-        prompt += f"\nPRIOR RELATED ISSUES:\n{prior_issues_text}\n"
+    if specific_concerns:
+        prompt += f"\nPREOCUPACIONES ESPECÍFICAS:\n{', '.join(specific_concerns)}\n"
     
-    prompt += """
-Please provide:
-1. Issue categorization and severity assessment
-2. Initial credibility analysis based on:
-   - Specificity of allegations
-   - Corroborating information provided
-   - Internal consistency of the report
-   - Knowledge demonstrated about internal processes
-3. Regulatory implications assessment
-4. Recommended immediate actions to:
-   - Preserve evidence
-   - Mitigate ongoing harm
-   - Meet regulatory obligations
-5. Investigation plan including:
-   - Suggested investigation scope
-   - Key witnesses to interview
-   - Documents to review
-   - Subject matter experts to consult
-6. Communications recommendations for:
-   - Reporter acknowledgment
-   - Management notification
-   - Potential regulatory disclosure
-7. Risk assessment of potential outcomes
-
-Format this as a confidential investigation brief for the Ethics & Compliance team.
+    # Add data processing analysis if provided
+    if data_processing:
+        prompt += f"""
+ANÁLISIS DE PROCESAMIENTO DE DATOS:
+- Categoría de Datos: {data_compliance['category']}
+- Período de Retención Requerido: {data_compliance['retention_period']} días
+- Cumplimiento del Consentimiento: {'Válido' if data_compliance['consent_valid'] else 'Inválido'}
+- Derechos Constitucionales: {', '.join(ColombianLegalFramework.CONSTITUTIONAL_PRINCIPLES)}
+"""
+    
+    # Add Colombian legal framework requirements
+    prompt += f"""
+MARCO NORMATIVO COLOMBIANO:
+- Principios Constitucionales: {', '.join(ColombianLegalFramework.CONSTITUTIONAL_PRINCIPLES)}
 """
     
     # Run the analysis
     response = agent.run(prompt)
     
     # Structure the response
-    return {
-        "analysis": response.content,
-        "report_id": f"WB-{datetime.datetime.now().strftime('%Y%m%d%H%M%S')}",
-        "confidentiality": "HIGH"
-    } 
+    result = {
+        "análisis": response.content,
+        "tipo_denuncia": report_type,
+        "jurisdiccion": jurisdiction,
+        "cumplimiento_colombiano": {
+            "principios_constitucionales": ColombianLegalFramework.CONSTITUTIONAL_PRINCIPLES,
+            "fecha_análisis": datetime.now().isoformat()
+        }
+    }
+    
+    if specific_concerns:
+        result["preocupaciones_específicas"] = specific_concerns
+    
+    # Add data processing details if provided
+    if data_processing:
+        result["procesamiento_datos"] = {
+            "categoria": data_compliance["category"],
+            "periodo_retencion": data_compliance["retention_period"],
+            "consentimiento_valido": data_compliance["consent_valid"],
+            "fecha_expiracion": (datetime.now() + timedelta(days=data_compliance["retention_period"])).isoformat()
+        }
+    
+    return result
+
+async def draft_whistleblower_policy(
+    organization_type: str,
+    jurisdiction: str,
+    specific_requirements: Optional[List[str]] = None,
+    data_processing: Optional[Dict[str, str]] = None
+) -> Dict[str, str]:
+    """Redactar política de denuncias según normativa colombiana"""
+    agent = create_whistleblower_agent()
+    
+    # Get data processing details if provided
+    data_compliance = {}
+    if data_processing:
+        data_category = get_data_category(data_processing.get("type", "personal"))
+        retention_period = get_retention_period(data_category)
+        consent_valid = validate_consent(data_processing.get("consent", {}))
+        data_compliance = {
+            "category": data_category.value,
+            "retention_period": retention_period,
+            "consent_valid": consent_valid
+        }
+    
+    # Prepare the prompt
+    prompt = f"""Redactar política de denuncias para:
+
+TIPO DE ORGANIZACIÓN: {organization_type}
+JURISDICCIÓN: {jurisdiction}
+
+La política debe incluir:
+1. Procedimientos de denuncia:
+   - Canales habilitados
+   - Requisitos mínimos
+   - Proceso de recepción
+   - Confirmación de recibido
+
+2. Medidas de protección:
+   - Confidencialidad
+   - Anonimato
+   - Protección laboral
+   - Garantías procesales
+
+3. Disposiciones anti-represalias:
+   - Prohibiciones expresas
+   - Sanciones aplicables
+   - Medidas preventivas
+   - Seguimiento
+
+4. Procedimientos de investigación:
+   - Etapas del proceso
+   - Responsables
+   - Plazos
+   - Garantías
+
+5. Requisitos documentales:
+   - Formatos establecidos
+   - Evidencias requeridas
+   - Cadena de custodia
+   - Archivo y conservación
+
+6. Protección de datos:
+   - Autorización de tratamiento
+   - Medidas de seguridad
+   - Períodos de retención
+   - Derechos ARCO
+
+7. Marco normativo aplicable:
+   - Ley 1778 de 2016
+   - Ley 1952 de 2019
+   - Ley 1581 de 2012
+   - Directrices ST
+"""
+    
+    if specific_requirements:
+        prompt += f"\nREQUISITOS ESPECÍFICOS:\n{', '.join(specific_requirements)}\n"
+    
+    # Add data processing analysis if provided
+    if data_processing:
+        prompt += f"""
+ANÁLISIS DE PROCESAMIENTO DE DATOS:
+- Categoría de Datos: {data_compliance['category']}
+- Período de Retención Requerido: {data_compliance['retention_period']} días
+- Cumplimiento del Consentimiento: {'Cumplido' if data_compliance['consent_valid'] else 'No Cumplido'}
+- Derechos Constitucionales: {', '.join(ColombianLegalFramework.CONSTITUTIONAL_PRINCIPLES)}
+"""
+    
+    # Add Colombian legal framework requirements
+    prompt += f"""
+MARCO NORMATIVO COLOMBIANO:
+- Principios Constitucionales: {', '.join(ColombianLegalFramework.CONSTITUTIONAL_PRINCIPLES)}
+"""
+    
+    # Run the drafting
+    response = agent.run(prompt)
+    
+    # Structure the response in Spanish
+    result = {
+        "politica": response.content,
+        "tipo_organizacion": organization_type,
+        "jurisdiccion": jurisdiction,
+        "cumplimiento_colombiano": {
+            "principios_constitucionales": ColombianLegalFramework.CONSTITUTIONAL_PRINCIPLES,
+            "fecha_elaboracion": datetime.now().isoformat()
+        }
+    }
+    
+    if specific_requirements:
+        result["requisitos_especificos"] = specific_requirements
+    
+    # Add data processing details if provided
+    if data_processing:
+        result["tratamiento_datos"] = {
+            "categoria": data_compliance["category"],
+            "periodo_retencion": data_compliance["retention_period"],
+            "consentimiento_valido": data_compliance["consent_valid"],
+            "fecha_expiracion": (datetime.now() + timedelta(days=data_compliance["retention_period"])).isoformat()
+        }
+    
+    return result 

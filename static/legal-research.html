@@ -1,0 +1,765 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Asistente de Investigación Legal - LegalTechAI</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+      rel="stylesheet" />
+    <link
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
+      rel="stylesheet" />
+    <link rel="stylesheet" href="/static/css/legal-research.css" />
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  </head>
+  <body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-info mb-4">
+      <div class="container">
+        <a class="navbar-brand" href="/dashboard">
+          <i class="fas fa-chevron-left me-2"></i>
+          LegalTechAI
+        </a>
+        <span class="navbar-text text-white">
+          Asistente de Investigación Legal
+        </span>
+      </div>
+    </nav>
+
+    <div class="container">
+      <!-- Search Section -->
+      <div class="row mb-4">
+        <div class="col-12">
+          <div class="card">
+            <div class="card-body">
+              <div class="search-area">
+                <div class="input-group mb-3">
+                  <input
+                    type="text"
+                    class="form-control form-control-lg"
+                    placeholder="Buscar en jurisprudencia, leyes y regulaciones..." />
+                  <button class="btn btn-info btn-lg" type="button">
+                    <i class="fas fa-search"></i>
+                    Buscar
+                  </button>
+                </div>
+                <div class="search-filters">
+                  <div class="row">
+                    <div class="col-md-3">
+                      <select class="form-select">
+                        <option selected>Tipo de Documento</option>
+                        <option>Jurisprudencia</option>
+                        <option>Leyes</option>
+                        <option>Regulaciones</option>
+                        <option>Doctrina</option>
+                      </select>
+                    </div>
+                    <div class="col-md-3">
+                      <select class="form-select">
+                        <option selected>Jurisdicción</option>
+                        <option>Federal</option>
+                        <option>Estatal</option>
+                        <option>Municipal</option>
+                      </select>
+                    </div>
+                    <div class="col-md-3">
+                      <select class="form-select">
+                        <option selected>Fecha</option>
+                        <option>Último año</option>
+                        <option>Últimos 5 años</option>
+                        <option>Últimos 10 años</option>
+                        <option>Personalizado</option>
+                      </select>
+                    </div>
+                    <div class="col-md-3">
+                      <select class="form-select">
+                        <option selected>Relevancia</option>
+                        <option>Más citados</option>
+                        <option>Más recientes</option>
+                        <option>Más relevantes</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="row">
+        <!-- Results and Analysis Section -->
+        <div class="col-md-8">
+          <div class="card mb-4">
+            <div
+              class="card-header d-flex justify-content-between align-items-center">
+              <h5 class="mb-0">
+                <i class="fas fa-search me-2"></i>
+                Resultados de la Búsqueda
+              </h5>
+              <div class="btn-group">
+                <button class="btn btn-outline-secondary btn-sm">
+                  <i class="fas fa-list"></i>
+                </button>
+                <button class="btn btn-outline-secondary btn-sm active">
+                  <i class="fas fa-th-large"></i>
+                </button>
+              </div>
+            </div>
+            <div class="card-body">
+              <div class="search-results">
+                <div class="text-center text-muted py-5">
+                  <i class="fas fa-search fa-3x mb-3"></i>
+                  <p>Ingresa un término de búsqueda para comenzar</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Document Preview -->
+          <div class="card">
+            <div class="card-header">
+              <h5 class="mb-0">
+                <i class="fas fa-file-alt me-2"></i>
+                Vista Previa del Documento
+              </h5>
+            </div>
+            <div class="card-body">
+              <div class="document-preview">
+                <div class="text-center text-muted py-5">
+                  <i class="fas fa-file-pdf fa-3x mb-3"></i>
+                  <p>Selecciona un documento para ver su contenido</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- AI Analysis and Tools -->
+        <div class="col-md-4">
+          <!-- AI Recommendations -->
+          <div class="card mb-4">
+            <div class="card-header">
+              <h5 class="mb-0">
+                <i class="fas fa-robot me-2"></i>
+                Recomendaciones IA
+              </h5>
+            </div>
+            <div class="card-body">
+              <div class="recommendations">
+                <div class="recommendation-item mb-3">
+                  <h6>Precedentes Relevantes</h6>
+                  <div class="progress mb-2">
+                    <div
+                      class="progress-bar bg-info"
+                      role="progressbar"
+                      style="width: 0%"></div>
+                  </div>
+                  <small class="text-muted">0 precedentes encontrados</small>
+                </div>
+                <div class="recommendation-item mb-3">
+                  <h6>Citas Relacionadas</h6>
+                  <div class="progress mb-2">
+                    <div
+                      class="progress-bar bg-info"
+                      role="progressbar"
+                      style="width: 0%"></div>
+                  </div>
+                  <small class="text-muted">0 citas extraídas</small>
+                </div>
+                <div class="recommendation-item">
+                  <h6>Argumentos Sugeridos</h6>
+                  <div class="progress mb-2">
+                    <div
+                      class="progress-bar bg-info"
+                      role="progressbar"
+                      style="width: 0%"></div>
+                  </div>
+                  <small class="text-muted">0 argumentos generados</small>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Writing Assistant -->
+          <div class="card mb-4">
+            <div class="card-header">
+              <h5 class="mb-0">
+                <i class="fas fa-pen-fancy me-2"></i>
+                Asistente de Redacción
+              </h5>
+            </div>
+            <div class="card-body">
+              <div class="mb-3">
+                <select class="form-select mb-3">
+                  <option selected>Tipo de Documento</option>
+                  <option>Demanda</option>
+                  <option>Contestación</option>
+                  <option>Recurso</option>
+                  <option>Informe</option>
+                </select>
+                <button class="btn btn-info w-100">
+                  <i class="fas fa-magic me-2"></i>
+                  Generar Borrador
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Actions -->
+          <div class="card">
+            <div class="card-header">
+              <h5 class="mb-0">
+                <i class="fas fa-tasks me-2"></i>
+                Acciones
+              </h5>
+            </div>
+            <div class="card-body">
+              <button class="btn btn-outline-info w-100 mb-2">
+                <i class="fas fa-save me-2"></i>
+                Guardar Investigación
+              </button>
+              <button class="btn btn-outline-info w-100 mb-2">
+                <i class="fas fa-download me-2"></i>
+                Exportar Referencias
+              </button>
+              <button class="btn btn-outline-secondary w-100">
+                <i class="fas fa-share-alt me-2"></i>
+                Compartir Resultados
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+      const API_BASE_URL = "/legal-research";
+      let currentResearch = null;
+
+      // Initialize when document loads
+      document.addEventListener("DOMContentLoaded", async () => {
+        await initializePage();
+      });
+
+      async function initializePage() {
+        try {
+          // Load research areas
+          const areasResponse = await fetch(`${API_BASE_URL}/areas`);
+          if (!areasResponse.ok)
+            throw new Error("Error loading research areas");
+          const areas = await areasResponse.json();
+
+          // Populate document type select
+          populateDocumentTypes(areas);
+
+          // Set up event listeners
+          setupEventListeners();
+        } catch (error) {
+          showError("Error initializing page: " + error.message);
+        }
+      }
+
+      function populateDocumentTypes(areas) {
+        const docTypeSelect = document.querySelector(
+          ".col-md-3:first-child select"
+        );
+        // Clear existing options except the first one
+        docTypeSelect.innerHTML = "<option selected>Tipo de Documento</option>";
+
+        // Add all areas as options
+        Object.keys(areas).forEach((category) => {
+          areas[category].forEach((area) => {
+            const option = document.createElement("option");
+            option.value = area;
+            option.textContent = area;
+            docTypeSelect.appendChild(option);
+          });
+        });
+      }
+
+      function setupEventListeners() {
+        // Search button
+        const searchBtn = document.querySelector(".search-area button");
+        if (searchBtn) {
+          searchBtn.addEventListener("click", handleSearch);
+        }
+
+        // Search input - add enter key support
+        const searchInput = document.querySelector(".search-area input");
+        if (searchInput) {
+          searchInput.addEventListener("keypress", (e) => {
+            if (e.key === "Enter") {
+              handleSearch(e);
+            }
+          });
+        }
+
+        // Generate draft button
+        const generateBtn = document.querySelector(
+          ".card.mb-4 .btn-info.w-100"
+        );
+        if (generateBtn) {
+          generateBtn.addEventListener("click", handleGenerate);
+        }
+
+        // Action buttons
+        const saveBtn = document.querySelector(
+          ".btn-outline-info:nth-child(1)"
+        );
+        const exportBtn = document.querySelector(
+          ".btn-outline-info:nth-child(2)"
+        );
+        const shareBtn = document.querySelector(".btn-outline-secondary");
+
+        if (saveBtn) saveBtn.addEventListener("click", handleSave);
+        if (exportBtn) exportBtn.addEventListener("click", handleExport);
+        if (shareBtn) shareBtn.addEventListener("click", handleShare);
+      }
+
+      async function handleSearch(event) {
+        event.preventDefault();
+        const searchInput = document.querySelector(".search-area input");
+        const searchTerm = searchInput.value.trim();
+
+        if (!searchTerm) {
+          showError("Por favor ingrese un término de búsqueda");
+          return;
+        }
+
+        try {
+          showLoading();
+
+          const filters = getSearchFilters();
+          const request = {
+            research_topic: searchTerm,
+            jurisdiction: filters.jurisdiction || "Colombia",
+            specific_areas: [filters.documentType].filter(Boolean),
+            data_processing: {
+              type: "investigacion_juridica",
+              purpose: "analisis_legal",
+            },
+          };
+
+          console.log("Sending request:", request); // Debug log
+
+          const response = await fetch(`${API_BASE_URL}/investigate`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify(request),
+          });
+
+          if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.detail || "Error en la investigación");
+          }
+
+          const result = await response.json();
+          currentResearch = result;
+          displayResults(result);
+          updateRecommendations(result);
+        } catch (error) {
+          showError("Error al realizar la investigación: " + error.message);
+          console.error("Search error:", error); // Debug log
+        } finally {
+          hideLoading();
+        }
+      }
+
+      function displayResults(result) {
+        const resultsContainer = document.querySelector(".search-results");
+        const previewContainer = document.querySelector(".document-preview");
+
+        resultsContainer.innerHTML = `
+          <div class="results-content">
+            <h5>Resultados de la Investigación</h5>
+            ${formatResearchResults(result)}
+          </div>
+        `;
+
+        // Enable action buttons
+        document.querySelectorAll(".card:last-child .btn").forEach((btn) => {
+          btn.disabled = false;
+        });
+      }
+
+      function formatResearchResults(result) {
+        return `
+          <div class="research-sections">
+            ${formatSection("Marco Legal", result.legal_framework)}
+            ${formatSection("Jurisprudencia", result.jurisprudence)}
+            ${formatSection("Análisis", result.research_results)}
+          </div>
+        `;
+      }
+
+      function formatSection(title, content) {
+        if (!content) return "";
+
+        let contentHtml = "";
+        if (Array.isArray(content)) {
+          contentHtml = `
+            <ul class="list-unstyled">
+              ${content.map((item) => `<li>${formatItem(item)}</li>`).join("")}
+            </ul>
+          `;
+        } else if (typeof content === "object") {
+          contentHtml = `
+            <div class="content-object">
+              ${Object.entries(content)
+                .map(
+                  ([key, value]) => `
+                <div class="content-item">
+                  <strong>${key}:</strong>
+                  <div>${formatItem(value)}</div>
+                </div>
+              `
+                )
+                .join("")}
+            </div>
+          `;
+        } else {
+          contentHtml = `<p>${content}</p>`;
+        }
+
+        return `
+          <div class="section mb-4">
+            <h6 class="mb-3">${title}</h6>
+            <div class="card">
+              <div class="card-body">
+                ${contentHtml}
+              </div>
+            </div>
+          </div>
+        `;
+      }
+
+      function formatItem(item) {
+        if (Array.isArray(item)) {
+          return item.map((i) => `<div>${i}</div>`).join("");
+        }
+        if (typeof item === "object") {
+          return Object.entries(item)
+            .map(
+              ([k, v]) => `
+            <div><strong>${k}:</strong> ${v}</div>
+          `
+            )
+            .join("");
+        }
+        return item;
+      }
+
+      function updateRecommendations(result) {
+        const recommendations = document.querySelector(".recommendations");
+        const items = recommendations.querySelectorAll(".recommendation-item");
+
+        // Update progress bars and counts
+        updateRecommendationItem(
+          items[0],
+          result.jurisprudence?.length || 0,
+          "precedentes"
+        );
+        updateRecommendationItem(items[1], countCitations(result), "citas");
+        updateRecommendationItem(
+          items[2],
+          countArguments(result),
+          "argumentos"
+        );
+      }
+
+      function updateRecommendationItem(item, count, type) {
+        const progressBar = item.querySelector(".progress-bar");
+        const countText = item.querySelector("small");
+
+        const maxValues = {
+          precedentes: 10,
+          citas: 20,
+          argumentos: 15,
+        };
+
+        const percentage = Math.min((count / maxValues[type]) * 100, 100);
+        progressBar.style.width = `${percentage}%`;
+        countText.textContent = `${count} ${type} encontrados`;
+      }
+
+      function showLoading() {
+        const resultsContainer = document.querySelector(".search-results");
+        resultsContainer.innerHTML = `
+          <div class="text-center py-5">
+            <div class="spinner-border text-info" role="status">
+              <span class="visually-hidden">Cargando...</span>
+            </div>
+            <p class="mt-2">Realizando investigación jurídica...</p>
+          </div>
+        `;
+      }
+
+      function hideLoading() {
+        // Will be replaced by results
+      }
+
+      function showError(message) {
+        const toastHtml = `
+          <div class="toast-container position-fixed bottom-0 end-0 p-3">
+            <div class="toast" role="alert">
+              <div class="toast-header bg-danger text-white">
+                <strong class="me-auto">Error</strong>
+                <button type="button" class="btn-close" data-bs-dismiss="toast"></button>
+              </div>
+              <div class="toast-body">${message}</div>
+            </div>
+          </div>
+        `;
+
+        document.body.insertAdjacentHTML("beforeend", toastHtml);
+        const toastEl = document.querySelector(".toast:last-child");
+        const bsToast = new bootstrap.Toast(toastEl);
+        bsToast.show();
+      }
+
+      function getSearchFilters() {
+        const selects = document.querySelectorAll(".search-filters select");
+        return {
+          documentType:
+            selects[0].value === "Tipo de Documento" ? null : selects[0].value,
+          jurisdiction:
+            selects[1].value === "Jurisdicción" ? null : selects[1].value,
+          date: selects[2].value === "Fecha" ? null : selects[2].value,
+          relevance:
+            selects[3].value === "Relevancia" ? null : selects[3].value,
+        };
+      }
+
+      async function handleGenerate() {
+        if (!currentResearch) {
+          showError("Primero realice una búsqueda para generar un borrador");
+          return;
+        }
+
+        const docTypeSelect = document.querySelector(".card.mb-4 select");
+        const documentType = docTypeSelect.value;
+
+        if (documentType === "Tipo de Documento") {
+          showError("Por favor seleccione un tipo de documento");
+          return;
+        }
+
+        try {
+          showDraftLoading();
+
+          const request = {
+            research_topic: currentResearch.research_topic,
+            document_type: documentType,
+            research_results: currentResearch.research_results,
+            legal_framework: currentResearch.legal_framework,
+            jurisprudence: currentResearch.jurisprudence,
+          };
+
+          const response = await fetch(`${API_BASE_URL}/generate-draft`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify(request),
+          });
+
+          if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.detail || "Error generando borrador");
+          }
+
+          const result = await response.json();
+          displayDraft(result.content);
+          showSuccess("Borrador generado exitosamente");
+        } catch (error) {
+          showError("Error al generar borrador: " + error.message);
+          console.error("Draft generation error:", error);
+        } finally {
+          hideDraftLoading();
+        }
+      }
+
+      function displayDraft(markdownContent) {
+        const previewContainer = document.querySelector(".document-preview");
+
+        // Convert markdown to HTML for preview
+        const htmlContent = marked.parse(markdownContent);
+
+        previewContainer.innerHTML = `
+            <div class="draft-content markdown-content">
+                ${htmlContent}
+            </div>
+            <div class="draft-actions mt-3">
+                <button class="btn btn-sm btn-outline-info me-2" onclick="downloadDraft('docx')">
+                    <i class="fas fa-file-word me-1"></i> Word
+                </button>
+                <button class="btn btn-sm btn-outline-info me-2" onclick="downloadDraft('pdf')">
+                    <i class="fas fa-file-pdf me-1"></i> PDF
+                </button>
+                <button class="btn btn-sm btn-outline-info" onclick="downloadDraft('txt')">
+                    <i class="fas fa-file-alt me-1"></i> Texto
+                </button>
+            </div>
+        `;
+
+        // Store the markdown content for later use
+        previewContainer
+          .querySelector(".draft-content")
+          .setAttribute("data-markdown", markdownContent);
+      }
+
+      function showDraftLoading() {
+        const previewContainer = document.querySelector(".document-preview");
+        previewContainer.innerHTML = `
+            <div class="text-center py-5">
+                <div class="spinner-border text-info" role="status">
+                    <span class="visually-hidden">Generando borrador...</span>
+                </div>
+                <p class="mt-2">Generando borrador del documento...</p>
+            </div>
+        `;
+      }
+
+      function hideDraftLoading() {
+        // Will be replaced by draft content
+      }
+
+      async function downloadDraft(format) {
+        try {
+          const previewContainer = document.querySelector(
+            ".document-preview .draft-content"
+          );
+          const markdownContent =
+            previewContainer.getAttribute("data-markdown");
+          const documentType =
+            document.querySelector(".card.mb-4 select").value;
+
+          showLoading();
+
+          const response = await fetch(`${API_BASE_URL}/download-draft`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              content: markdownContent,
+              format: format,
+              document_type: documentType,
+              filename: `borrador_${new Date().toISOString().split("T")[0]}`,
+            }),
+          });
+
+          if (!response.ok) {
+            throw new Error("Error al descargar el documento");
+          }
+
+          // Get the filename from the response headers
+          const contentDisposition = response.headers.get(
+            "Content-Disposition"
+          );
+          const filename = contentDisposition
+            ? contentDisposition.split("filename=")[1].replace(/"/g, "")
+            : `borrador_${new Date().toISOString().split("T")[0]}.${format}`;
+
+          // Download the file
+          const blob = await response.blob();
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement("a");
+          a.href = url;
+          a.download = filename;
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          URL.revokeObjectURL(url);
+
+          showSuccess(
+            `Documento descargado exitosamente en formato ${format.toUpperCase()}`
+          );
+        } catch (error) {
+          showError("Error al descargar el documento: " + error.message);
+          console.error("Download error:", error);
+        } finally {
+          hideLoading();
+        }
+      }
+
+      // Helper functions for actions
+      function handleSave() {
+        if (!currentResearch) return;
+        // Implement save functionality
+        console.log("Saving research:", currentResearch);
+      }
+
+      function handleExport() {
+        if (!currentResearch) return;
+        const blob = new Blob([JSON.stringify(currentResearch, null, 2)], {
+          type: "application/json",
+        });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `investigacion_${
+          new Date().toISOString().split("T")[0]
+        }.json`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      }
+
+      async function handleShare() {
+        if (!currentResearch) return;
+
+        if (navigator.share) {
+          try {
+            await navigator.share({
+              title: "Investigación Jurídica",
+              text: currentResearch.research_topic,
+              url: window.location.href,
+            });
+          } catch (err) {
+            console.error("Error sharing:", err);
+          }
+        } else {
+          // Fallback to copy to clipboard
+          const text = `Investigación: ${currentResearch.research_topic}\nJurisdicción: ${currentResearch.jurisdiction}`;
+          await navigator.clipboard.writeText(text);
+          showSuccess("Copiado al portapapeles");
+        }
+      }
+
+      function countCitations(result) {
+        // Implementation for counting citations
+        return result.jurisprudence?.length || 0;
+      }
+
+      function countArguments(result) {
+        // Implementation for counting arguments
+        return Object.keys(result.research_results || {}).length;
+      }
+
+      function showSuccess(message) {
+        const toastHtml = `
+          <div class="toast-container position-fixed bottom-0 end-0 p-3">
+            <div class="toast" role="alert">
+              <div class="toast-header bg-success text-white">
+                <strong class="me-auto">Éxito</strong>
+                <button type="button" class="btn-close" data-bs-dismiss="toast"></button>
+              </div>
+              <div class="toast-body">${message}</div>
+            </div>
+          </div>
+        `;
+
+        document.body.insertAdjacentHTML("beforeend", toastHtml);
+        const toastEl = document.querySelector(".toast:last-child");
+        const bsToast = new bootstrap.Toast(toastEl);
+        bsToast.show();
+      }
+    </script>
+  </body>
+</html>
