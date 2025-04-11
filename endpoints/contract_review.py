@@ -304,7 +304,7 @@ Provide a concise analysis focusing on the most important findings.
         # Combine and summarize the analyses
         summary_prompt = f"""Synthesize the following analyses of a {contract_type} contract into a cohesive summary:
 
-{'\n\n'.join([f'Part {i+1}:\n{analysis}' for i, analysis in enumerate(chunk_analyses)])}
+{chr(10).join([f'Part {i+1}:{chr(10)}{analysis}' for i, analysis in enumerate(chunk_analyses)])}
 
 Provide:
 1. Executive summary
