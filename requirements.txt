@@ -4,6 +4,7 @@ pydantic>=2.6.0
 python-dotenv>=1.0.0
 httpx>=0.26.0
 agno>=1.1.13
+mistralai>=0.0.12
 #openai>=1.12.0
 pgvector>=0.2.4
 pypdf>=4.0.0
