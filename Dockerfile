@@ -30,5 +30,5 @@ RUN mkdir -p static/uploads
 # Expose the port the app runs on
 EXPOSE 8000
 
-# Use gunicorn in production
-CMD ["gunicorn", "main:app", "--workers", "4", "--worker-class", "uvicorn.workers.UvicornWorker", "--bind", "0.0.0.0:8000"]
+# Use gunicorn with uvicorn workers for FastAPI
+CMD ["gunicorn", "main:app", "--workers", "4", "--worker-class", "uvicorn.workers.UvicornWorker", "--bind", "0.0.0.0:8000", "--timeout", "120"]
