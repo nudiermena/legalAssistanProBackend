@@ -26,11 +26,13 @@ async function analyzeContract(file) {
     formData.append("jurisdiction", "Colombia");
     formData.append("language", "es");
 
-    const response = await fetch("/api/contract-review/analyze", {
-      method: "POST",
-      body: formData, // Send as FormData instead of JSON
-      // Remove Content-Type header - browser will set it automatically with boundary
-    });
+    const response = await fetch(
+      "http://localhost:8000/contract-review/analyze",
+      {
+        method: "POST",
+        body: formData,
+      }
+    );
 
     if (!response.ok) {
       const error = await response.json();

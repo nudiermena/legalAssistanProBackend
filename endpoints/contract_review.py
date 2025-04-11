@@ -29,7 +29,7 @@ import shutil
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
-router = APIRouter(prefix="/dashboard/contract-review", tags=["contracts"])
+router = APIRouter(prefix="", tags=["contracts"])
 
 class ContractReviewRequest(BaseModel):
     contract_text: str = Field(
@@ -621,7 +621,7 @@ def cleanup_old_files(max_age_hours: int = 24):
     except Exception as e:
         logger.error(f"Error during cleanup: {e}")
 
-@router.post("/analyze")
+@router.post("/contract-review/analyze")
 async def analyze_contract(
     file: UploadFile = File(...),
     analysis_options: Optional[str] = Form(None),
@@ -770,7 +770,7 @@ async def analyze_contract(
         )
 
 # Optional: Add a cleanup endpoint for maintenance
-@router.post("/cleanup")
+@router.post("/contract-review/cleanup")
 async def cleanup_files():
     """Manually trigger cleanup of old files."""
     try:
@@ -834,7 +834,7 @@ def assess_contract_risks(
         "impacto_potencial": "por_evaluar"
     } 
 
-@router.get("/", response_class=HTMLResponse)
+@router.get("/dashboard/contract-review", response_class=HTMLResponse)
 async def get_contract_analysis_interface(request: Request):
     """Serve the contract analysis interface"""
     static_dir = Path("static")
@@ -886,7 +886,7 @@ async def get_contract_analysis_interface(request: Request):
     
     return HTMLResponse(content=html_file.read_text(encoding="utf-8"))
 
-@router.post("/upload-analyze")
+@router.post("/contract-review/upload-analyze")
 async def upload_and_analyze_contract(
     file: UploadFile = File(...),
     contract_type: str = Form("prestacion_servicios"),

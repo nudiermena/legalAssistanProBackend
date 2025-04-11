@@ -114,17 +114,15 @@ app.include_router(dashboard.router)
 @app.exception_handler(404)
 async def custom_404_handler(request: Request, exc):
     logger.error(f"404 error for path: {request.url.path}")
-    return templates.TemplateResponse(
-        "404.html",
-        {"request": request},
-        status_code=404
+    return JSONResponse(
+        status_code=404,
+        content={"detail": {"message": f"Endpoint not found: {request.url.path}"}}
     )
 
 @app.exception_handler(500)
 async def server_error_handler(request: Request, exc):
     logger.error(f"500 error for path: {request.url.path}, error: {exc}")
-    return templates.TemplateResponse(
-        "500.html",
-        {"request": request},
-        status_code=500
+    return JSONResponse(
+        status_code=500,
+        content={"detail": {"message": "Internal server error"}}
     )
