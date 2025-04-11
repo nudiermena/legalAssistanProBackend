@@ -1,81 +1,100 @@
-import logging
-
-# Configure logging
-logging.basicConfig(
-    level=logging.DEBUG,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-)
-
 async function handleFileSelect(event) {
-    const file = event.target.files[0];
-    
-    if (!file) {
-        showError('Por favor seleccione un archivo');
-        return;
-    }
+  const file = event.target.files[0];
+  const analysisButton = document.querySelector(".btn-primary[data-tooltip]");
 
-    if (file.type !== 'application/pdf') {
-        showError('Por favor seleccione un archivo PDF válido');
-        event.target.value = ''; // Clear the input
-        return;
-    }
+  if (!file) {
+    showError("Por favor seleccione un archivo");
+    analysisButton.disabled = true;
+    return;
+  }
 
-    // Show file info
-    const fileInfo = document.getElementById('fileInfo');
-    const fileName = document.getElementById('fileName');
-    fileName.textContent = file.name;
-    fileInfo.style.display = 'block';
+  if (file.type !== "application/pdf") {
+    showError("Por favor seleccione un archivo PDF válido");
+    event.target.value = ""; // Clear the input
+    analysisButton.disabled = true;
+    return;
+  }
 
-    // Process the file
-    analyzeContract(file);
+  // Show file info
+  const fileInfo = document.getElementById("fileInfo");
+  const fileName = document.getElementById("fileName");
+  fileName.textContent = file.name;
+  fileInfo.style.display = "block";
+
+  // Enable analysis button
+  analysisButton.disabled = false;
+  analysisButton.removeAttribute("data-tooltip");
 }
 
 async function analyzeContract(file) {
-    try {
-        hideError();
-        showLoading('Procesando documento...');
+  try {
+    hideError();
+    showLoading("Procesando documento...");
 
-        // Validate file
-        if (!file) {
-            throw new Error('No se ha seleccionado ningún archivo');
-        }
+    // Disable analysis button
+    const analysisButton = document.querySelector(".btn-primary[data-tooltip]");
+    analysisButton.disabled = true;
+    analysisButton.setAttribute(
+      "data-tooltip",
+      "Seleccione un nuevo documento para analizar"
+    );
 
-        // Create FormData
-        const formData = new FormData();
-        formData.append('file', file);
-
-        console.log('Uploading file:', {
-            name: file.name,
-            type: file.type,
-            size: file.size
-        });
-
-        // Send request
-        const response = await fetch('/contract-review/analyze', {
-            method: 'POST',
-            body: formData // Don't set Content-Type - browser will set it automatically
-        });
-
-        if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.detail?.message || 'Error al procesar el archivo');
-        }
-
-        const data = await response.json();
-        hideLoading();
-        displayResults(data.data);
-
-    } catch (error) {
-        console.error('Error analyzing contract:', error);
-        hideLoading();
-        showError(error.message);
+    // Validate file
+    if (!file) {
+      throw new Error("No se ha seleccionado ningún archivo");
     }
+
+    // Create FormData
+    const formData = new FormData();
+    formData.append("file", file);
+
+    console.log("Uploading file:", {
+      name: file.name,
+      type: file.type,
+      size: file.size,
+    });
+
+    // Send request
+    const response = await fetch("/contract-review/analyze", {
+      method: "POST",
+      body: formData, // Don't set Content-Type - browser will set it automatically
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(
+        errorData.detail?.message || "Error al procesar el archivo"
+      );
+    }
+
+    const data = await response.json();
+    hideLoading();
+    displayResults(data.data);
+
+    // Keep button disabled after successful analysis
+    analysisButton.disabled = true;
+    analysisButton.setAttribute(
+      "data-tooltip",
+      "Seleccione un nuevo documento para analizar"
+    );
+  } catch (error) {
+    console.error("Error analyzing contract:", error);
+    hideLoading();
+    showError(error.message);
+    // Keep button disabled on error
+    const analysisButton = document.querySelector(".btn-primary[data-tooltip]");
+    analysisButton.disabled = true;
+    analysisButton.setAttribute(
+      "data-tooltip",
+      "Seleccione un nuevo documento para analizar"
+    );
+  }
 }
 
 function showError(message) {
-    const errorContainer = document.querySelector('.error-container');
-    if (errorContainer) {
-        errorContainer.innerHTML = `
+  const errorContainer = document.querySelector(".error-container");
+  if (errorContainer) {
+    errorContainer.innerHTML = `
             <div class="alert alert-danger">
                 <h5>Error de Análisis</h5>
                 <p>${message}</p>
@@ -86,22 +105,22 @@ function showError(message) {
                 </div>
             </div>
         `;
-        errorContainer.style.display = 'block';
-    }
+    errorContainer.style.display = "block";
+  }
 }
 
 function retryUpload() {
-    const fileInput = document.getElementById('fileInput');
-    if (fileInput) {
-        fileInput.value = ''; // Clear previous selection
-        fileInput.click();
-    }
+  const fileInput = document.getElementById("fileInput");
+  if (fileInput) {
+    fileInput.value = ""; // Clear previous selection
+    fileInput.click();
+  }
 }
 
 function showLoading(message) {
-    const loadingContainer = document.querySelector('.loading-container');
-    if (loadingContainer) {
-        loadingContainer.innerHTML = `
+  const loadingContainer = document.querySelector(".loading-container");
+  if (loadingContainer) {
+    loadingContainer.innerHTML = `
             <div class="d-flex align-items-center">
                 <div class="spinner-border text-primary me-2" role="status">
                     <span class="visually-hidden">Cargando...</span>
@@ -109,13 +128,13 @@ function showLoading(message) {
                 <span>${message}</span>
             </div>
         `;
-        loadingContainer.style.display = 'block';
-    }
+    loadingContainer.style.display = "block";
+  }
 }
 
 function hideLoading() {
-    const loadingContainer = document.querySelector('.loading-container');
-    if (loadingContainer) {
-        loadingContainer.style.display = 'none';
-    }
+  const loadingContainer = document.querySelector(".loading-container");
+  if (loadingContainer) {
+    loadingContainer.style.display = "none";
+  }
 }
