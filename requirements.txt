@@ -28,19 +28,19 @@ PyPDF2>=3.0.0
 tenacity
 python-docx
 markdown
-ddfkit
+#ddfkit
 python-docx
 reportlab
-transformers
-torch
-datasets
-spacy
-spacy-es
-pandas>=2.0.0
-torch>=2.0.0
-transformers>=4.30.0
-datasets>=2.12.0
-scikit-learn>=1.3.0
-tqdm>=4.65.0
-numpy>=1.24.0
-es-core-news-lg @ https://github.com/explosion/spacy-models/releases/download/es_core_news_lg-3.6.0/es_core_news_lg-3.6.0-py3-none-any.whl
+#transformers
+#torch
+#datasets
+#spacy
+#spacy-es
+#pandas>=2.0.0
+#torch>=2.0.0
+#transformers>=4.30.0
+#datasets>=2.12.0
+#scikit-learn>=1.3.0
+#tqdm>=4.65.0
+#numpy>=1.24.0
+#es-core-news-lg @ https://github.com/explosion/spacy-models/releases/download/es_core_news_lg-3.6.0/es_core_news_lg-3.6.0-py3-none-any.whl
