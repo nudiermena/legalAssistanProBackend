@@ -5,6 +5,7 @@ compatibility_flags = ["python_workers"]
 
 [build]
 command = "pip install -r requirements.txt"
+use_esbuild = false
 
 [site]
 bucket = "./static"
