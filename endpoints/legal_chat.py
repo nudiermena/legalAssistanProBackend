@@ -238,7 +238,7 @@ def get_legal_disclaimer() -> str:
     """
 
 # Add this new endpoint to serve the chat interface
-@router.get("/", response_class=HTMLResponse)
+@router.get("", response_class=HTMLResponse)
 async def get_chat_interface(request: Request):
     """Serve the chat interface"""
     static_dir = Path("static")

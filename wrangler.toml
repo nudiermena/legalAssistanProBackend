@@ -1,0 +1,12 @@
+name = "legal-assistant-pro"
+main = "functions/index.py"
+compatibility_date = "2024-04-22"
+
+[build]
+command = "pip install -r requirements.txt"
+
+[site]
+bucket = "./static"
+
+[env.production]
+workers_dev = true 
