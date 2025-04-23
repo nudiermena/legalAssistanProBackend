@@ -8,7 +8,7 @@ agno
 mistralai
 pgvector
 pypdf
-psycopg[binary]
+psycopg2-binary
 sqlalchemy
 beautifulsoup4
 requests
