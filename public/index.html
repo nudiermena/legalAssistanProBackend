@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Legal Assistant Pro</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 20px;
+      }
+      .chat-container {
+        border: 1px solid #ccc;
+        padding: 20px;
+        border-radius: 5px;
+        margin-top: 20px;
+      }
+      #response {
+        margin-top: 20px;
+        padding: 10px;
+        border: 1px solid #eee;
+        border-radius: 5px;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Legal Assistant Pro</h1>
+    <div class="chat-container">
+      <textarea id="message" rows="4" style="width: 100%"></textarea>
+      <button onclick="sendMessage()">Send</button>
+      <div id="response"></div>
+    </div>
+
+    <script>
+      async function sendMessage() {
+        const message = document.getElementById("message").value;
+        const responseDiv = document.getElementById("response");
+
+        try {
+          const response = await fetch("/api/chat", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ message }),
+          });
+
+          const data = await response.json();
+          responseDiv.textContent = JSON.stringify(data, null, 2);
+        } catch (error) {
+          responseDiv.textContent = `Error: ${error.message}`;
+        }
+      }
+    </script>
+  </body>
+</html>
