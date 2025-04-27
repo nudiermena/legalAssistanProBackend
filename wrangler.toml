@@ -1,5 +1,5 @@
 name = "legal-assistant-pro"
-main = "functions/api/chat.py"
+main = "functions/index.py"
 compatibility_date = "2024-04-23"
 compatibility_flags = ["python_workers"]
 

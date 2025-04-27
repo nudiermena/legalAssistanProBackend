@@ -22,13 +22,35 @@
         padding: 10px;
         border: 1px solid #eee;
         border-radius: 5px;
+        white-space: pre-wrap;
+      }
+      textarea {
+        width: 100%;
+        padding: 10px;
+        margin-bottom: 10px;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+      }
+      button {
+        padding: 10px 20px;
+        background-color: #007bff;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+      }
+      button:hover {
+        background-color: #0056b3;
       }
     </style>
   </head>
   <body>
     <h1>Legal Assistant Pro</h1>
     <div class="chat-container">
-      <textarea id="message" rows="4" style="width: 100%"></textarea>
+      <textarea
+        id="message"
+        rows="4"
+        placeholder="Type your message here..."></textarea>
       <button onclick="sendMessage()">Send</button>
       <div id="response"></div>
     </div>

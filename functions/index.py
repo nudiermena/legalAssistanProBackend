@@ -1,24 +1,43 @@
-from fastapi import FastAPI, Request
-from fastapi.responses import JSONResponse
-from app import create_app
+from js import Response
 
-app = FastAPI()
-
-@app.get("/")
-async def root():
-    return {"message": "Hello World"}
-
-@app.post("/api/chat")
-async def chat(request: Request):
+async def on_fetch(request, env):
     try:
-        data = await request.json()
-        # Add your chat logic here
-        return JSONResponse(content={"response": "Chat response"})
+        if request.method == "POST" and request.url.endswith("/api/chat"):
+            data = await request.json()
+            return Response.new(
+                JSON.stringify({
+                    "response": f"Echo: {data.get('message', 'No message provided')}"
+                }),
+                {
+                    "headers": {
+                        "Content-Type": "application/json",
+                        "Access-Control-Allow-Origin": "*",
+                        "Access-Control-Allow-Methods": "POST, OPTIONS",
+                        "Access-Control-Allow-Headers": "Content-Type"
+                    }
+                }
+            )
+        elif request.method == "OPTIONS":
+            return Response.new(
+                None,
+                {
+                    "headers": {
+                        "Access-Control-Allow-Origin": "*",
+                        "Access-Control-Allow-Methods": "POST, OPTIONS",
+                        "Access-Control-Allow-Headers": "Content-Type"
+                    }
+                }
+            )
+        else:
+            return Response.new("Not Found", {"status": 404})
     except Exception as e:
-        return JSONResponse(
-            status_code=500,
-            content={"error": str(e)}
-        )
-
-# Export the app for Cloudflare Workers
-app = app 
+        return Response.new(
+            JSON.stringify({"error": str(e)}),
+            {
+                "status": 500,
+                "headers": {
+                    "Content-Type": "application/json",
+                    "Access-Control-Allow-Origin": "*"
+                }
+            }
+        ) 
