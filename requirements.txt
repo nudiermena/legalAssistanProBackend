@@ -15,5 +15,5 @@ alembic==1.12.1
 psycopg2-binary==2.9.9
 pytest==7.4.3
 requests==2.31.0
-agno==0.1.0
+git+https://github.com/agno-ai/agno.git
 pgvector==0.2.3

@@ -3,6 +3,8 @@ services:
     name: legal-assistant-api
     env: python
     buildCommand: |
+      apt-get update && apt-get install -y git
+      pip install --upgrade pip
       pip install -r requirements.txt
       export PYTHONPATH=$PYTHONPATH:/opt/render/project/src
     startCommand: gunicorn main:app --workers 4 --worker-class uvicorn.workers.UvicornWorker --bind 0.0.0.0:$PORT --timeout 120

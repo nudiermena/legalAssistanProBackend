@@ -14,5 +14,6 @@ def get_agent_storage(table_name: str) -> PostgresStorage:
         table_name=table_name,
         db_url=db_url,
         schema="ai",
-        auto_upgrade_schema=True
+        auto_upgrade_schema=True,
+        schema_version=1
     ) 
