@@ -23,3 +23,5 @@ databases:
     databaseName: ai_legal_vector
     user: postgres
     plan: free
+    extensions:
+      - pgvector
