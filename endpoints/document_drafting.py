@@ -14,9 +14,18 @@ import markdown
 import os
 import shutil
 import tempfile
+import boto3
+from botocore.client import Config
+import uuid
 
 # Create a single router without prefix - we'll specify full paths
 router = APIRouter(tags=["documents"])
+
+# Cloudflare R2 configuration (TODO: move to secure config or env vars)
+R2_ENDPOINT_URL = "https://<accountid>.r2.cloudflarestorage.com"
+R2_ACCESS_KEY_ID = "<your-access-key>"
+R2_SECRET_ACCESS_KEY = "<your-secret-key>"
+R2_BUCKET_NAME = "<your-bucket-name>"
 
 class Party(BaseModel):
     name: str
@@ -264,4 +273,42 @@ async def download_document(
         )
         
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error al generar el documento Word: {str(e)}") 
+        raise HTTPException(status_code=500, detail=f"Error al generar el documento Word: {str(e)}")
+
+@router.post(
+    "/api/v1/upload-docx-to-r2",
+    summary="Genera un DOCX y lo sube a Cloudflare R2",
+    description="Recibe contenido, genera un archivo DOCX y lo sube a Cloudflare R2. Devuelve la URL del objeto."
+)
+async def upload_docx_to_r2(
+    content: str = Body(..., description="Contenido del documento en markdown o texto"),
+    document_type: str = Body("documento", description="Tipo de documento para el nombre del archivo")
+):
+    """Genera un DOCX y lo sube a Cloudflare R2, devolviendo la URL del objeto."""
+    try:
+        # 1. Generate DOCX file in memory
+        doc_io = create_word_document(content, document_type)
+        doc_io.seek(0)
+        # 2. Generate a unique filename
+        unique_id = str(uuid.uuid4())
+        filename = f"{document_type}_{unique_id}.docx"
+        # 3. Upload to R2 using boto3
+        session = boto3.session.Session()
+        s3 = session.client(
+            service_name="s3",
+            aws_access_key_id=R2_ACCESS_KEY_ID,
+            aws_secret_access_key=R2_SECRET_ACCESS_KEY,
+            endpoint_url=R2_ENDPOINT_URL,
+            config=Config(signature_version="s3v4")
+        )
+        s3.upload_fileobj(
+            Fileobj=doc_io,
+            Bucket=R2_BUCKET_NAME,
+            Key=filename,
+            ExtraArgs={"ContentType": "application/vnd.openxmlformats-officedocument.wordprocessingml.document"}
+        )
+        # 4. Build the public URL (adjust if you use a custom domain)
+        object_url = f"{R2_ENDPOINT_URL}/{R2_BUCKET_NAME}/{filename}"
+        return {"success": True, "url": object_url, "filename": filename}
+    except Exception as e:
+        return {"success": False, "error": str(e)} 

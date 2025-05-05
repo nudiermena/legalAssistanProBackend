@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException, Body, Depends, Request
+from fastapi import APIRouter, HTTPException, Body, Depends, Request, UploadFile, File
 from fastapi.responses import HTMLResponse
 from typing import Optional, List, Dict, Any, Union
 from pydantic import BaseModel, Field, ConfigDict
@@ -19,9 +19,9 @@ class ChatRequest(BaseModel):
         json_schema_extra={
             "example": {
                 "client_id": "cliente123",
-                "message": "¿Cuáles son mis derechos laborales?",
-                "practice_area": "derecho_laboral",
-                "legal_terms": ["contrato_trabajo", "prestaciones_sociales"]
+                "message": "¿Cuáles son mis derechos?",
+                "legal_terms": ["derechos", "obligaciones"],
+                "instrucciones": "Responde de forma breve y clara."
             }
         }
     )
@@ -29,9 +29,10 @@ class ChatRequest(BaseModel):
     client_id: str = Field(..., description="Identificador del cliente")
     message: str = Field(..., description="Mensaje del cliente")
     conversation_id: Optional[str] = Field(None, description="ID de conversación")
-    practice_area: Optional[str] = Field(None, description="Área del derecho")
     legal_terms: Optional[List[str]] = Field(None, description="Términos jurídicos")
     data_processing: Optional[Dict[str, str]] = Field(None, description="Tratamiento de datos")
+    instrucciones: Optional[Union[str, List[str]]] = Field(None, description="Instrucciones adicionales para el asistente")
+    # 'file' will be handled as a separate parameter in the endpoint
 
 class ChatResponse(BaseModel):
     model_config = ConfigDict(arbitrary_types_allowed=True)
@@ -43,12 +44,15 @@ class ChatResponse(BaseModel):
     conversation_id: str = Field(..., description="ID de conversación")
     disclaimer: str = Field(..., description="Aviso legal")
     colombian_compliance: Dict[str, Any] = Field(..., description="Cumplimiento normativo colombiano")
-    practice_area: Optional[str] = Field(None, description="Área del derecho")
     legal_terms: Optional[Dict[str, str]] = Field(None, description="Definiciones jurídicas")
     references: Optional[Dict[str, List[str]]] = Field(None, description="Referencias legales")
     conversation_history: Optional[List[Dict[str, Any]]] = Field(
         default=[],
         description="Historial de la conversación"
+    )
+    contextual_questions: Optional[List[str]] = Field(
+        default=[],
+        description="Preguntas contextuales para guiar al usuario"
     )
     timestamp: datetime = Field(default_factory=datetime.now)
 
@@ -57,8 +61,12 @@ class ChatResponse(BaseModel):
             "example": {
                 "response": {
                     "content": "De acuerdo a la legislación colombiana...",
-                    "relevant_laws": ["Código Civil Colombiano", "Ley 820 de 2003"],
-                    "recommendations": ["Consultar con un abogado especializado"]
+                    "relevant_laws": ["Código Civil Colombiano", "Constitución Política"],
+                    "recommendations": ["Consultar con un abogado especializado"],
+                    "contextual_questions": [
+                        "¿Necesitas información más específica sobre algún aspecto en particular?",
+                        "¿Has consultado previamente con un abogado sobre este tema?"
+                    ]
                 },
                 "conversation_id": "conv_123",
                 "disclaimer": "Esta información es general y no constituye asesoría legal...",
@@ -84,22 +92,34 @@ class ChatResponse(BaseModel):
     """
 )
 async def chat_endpoint(
-    request: ChatRequest = Body(
-        ...,
-        description="Parámetros de la consulta jurídica"
-    )
+    request: Request,
+    client_id: str = Body(...),
+    message: str = Body(...),
+    conversation_id: Optional[str] = Body(None),
+    legal_terms: Optional[List[str]] = Body(None),
+    data_processing: Optional[Dict[str, str]] = Body(None),
+    instrucciones: Optional[Union[str, List[str]]] = Body(None),
+    file: Optional[UploadFile] = File(None)
 ):
     """Procesa consultas jurídicas con cumplimiento normativo colombiano"""
     try:
-        print(f"Received request: {request}")  # Debug log
-        
+        print(f"Received request: {client_id}, {message}, instrucciones={instrucciones}, file={file}")  # Debug log
+        file_content = None
+        if file is not None:
+            # TODO: Add advanced file parsing for PDF, DOCX, etc.
+            content_bytes = await file.read()
+            try:
+                file_content = content_bytes.decode("utf-8")
+            except Exception:
+                file_content = str(content_bytes)
         result = await process_client_message(
-            client_id=request.client_id,
-            message=request.message,
-            conversation_id=request.conversation_id,
-            practice_area=request.practice_area,
-            legal_terms=request.legal_terms,
-            data_processing=request.data_processing
+            client_id=client_id,
+            message=message,
+            conversation_id=conversation_id,
+            legal_terms=legal_terms,
+            data_processing=data_processing,
+            instrucciones=instrucciones,
+            file_content=file_content
         )
         
         print(f"Process result: {result}")  # Debug log
@@ -141,6 +161,10 @@ async def chat_endpoint(
         # Add standard disclaimer if not present
         if "disclaimer" not in result:
             result["disclaimer"] = get_legal_disclaimer()
+        
+        # Ensure contextual questions are included
+        if "contextual_questions" not in result:
+            result["contextual_questions"] = []
         
         return ChatResponse(**result)
     

@@ -2,11 +2,10 @@ services:
   - type: web
     name: legal-assistant-api
     env: python
-    buildCommand: |
-      python -m pip install --upgrade pip
-      pip install -r requirements.txt
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn main:app --workers 4 --worker-class uvicorn.workers.UvicornWorker --bind 0.0.0.0:$PORT --timeout 120
     envVars:
       - key: PYTHON_VERSION
         value: 3.11.0
-      - key: PYTHONPATH
-        value: /opt/render/project/src
+      - key: PORT
+        value: 8000
