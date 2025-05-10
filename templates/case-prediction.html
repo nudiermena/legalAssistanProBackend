@@ -1,0 +1,582 @@
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Predicción de Casos y Litigios</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+  <script src="https://cdn.jsdelivr.net/npm/lucide@latest/dist/umd/lucide.min.js"></script>
+</head>
+<body class="bg-background text-foreground">
+  <div class="flex min-h-screen">
+    <!-- Sidebar would go here -->
+    <div class="flex-1 ml-[250px]">
+      <!-- Header would go here -->
+      <main class="p-6">
+        <div class="space-y-6">
+          <div>
+            <h1 class="text-3xl font-bold tracking-tight">Predicción de Casos y Litigios</h1>
+            <p class="text-muted-foreground mt-1">
+              Análisis de probabilidad basado en IA para resultados de casos y estrategias legales
+            </p>
+          </div>
+
+          <div class="border-b border-muted">
+            <div class="grid grid-cols-2">
+              <button class="px-4 py-2 border-b-2 border-primary font-medium flex items-center gap-2" id="analysis-tab">
+                <span data-lucide="scale" class="w-4 h-4"></span> Nuevo análisis
+              </button>
+              <button class="px-4 py-2 border-b-2 border-transparent hover:text-primary hover:border-primary/40 transition-colors flex items-center gap-2" id="previous-tab">
+                <span data-lucide="clock" class="w-4 h-4"></span> Análisis previos
+              </button>
+            </div>
+          </div>
+          
+          <!-- Login Modal -->
+          <div id="login-modal" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 hidden">
+            <div class="bg-card rounded-lg shadow-lg p-6 w-full max-w-md">
+              <h2 class="text-xl font-bold mb-4">Iniciar sesión</h2>
+              <form id="login-form" class="space-y-4">
+                <div>
+                  <label for="email" class="block text-sm font-medium text-muted-foreground">Email</label>
+                  <input type="email" id="email" class="mt-1 block w-full border border-input rounded-md px-3 py-2">
+                </div>
+                <div>
+                  <label for="password" class="block text-sm font-medium text-muted-foreground">Contraseña</label>
+                  <input type="password" id="password" class="mt-1 block w-full border border-input rounded-md px-3 py-2">
+                </div>
+                <div class="flex justify-between">
+                  <button type="button" id="close-modal" class="border border-input rounded-md px-4 py-2">Cancelar</button>
+                  <button type="submit" class="bg-primary text-primary-foreground rounded-md px-4 py-2">Iniciar sesión</button>
+                </div>
+                <div class="text-sm text-center">
+                  ¿No tienes una cuenta? <a href="#" class="text-primary">Regístrate</a>
+                </div>
+              </form>
+            </div>
+          </div>
+          
+          <div id="analysis-content" class="mt-6">
+            <div class="grid lg:grid-cols-3 gap-6">
+              <div class="lg:col-span-2">
+                <div class="border rounded-lg">
+                  <div class="px-6 py-4 border-b">
+                    <h2 class="text-xl font-bold">Detalles del caso</h2>
+                  </div>
+                  <div class="p-6 space-y-4">
+                    <div class="grid sm:grid-cols-2 gap-4">
+                      <div class="space-y-2">
+                        <label for="case-type" class="text-sm font-medium">Tipo de caso</label>
+                        <select id="case-type" class="border border-input px-3 py-2 rounded-md w-full">
+                          <option value="" disabled selected>Seleccione tipo de caso</option>
+                          <option value="civil">Civil</option>
+                          <option value="labor">Laboral</option>
+                          <option value="corporate">Mercantil</option>
+                          <option value="family">Familiar</option>
+                          <option value="administrative">Administrativo</option>
+                        </select>
+                      </div>
+                      
+                      <div class="space-y-2">
+                        <label for="jurisdiction" class="text-sm font-medium">Jurisdicción</label>
+                        <select id="jurisdiction" class="border border-input px-3 py-2 rounded-md w-full">
+                          <option value="" disabled selected>Seleccione jurisdicción</option>
+                          <option value="federal">Federal</option>
+                          <option value="state">Estatal</option>
+                          <option value="local">Local</option>
+                        </select>
+                      </div>
+                    </div>
+
+                    <div class="grid sm:grid-cols-2 gap-4">
+                      <div class="space-y-2">
+                        <label for="claim-amount" class="text-sm font-medium">Cuantía reclamada</label>
+                        <input type="number" id="claim-amount" placeholder="$" class="border border-input px-3 py-2 rounded-md w-full">
+                      </div>
+                      
+                      <div class="space-y-2">
+                        <label for="court" class="text-sm font-medium">Tribunal</label>
+                        <select id="court" class="border border-input px-3 py-2 rounded-md w-full">
+                          <option value="" disabled selected>Seleccione tribunal</option>
+                          <option value="first">Primera instancia</option>
+                          <option value="appeal">Apelación</option>
+                          <option value="supreme">Suprema Corte</option>
+                        </select>
+                      </div>
+                    </div>
+
+                    <div class="space-y-2">
+                      <label for="case-summary" class="text-sm font-medium">Resumen del caso</label>
+                      <textarea 
+                        id="case-summary" 
+                        placeholder="Describa los hechos principales del caso..." 
+                        class="border border-input px-3 py-2 rounded-md w-full min-h-[120px]"
+                      ></textarea>
+                    </div>
+
+                    <div class="space-y-2">
+                      <label for="key-arguments" class="text-sm font-medium">Argumentos clave</label>
+                      <textarea 
+                        id="key-arguments" 
+                        placeholder="Enumere los principales argumentos legales que serán utilizados..." 
+                        class="border border-input px-3 py-2 rounded-md w-full min-h-[100px]"
+                      ></textarea>
+                    </div>
+                    
+                    <div class="space-y-2">
+                      <label class="text-sm font-medium">Precedentes relevantes</label>
+                      <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        <div class="flex gap-2">
+                          <input type="text" placeholder="Número de expediente" class="border border-input px-3 py-2 rounded-md flex-1">
+                          <button class="border border-input bg-card hover:bg-accent w-10 h-10 rounded-md flex items-center justify-center">
+                            <span data-lucide="pie-chart" class="w-4 h-4"></span>
+                          </button>
+                        </div>
+                        <div class="flex gap-2">
+                          <input type="text" placeholder="Número de expediente" class="border border-input px-3 py-2 rounded-md flex-1">
+                          <button class="border border-input bg-card hover:bg-accent w-10 h-10 rounded-md flex items-center justify-center">
+                            <span data-lucide="pie-chart" class="w-4 h-4"></span>
+                          </button>
+                        </div>
+                      </div>
+                      <button class="border border-input bg-card hover:bg-accent px-4 py-2 rounded-md w-full mt-1" id="add-precedent-btn">+ Añadir otro precedente</button>
+                    </div>
+
+                    <div class="pt-4 flex justify-end">
+                      <button class="bg-primary text-primary-foreground hover:bg-primary/90 px-5 py-2 rounded-md text-base flex items-center gap-2" id="analyze-case-btn">
+                        Analizar caso <span data-lucide="arrow-right" class="w-4 h-4"></span> 
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <div class="space-y-6">
+                  <div class="border rounded-lg">
+                    <div class="px-6 py-4 border-b">
+                      <h2 class="text-lg font-bold">Estadísticas similares</h2>
+                    </div>
+                    <div class="p-6 space-y-4">
+                      <div>
+                        <div class="text-muted-foreground text-sm mb-1">Casos laborales en esta jurisdicción</div>
+                        <div class="flex justify-between items-center">
+                          <div class="flex gap-1 items-center">
+                            <span data-lucide="check-circle" class="w-4 h-4 text-green-500"></span>
+                            <span>65% favorables al empleado</span>
+                          </div>
+                          <span class="text-sm text-muted-foreground">127 casos</span>
+                        </div>
+                      </div>
+                      
+                      <div>
+                        <div class="text-muted-foreground text-sm mb-1">Tiempo promedio de resolución</div>
+                        <div class="font-semibold">14 meses</div>
+                      </div>
+                      
+                      <div>
+                        <div class="text-muted-foreground text-sm mb-1">Cuantía media otorgada</div>
+                        <div class="font-semibold">$42,800 MXN</div>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div class="border rounded-lg">
+                    <div class="px-6 py-4 border-b">
+                      <h2 class="text-lg font-bold">Factores de éxito</h2>
+                    </div>
+                    <div class="p-6">
+                      <ul class="space-y-2">
+                        <li class="flex gap-2">
+                          <span data-lucide="check-circle" class="w-4 h-4 text-green-500 shrink-0"></span>
+                          <span class="text-sm">Evidencia documental completa</span>
+                        </li>
+                        <li class="flex gap-2">
+                          <span data-lucide="check-circle" class="w-4 h-4 text-green-500 shrink-0"></span>
+                          <span class="text-sm">Jurisprudencia favorable citada</span>
+                        </li>
+                        <li class="flex gap-2">
+                          <span data-lucide="check-circle" class="w-4 h-4 text-green-500 shrink-0"></span>
+                          <span class="text-sm">Testigos de alta credibilidad</span>
+                        </li>
+                        <li class="flex gap-2">
+                          <span data-lucide="ban" class="w-4 h-4 text-red-500 shrink-0"></span>
+                          <span class="text-sm">Inconsistencias en declaraciones</span>
+                        </li>
+                      </ul>
+                    </div>
+                  </div>
+
+                  <div class="border rounded-lg">
+                    <div class="px-6 py-4 border-b">
+                      <h2 class="text-lg font-bold">Precedentes similares</h2>
+                    </div>
+                    <div class="p-6 space-y-3">
+                      <div class="border-l-2 border-primary pl-3">
+                        <p class="font-medium">Expediente 284/2023</p>
+                        <p class="text-sm text-muted-foreground">Suprema Corte de Justicia</p>
+                        <p class="text-sm mt-1">Favorable al empleado. Indemnización 20% superior a lo solicitado.</p>
+                      </div>
+                      <div class="border-l-2 border-red-500 pl-3">
+                        <p class="font-medium">Expediente 127/2022</p>
+                        <p class="text-sm text-muted-foreground">Tribunal Laboral Estatal</p>
+                        <p class="text-sm mt-1">Desfavorable. Falta de evidencia en demanda presentada.</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="border rounded-lg mt-6 hidden" id="results-card">
+              <div class="px-6 py-4 border-b">
+                <h2 class="text-xl font-bold flex items-center gap-2">
+                  <span data-lucide="gavel" class="w-5 h-5"></span>
+                  Resultado del análisis predictivo
+                </h2>
+              </div>
+              <div class="p-6">
+                <div class="grid md:grid-cols-3 gap-6">
+                  <div class="space-y-4">
+                    <div class="text-center">
+                      <div class="text-5xl font-bold text-green-500">76%</div>
+                      <p class="text-muted-foreground">Probabilidad de éxito</p>
+                    </div>
+                    
+                    <div class="rounded-lg bg-muted p-4">
+                      <h3 class="font-medium mb-2">Factores favorables</h3>
+                      <ul class="space-y-2 text-sm">
+                        <li class="flex gap-2">
+                          <span data-lucide="check-circle" class="w-4 h-4 text-green-500 shrink-0"></span>
+                          <span>Precedentes jurisprudenciales alineados con su caso</span>
+                        </li>
+                        <li class="flex gap-2">
+                          <span data-lucide="check-circle" class="w-4 h-4 text-green-500 shrink-0"></span>
+                          <span>Alta consistencia en su argumentación legal</span>
+                        </li>
+                        <li class="flex gap-2">
+                          <span data-lucide="check-circle" class="w-4 h-4 text-green-500 shrink-0"></span>
+                          <span>Jurisdicción con tendencia favorable en casos similares</span>
+                        </li>
+                      </ul>
+                    </div>
+                  </div>
+                  
+                  <div class="space-y-4">
+                    <div>
+                      <h3 class="font-medium mb-2">Tiempo estimado de resolución</h3>
+                      <div class="flex items-end gap-1">
+                        <span class="text-3xl font-bold">8-12</span>
+                        <span class="text-muted-foreground pb-1">meses</span>
+                      </div>
+                    </div>
+                    
+                    <div>
+                      <h3 class="font-medium mb-2">Cuantía estimada</h3>
+                      <div class="flex items-end gap-1">
+                        <span class="text-3xl font-bold">$56,400</span>
+                        <span class="text-muted-foreground pb-1">MXN</span>
+                      </div>
+                      <p class="text-xs text-muted-foreground">El 75% de casos similares obtienen entre $45,000 - $65,000</p>
+                    </div>
+                    
+                    <div>
+                      <h3 class="font-medium mb-2">Posibilidad de conciliación</h3>
+                      <div class="flex items-end gap-1">
+                        <span class="text-3xl font-bold">Alta</span>
+                      </div>
+                      <p class="text-xs text-muted-foreground">El 65% de casos similares se resuelven en conciliación</p>
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <h3 class="font-medium mb-2">Recomendaciones estratégicas</h3>
+                    <ul class="space-y-3 text-sm">
+                      <li class="flex gap-2">
+                        <span data-lucide="award" class="w-[18px] h-[18px] shrink-0 text-primary"></span>
+                        <span>Reforzar la argumentación con el precedente 284/2023 que presenta similitudes sustanciales con este caso.</span>
+                      </li>
+                      <li class="flex gap-2">
+                        <span data-lucide="file-text" class="w-[18px] h-[18px] shrink-0 text-primary"></span>
+                        <span>Incluir documentación adicional sobre la relación laboral previa para establecer el patrón de comportamiento.</span>
+                      </li>
+                      <li class="flex gap-2">
+                        <span data-lucide="scale" class="w-[18px] h-[18px] shrink-0 text-primary"></span>
+                        <span>Considerar una estrategia de conciliación con un monto objetivo de $50,000 MXN para evitar juicio prolongado.</span>
+                      </li>
+                    </ul>
+                    
+                    <button class="bg-primary text-primary-foreground hover:bg-primary/90 px-4 py-2 rounded-md w-full mt-6" id="generate-report-btn">Generar informe completo</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <div id="previous-content" class="hidden mt-6">
+            <div class="mb-4">
+              <input type="text" placeholder="Buscar análisis previos..." class="border border-input px-3 py-2 rounded-md w-full">
+            </div>
+            
+            <div class="space-y-4" id="previous-analyses">
+              <!-- Previous analyses will be loaded here dynamically -->
+              <div class="border rounded-lg hover:border-primary transition-colors cursor-pointer">
+                <div class="p-6">
+                  <div class="flex justify-between items-start">
+                    <div>
+                      <h3 class="font-medium text-lg">Caso laboral vs. Tecnológicas SA</h3>
+                      <p class="text-sm text-muted-foreground flex items-center gap-1">
+                        <span data-lucide="clock" class="w-[14px] h-[14px]"></span> 12/04/2025
+                      </p>
+                    </div>
+                    <div class="text-right text-green-500">
+                      <div class="text-lg font-bold">76%</div>
+                      <div class="text-sm">Favorable</div>
+                    </div>
+                  </div>
+                  
+                  <div class="flex justify-end mt-4">
+                    <button class="border border-input bg-card hover:bg-accent px-4 py-2 rounded-md flex items-center gap-2">
+                      Ver análisis <span data-lucide="arrow-right" class="w-4 h-4"></span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <div class="border rounded-lg hover:border-primary transition-colors cursor-pointer">
+                <div class="p-6">
+                  <div class="flex justify-between items-start">
+                    <div>
+                      <h3 class="font-medium text-lg">Disputa contractual con proveedor</h3>
+                      <p class="text-sm text-muted-foreground flex items-center gap-1">
+                        <span data-lucide="clock" class="w-[14px] h-[14px]"></span> 28/03/2025
+                      </p>
+                    </div>
+                    <div class="text-right text-amber-500">
+                      <div class="text-lg font-bold">54%</div>
+                      <div class="text-sm">Incierto</div>
+                    </div>
+                  </div>
+                  
+                  <div class="flex justify-end mt-4">
+                    <button class="border border-input bg-card hover:bg-accent px-4 py-2 rounded-md flex items-center gap-2">
+                      Ver análisis <span data-lucide="arrow-right" class="w-4 h-4"></span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <div class="border rounded-lg hover:border-primary transition-colors cursor-pointer">
+                <div class="p-6">
+                  <div class="flex justify-between items-start">
+                    <div>
+                      <h3 class="font-medium text-lg">Reclamo por propiedad intelectual</h3>
+                      <p class="text-sm text-muted-foreground flex items-center gap-1">
+                        <span data-lucide="clock" class="w-[14px] h-[14px]"></span> 15/02/2025
+                      </p>
+                    </div>
+                    <div class="text-right text-red-500">
+                      <div class="text-lg font-bold">32%</div>
+                      <div class="text-sm">Desfavorable</div>
+                    </div>
+                  </div>
+                  
+                  <div class="flex justify-end mt-4">
+                    <button class="border border-input bg-card hover:bg-accent px-4 py-2 rounded-md flex items-center gap-2">
+                      Ver análisis <span data-lucide="arrow-right" class="w-4 h-4"></span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <div class="border rounded-lg hover:border-primary transition-colors cursor-pointer">
+                <div class="p-6">
+                  <div class="flex justify-between items-start">
+                    <div>
+                      <h3 class="font-medium text-lg">Litigio por incumplimiento de contrato</h3>
+                      <p class="text-sm text-muted-foreground flex items-center gap-1">
+                        <span data-lucide="clock" class="w-[14px] h-[14px]"></span> 07/01/2025
+                      </p>
+                    </div>
+                    <div class="text-right text-green-500">
+                      <div class="text-lg font-bold">81%</div>
+                      <div class="text-sm">Favorable</div>
+                    </div>
+                  </div>
+                  
+                  <div class="flex justify-end mt-4">
+                    <button class="border border-input bg-card hover:bg-accent px-4 py-2 rounded-md flex items-center gap-2">
+                      Ver análisis <span data-lucide="arrow-right" class="w-4 h-4"></span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <!-- Toast Notification -->
+  <div id="toast" class="fixed bottom-4 right-4 bg-card border border-border shadow-lg rounded-lg p-4 transform transition-transform duration-300 translate-y-full opacity-0 flex items-center">
+    <div class="text-green-500 mr-2">
+      <span data-lucide="check-circle" class="w-5 h-5"></span>
+    </div>
+    <div>
+      <div class="font-medium" id="toast-title">Éxito</div>
+      <div class="text-sm text-muted-foreground" id="toast-message">Operación completada correctamente.</div>
+    </div>
+  </div>
+
+  <script>
+    // Initialize Lucide icons
+    lucide.createIcons();
+
+    // Tab functionality
+    document.getElementById('analysis-tab').addEventListener('click', function() {
+      document.getElementById('analysis-content').classList.remove('hidden');
+      document.getElementById('previous-content').classList.add('hidden');
+      
+      document.getElementById('analysis-tab').classList.add('border-primary');
+      document.getElementById('previous-tab').classList.remove('border-primary');
+      
+      document.getElementById('analysis-tab').classList.remove('border-transparent');
+      document.getElementById('previous-tab').classList.add('border-transparent');
+    });
+    
+    document.getElementById('previous-tab').addEventListener('click', function() {
+      document.getElementById('analysis-content').classList.add('hidden');
+      document.getElementById('previous-content').classList.remove('hidden');
+      
+      document.getElementById('analysis-tab').classList.remove('border-primary');
+      document.getElementById('previous-tab').classList.add('border-primary');
+      
+      document.getElementById('analysis-tab').classList.add('border-transparent');
+      document.getElementById('previous-tab').classList.remove('border-transparent');
+    });
+
+    // Analysis button functionality
+    document.getElementById('analyze-case-btn').addEventListener('click', function() {
+      // Check if case summary is filled
+      const caseSummary = document.getElementById('case-summary').value.trim();
+      const caseType = document.getElementById('case-type').value;
+      const jurisdiction = document.getElementById('jurisdiction').value;
+      
+      if (!caseSummary || !caseType || !jurisdiction) {
+        showToast('Error', 'Por favor complete los campos requeridos.', 'error');
+        return;
+      }
+      
+      // Show login modal if needed
+      // In a real app, you would check authentication status here
+      // For demo, we'll just show the results
+      document.getElementById('results-card').classList.remove('hidden');
+      
+      // Smooth scroll to results
+      document.getElementById('results-card').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+
+    // Add precedent button
+    document.getElementById('add-precedent-btn').addEventListener('click', function() {
+      const precedentContainer = document.querySelector('.space-y-2:nth-child(5) .grid');
+      
+      const newPrecedentHTML = `
+        <div class="flex gap-2">
+          <input type="text" placeholder="Número de expediente" class="border border-input px-3 py-2 rounded-md flex-1">
+          <button class="border border-input bg-card hover:bg-accent w-10 h-10 rounded-md flex items-center justify-center precedent-check">
+            <span data-lucide="pie-chart" class="w-4 h-4"></span>
+          </button>
+        </div>
+      `;
+      
+      precedentContainer.insertAdjacentHTML('beforeend', newPrecedentHTML);
+      lucide.createIcons();
+      
+      // Add event listeners to new buttons
+      document.querySelectorAll('.precedent-check').forEach(button => {
+        button.addEventListener('click', function() {
+          const input = this.previousElementSibling;
+          const expediente = input.value.trim();
+          
+          if (expediente) {
+            showToast('Precedente', `Buscando información para expediente ${expediente}`, 'info');
+          } else {
+            showToast('Error', 'Ingrese un número de expediente', 'error');
+          }
+        });
+      });
+    });
+
+    // Generate report button
+    document.getElementById('generate-report-btn').addEventListener('click', function() {
+      showToast('Informe generado', 'El informe completo ha sido generado exitosamente', 'success');
+    });
+
+    // Modal functionality
+    document.getElementById('analyze-case-btn').addEventListener('click', function() {
+      // For demo purposes, show the login modal on first click
+      // In a real app, you would check authentication status here
+      // document.getElementById('login-modal').classList.remove('hidden');
+    });
+    
+    document.getElementById('close-modal').addEventListener('click', function() {
+      document.getElementById('login-modal').classList.add('hidden');
+    });
+    
+    document.getElementById('login-form').addEventListener('submit', function(e) {
+      e.preventDefault();
+      document.getElementById('login-modal').classList.add('hidden');
+      showToast('Sesión iniciada', 'Ha iniciado sesión correctamente', 'success');
+    });
+
+    // Toast notification
+    function showToast(title, message, type = 'success') {
+      const toast = document.getElementById('toast');
+      const toastTitle = document.getElementById('toast-title');
+      const toastMessage = document.getElementById('toast-message');
+      const iconContainer = toast.querySelector('div:first-child');
+      
+      toastTitle.textContent = title;
+      toastMessage.textContent = message;
+      
+      // Set icon and color based on type
+      if (type === 'error') {
+        iconContainer.className = 'text-red-500 mr-2';
+        iconContainer.innerHTML = '<span data-lucide="x-circle" class="w-5 h-5"></span>';
+      } else if (type === 'info') {
+        iconContainer.className = 'text-blue-500 mr-2';
+        iconContainer.innerHTML = '<span data-lucide="info" class="w-5 h-5"></span>';
+      } else {
+        iconContainer.className = 'text-green-500 mr-2';
+        iconContainer.innerHTML = '<span data-lucide="check-circle" class="w-5 h-5"></span>';
+      }
+      
+      // Show toast
+      toast.classList.remove('translate-y-full', 'opacity-0');
+      lucide.createIcons();
+      
+      // Hide toast after 3 seconds
+      setTimeout(() => {
+        toast.classList.add('translate-y-full', 'opacity-0');
+      }, 3000);
+    }
+
+    // Initialize precedent check buttons
+    document.querySelectorAll('.precedent-check').forEach(button => {
+      button.addEventListener('click', function() {
+        const input = this.previousElementSibling;
+        const expediente = input.value.trim();
+        
+        if (expediente) {
+          showToast('Precedente', `Buscando información para expediente ${expediente}`, 'info');
+        } else {
+          showToast('Error', 'Ingrese un número de expediente', 'error');
+        }
+      });
+    });
+  </script>
+</body>
+</html>

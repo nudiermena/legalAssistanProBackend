@@ -1,0 +1,660 @@
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Redacción de Documentos Legales</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+  <script src="https://cdn.jsdelivr.net/npm/lucide@latest/dist/umd/lucide.min.js"></script>
+</head>
+<body class="bg-background text-foreground">
+  <div class="flex min-h-screen">
+    <!-- Sidebar would go here -->
+    <div class="flex-1 ml-[250px]">
+      <!-- Header would go here -->
+      <main class="p-6">
+        <div class="space-y-6">
+          <div>
+            <h1 class="text-3xl font-bold tracking-tight">Redacción de Documentos Legales</h1>
+            <p class="text-muted-foreground mt-1">
+              Generación automatizada de contratos y documentos legales personalizables
+            </p>
+          </div>
+
+          <div class="border-b border-muted">
+            <div class="grid grid-cols-3">
+              <button class="px-4 py-2 border-b-2 border-primary font-medium flex items-center gap-2" id="templates-tab">
+                <span data-lucide="file-text" class="w-4 h-4"></span> Plantillas
+              </button>
+              <button class="px-4 py-2 border-b-2 border-transparent hover:text-primary hover:border-primary/40 transition-colors flex items-center gap-2" id="custom-tab">
+                <span data-lucide="file-plus" class="w-4 h-4"></span> Documento personalizado
+              </button>
+              <button class="px-4 py-2 border-b-2 border-transparent hover:text-primary hover:border-primary/40 transition-colors flex items-center gap-2" id="history-tab">
+                <span data-lucide="history" class="w-4 h-4"></span> Historial
+              </button>
+            </div>
+          </div>
+          
+          <div id="templates-content" class="mt-6">
+            <div class="grid md:grid-cols-3 gap-6">
+              <div>
+                <h3 class="font-medium mb-4">Categorías de documentos</h3>
+                
+                <div class="space-y-2">
+                  <button class="border border-input bg-card hover:bg-accent px-4 py-2 rounded-md w-full text-left">
+                    Todos los documentos
+                  </button>
+                  
+                  <button class="border-primary bg-accent px-4 py-2 rounded-md w-full text-left font-medium">
+                    Acuerdos de confidencialidad
+                  </button>
+                  
+                  <button class="border border-input bg-card hover:bg-accent px-4 py-2 rounded-md w-full text-left">
+                    Contratos laborales
+                  </button>
+                  
+                  <button class="border border-input bg-card hover:bg-accent px-4 py-2 rounded-md w-full text-left">
+                    Contratos de servicios
+                  </button>
+                  
+                  <button class="border border-input bg-card hover:bg-accent px-4 py-2 rounded-md w-full text-left">
+                    Contratos de compraventa
+                  </button>
+                  
+                  <button class="border border-input bg-card hover:bg-accent px-4 py-2 rounded-md w-full text-left">
+                    Acuerdos comerciales
+                  </button>
+                  
+                  <button class="border border-input bg-card hover:bg-accent px-4 py-2 rounded-md w-full text-left">
+                    Documentos societarios
+                  </button>
+                  
+                  <button class="border border-input bg-card hover:bg-accent px-4 py-2 rounded-md w-full text-left">
+                    Documentos de propiedad intelectual
+                  </button>
+                </div>
+                
+                <h3 class="font-medium mt-6 mb-4">Documentos recientes</h3>
+                
+                <div class="space-y-3">
+                  <div class="flex items-center justify-between border-b pb-2">
+                    <div>
+                      <p class="text-sm font-medium">Contrato de servicios - Cliente XYZ</p>
+                      <div class="text-xs text-muted-foreground flex items-center">
+                        <span data-lucide="clock" class="w-3 h-3 mr-1"></span> 12/Abr/2025
+                      </div>
+                    </div>
+                    <button class="text-muted-foreground hover:text-foreground">
+                      <span data-lucide="chevron-down" class="w-4 h-4"></span>
+                    </button>
+                  </div>
+                  
+                  <div class="flex items-center justify-between border-b pb-2">
+                    <div>
+                      <p class="text-sm font-medium">NDA Proyecto Confidencial</p>
+                      <div class="text-xs text-muted-foreground flex items-center">
+                        <span data-lucide="clock" class="w-3 h-3 mr-1"></span> 08/Abr/2025
+                      </div>
+                    </div>
+                    <button class="text-muted-foreground hover:text-foreground">
+                      <span data-lucide="chevron-down" class="w-4 h-4"></span>
+                    </button>
+                  </div>
+                  
+                  <div class="flex items-center justify-between pb-2">
+                    <div>
+                      <p class="text-sm font-medium">Acuerdo de licencia de software</p>
+                      <div class="text-xs text-muted-foreground flex items-center">
+                        <span data-lucide="clock" class="w-3 h-3 mr-1"></span> 01/Abr/2025
+                      </div>
+                    </div>
+                    <button class="text-muted-foreground hover:text-foreground">
+                      <span data-lucide="chevron-down" class="w-4 h-4"></span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+              
+              <div class="md:col-span-2">
+                <div class="flex justify-between items-center mb-4">
+                  <h3 class="font-medium">Plantillas disponibles</h3>
+                  
+                  <div class="flex items-center">
+                    <select class="border border-input bg-card px-3 py-1 rounded-md">
+                      <option>Más reciente</option>
+                      <option>Más popular</option>
+                      <option>A-Z</option>
+                    </select>
+                  </div>
+                </div>
+                
+                <div class="grid sm:grid-cols-2 gap-4">
+                  <div class="border border-primary rounded-lg cursor-pointer" id="nda-template">
+                    <div class="p-5">
+                      <div class="flex justify-between items-start mb-3">
+                        <h3 class="font-medium">Acuerdo de confidencialidad (NDA)</h3>
+                        <span data-lucide="check-circle" class="w-[18px] h-[18px] text-primary"></span>
+                      </div>
+                      <p class="text-sm text-muted-foreground mb-4">
+                        Protege información confidencial compartida entre partes
+                      </p>
+                      <div class="flex justify-between text-xs text-muted-foreground">
+                        <span>Tiempo: 10 min</span>
+                        <span>Complejidad: Baja</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="border hover:border-primary rounded-lg cursor-pointer transition-colors">
+                    <div class="p-5">
+                      <div class="flex justify-between items-start mb-3">
+                        <h3 class="font-medium">Contrato de prestación de servicios</h3>
+                      </div>
+                      <p class="text-sm text-muted-foreground mb-4">
+                        Define los términos de servicios profesionales
+                      </p>
+                      <div class="flex justify-between text-xs text-muted-foreground">
+                        <span>Tiempo: 15 min</span>
+                        <span>Complejidad: Media</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="border hover:border-primary rounded-lg cursor-pointer transition-colors">
+                    <div class="p-5">
+                      <div class="flex justify-between items-start mb-3">
+                        <h3 class="font-medium">Contrato laboral</h3>
+                      </div>
+                      <p class="text-sm text-muted-foreground mb-4">
+                        Establece relación laboral con empleados
+                      </p>
+                      <div class="flex justify-between text-xs text-muted-foreground">
+                        <span>Tiempo: 20 min</span>
+                        <span>Complejidad: Media</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="border hover:border-primary rounded-lg cursor-pointer transition-colors">
+                    <div class="p-5">
+                      <div class="flex justify-between items-start mb-3">
+                        <h3 class="font-medium">Acuerdo de propiedad intelectual</h3>
+                      </div>
+                      <p class="text-sm text-muted-foreground mb-4">
+                        Protege derechos sobre obras e invenciones
+                      </p>
+                      <div class="flex justify-between text-xs text-muted-foreground">
+                        <span>Tiempo: 25 min</span>
+                        <span>Complejidad: Alta</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                
+                <div class="border rounded-lg mt-6">
+                  <div class="px-6 py-4 border-b">
+                    <h2 class="text-xl font-bold">Acuerdo de confidencialidad (NDA)</h2>
+                  </div>
+                  <div class="p-6 space-y-4">
+                    <p class="text-sm text-muted-foreground">
+                      Complete la información a continuación para generar un acuerdo de confidencialidad adaptado a sus necesidades.
+                    </p>
+                    
+                    <div class="grid md:grid-cols-2 gap-4">
+                      <div class="space-y-2">
+                        <label for="company-name" class="text-sm font-medium">Nombre de su empresa</label>
+                        <input type="text" id="company-name" placeholder="Ej: Empresa ABC, S.A. de C.V." class="border border-input px-3 py-2 rounded-md w-full">
+                      </div>
+                      
+                      <div class="space-y-2">
+                        <label for="counterparty" class="text-sm font-medium">Nombre de la contraparte</label>
+                        <input type="text" id="counterparty" placeholder="Ej: Empresa XYZ, S.A. de C.V." class="border border-input px-3 py-2 rounded-md w-full">
+                      </div>
+                    </div>
+                    
+                    <div class="grid md:grid-cols-2 gap-4">
+                      <div class="space-y-2">
+                        <label for="effective-date" class="text-sm font-medium">Fecha de entrada en vigor</label>
+                        <input type="date" id="effective-date" class="border border-input px-3 py-2 rounded-md w-full">
+                      </div>
+                      
+                      <div class="space-y-2">
+                        <label for="duration" class="text-sm font-medium">Duración del acuerdo</label>
+                        <select id="duration" class="border border-input px-3 py-2 rounded-md w-full">
+                          <option value="" disabled selected>Seleccionar duración</option>
+                          <option value="1-year">1 año</option>
+                          <option value="2-years">2 años</option>
+                          <option value="3-years">3 años</option>
+                          <option value="5-years">5 años</option>
+                          <option value="indefinite">Indefinido</option>
+                        </select>
+                      </div>
+                    </div>
+                    
+                    <div class="space-y-2">
+                      <label for="confidential-info" class="text-sm font-medium">Descripción de información confidencial</label>
+                      <textarea id="confidential-info" placeholder="Describa el tipo de información confidencial que será compartida..." class="border border-input px-3 py-2 rounded-md w-full min-h-[100px]"></textarea>
+                    </div>
+                    
+                    <div class="space-y-2">
+                      <label for="purpose" class="text-sm font-medium">Propósito del intercambio de información</label>
+                      <input type="text" id="purpose" placeholder="Ej: Evaluación de posible alianza estratégica" class="border border-input px-3 py-2 rounded-md w-full">
+                    </div>
+                    
+                    <div class="grid md:grid-cols-2 gap-4">
+                      <div class="space-y-2">
+                        <label for="jurisdiction" class="text-sm font-medium">Jurisdicción aplicable</label>
+                        <select id="jurisdiction" class="border border-input px-3 py-2 rounded-md w-full">
+                          <option value="" disabled selected>Seleccionar jurisdicción</option>
+                          <option value="cdmx">Ciudad de México</option>
+                          <option value="nuevo-leon">Nuevo León</option>
+                          <option value="jalisco">Jalisco</option>
+                          <option value="other">Otro</option>
+                        </select>
+                      </div>
+                      
+                      <div class="space-y-2">
+                        <label for="dispute-resolution" class="text-sm font-medium">Resolución de controversias</label>
+                        <select id="dispute-resolution" class="border border-input px-3 py-2 rounded-md w-full">
+                          <option value="" disabled selected>Seleccionar método</option>
+                          <option value="courts">Tribunales</option>
+                          <option value="mediation">Mediación</option>
+                          <option value="arbitration">Arbitraje</option>
+                        </select>
+                      </div>
+                    </div>
+                    
+                    <div>
+                      <h4 class="text-sm font-medium mb-2">Cláusulas adicionales</h4>
+                      <div class="grid grid-cols-2 gap-2">
+                        <button class="border border-input bg-card hover:bg-accent px-4 py-2 rounded-md text-left">No competencia</button>
+                        <button class="border border-input bg-card hover:bg-accent px-4 py-2 rounded-md text-left">No contratación</button>
+                        <button class="border border-input bg-card hover:bg-accent px-4 py-2 rounded-md text-left">Indemnización</button>
+                        <button class="border border-input bg-card hover:bg-accent px-4 py-2 rounded-md text-left">Fuerza mayor</button>
+                      </div>
+                    </div>
+                    
+                    <div class="flex justify-end gap-4 pt-4">
+                      <button class="border border-input bg-card hover:bg-accent px-4 py-2 rounded-md flex items-center gap-2">
+                        <span data-lucide="eye" class="w-4 h-4"></span> Vista previa
+                      </button>
+                      <button class="bg-primary text-primary-foreground hover:bg-primary/90 px-4 py-2 rounded-md flex items-center gap-2">
+                        <span data-lucide="file-text" class="w-4 h-4"></span> Generar documento
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <div id="custom-content" class="mt-6 hidden">
+            <div class="border rounded-lg">
+              <div class="px-6 py-4 border-b">
+                <h2 class="text-xl font-bold">Crear documento personalizado</h2>
+              </div>
+              <div class="p-6 space-y-4">
+                <div class="space-y-2">
+                  <label for="document-type" class="text-sm font-medium">Tipo de documento</label>
+                  <input type="text" id="document-type" placeholder="Ej: Contrato de colaboración" class="border border-input px-3 py-2 rounded-md w-full">
+                </div>
+                
+                <div class="space-y-2">
+                  <label for="document-description" class="text-sm font-medium">Describa el documento que necesita</label>
+                  <textarea id="document-description" placeholder="Describa en detalle el tipo de documento legal que necesita redactar, incluyendo su objetivo, partes involucradas, términos importantes, etc." class="border border-input px-3 py-2 rounded-md w-full min-h-[150px]"></textarea>
+                </div>
+                
+                <div class="space-y-2">
+                  <label for="key-points" class="text-sm font-medium">Puntos clave a incluir</label>
+                  <textarea id="key-points" placeholder="Liste los puntos clave que desea asegurarse de incluir en el documento (uno por línea)" class="border border-input px-3 py-2 rounded-md w-full min-h-[100px]"></textarea>
+                </div>
+                
+                <div class="grid md:grid-cols-2 gap-4">
+                  <div class="space-y-2">
+                    <label for="industry" class="text-sm font-medium">Industria</label>
+                    <select id="industry" class="border border-input px-3 py-2 rounded-md w-full">
+                      <option value="" disabled selected>Seleccionar industria</option>
+                      <option value="technology">Tecnología</option>
+                      <option value="healthcare">Salud</option>
+                      <option value="finance">Finanzas</option>
+                      <option value="real-estate">Bienes raíces</option>
+                      <option value="retail">Comercio</option>
+                      <option value="other">Otra</option>
+                    </select>
+                  </div>
+                  
+                  <div class="space-y-2">
+                    <label for="jurisdiction-custom" class="text-sm font-medium">Jurisdicción aplicable</label>
+                    <select id="jurisdiction-custom" class="border border-input px-3 py-2 rounded-md w-full">
+                      <option value="" disabled selected>Seleccionar jurisdicción</option>
+                      <option value="federal">Federal</option>
+                      <option value="cdmx">Ciudad de México</option>
+                      <option value="nuevo-leon">Nuevo León</option>
+                      <option value="jalisco">Jalisco</option>
+                      <option value="other">Otra</option>
+                    </select>
+                  </div>
+                </div>
+                
+                <div class="space-y-2">
+                  <label for="complexity" class="text-sm font-medium">Complejidad del documento</label>
+                  <select id="complexity" class="border border-input px-3 py-2 rounded-md w-full">
+                    <option value="" disabled selected>Seleccionar complejidad</option>
+                    <option value="simple">Simple - Términos básicos</option>
+                    <option value="standard">Estándar - Nivel de detalle normal</option>
+                    <option value="complex">Complejo - Altamente detallado</option>
+                  </select>
+                </div>
+                
+                <div class="flex justify-end gap-4 pt-4">
+                  <button class="border border-input bg-card hover:bg-accent px-4 py-2 rounded-md">Cancelar</button>
+                  <button class="bg-primary text-primary-foreground hover:bg-primary/90 px-4 py-2 rounded-md flex items-center gap-2">
+                    <span data-lucide="edit" class="w-4 h-4"></span> Redactar documento
+                  </button>
+                </div>
+              </div>
+            </div>
+            
+            <div class="border border-dashed rounded-lg mt-6">
+              <div class="p-6">
+                <div class="text-center">
+                  <span data-lucide="file-text" class="w-12 h-12 mx-auto text-muted-foreground opacity-50"></span>
+                  <h3 class="text-lg font-medium mt-4">El documento se generará aquí</h3>
+                  <p class="text-muted-foreground">
+                    Complete el formulario anterior y presione "Redactar documento" para crear un borrador personalizado.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <div id="history-content" class="mt-6 hidden">
+            <div class="flex justify-between items-center mb-4">
+              <h3 class="font-medium">Documentos generados recientemente</h3>
+              
+              <div class="flex gap-2 items-center">
+                <input type="text" placeholder="Buscar documento..." class="border border-input px-3 py-2 rounded-md max-w-xs">
+                <button class="border border-input bg-card hover:bg-accent px-4 py-2 rounded-md flex items-center gap-2">
+                  <span data-lucide="settings" class="w-4 h-4"></span> Filtros
+                </button>
+              </div>
+            </div>
+            
+            <div class="space-y-4">
+              <div class="border rounded-lg">
+                <div class="p-6">
+                  <div class="flex justify-between items-start">
+                    <div>
+                      <h3 class="font-medium text-lg">Acuerdo de confidencialidad - Proyecto Alpha</h3>
+                      <div class="flex gap-6 mt-1 text-sm text-muted-foreground">
+                        <div class="flex items-center gap-1">
+                          <span data-lucide="clock" class="w-[14px] h-[14px]"></span> 15/Abr/2025
+                        </div>
+                        <div>NDA</div>
+                      </div>
+                    </div>
+                    <div class="flex gap-1">
+                      <span class="bg-primary text-primary-foreground px-2 py-1 text-xs font-medium rounded-full">
+                        Enviado
+                      </span>
+                      <span class="bg-primary text-primary-foreground px-2 py-1 text-xs font-medium rounded-full">
+                        Firmado
+                      </span>
+                    </div>
+                  </div>
+                  
+                  <div class="flex flex-wrap gap-2 mt-4">
+                    <button class="border border-input bg-card hover:bg-accent px-3 py-1 rounded-md flex items-center gap-1" aria-label="Ver documento">
+                      <span data-lucide="eye" class="w-4 h-4"></span>
+                      <span>Ver</span>
+                    </button>
+                    
+                    <button class="border border-input bg-card hover:bg-accent px-3 py-1 rounded-md flex items-center gap-1" aria-label="Editar documento">
+                      <span data-lucide="pencil" class="w-4 h-4"></span>
+                      <span>Editar</span>
+                    </button>
+                    
+                    <button class="border border-input bg-card hover:bg-accent px-3 py-1 rounded-md flex items-center gap-1" aria-label="Duplicar documento">
+                      <span data-lucide="copy" class="w-4 h-4"></span>
+                      <span>Duplicar</span>
+                    </button>
+                    
+                    <button class="border border-input bg-card hover:bg-accent px-3 py-1 rounded-md flex items-center gap-1" aria-label="Descargar documento">
+                      <span data-lucide="download" class="w-4 h-4"></span>
+                      <span>Descargar</span>
+                    </button>
+                    
+                    <button class="border border-input bg-card hover:bg-accent px-3 py-1 rounded-md flex items-center gap-1" aria-label="Compartir documento">
+                      <span data-lucide="share" class="w-4 h-4"></span>
+                      <span>Compartir</span>
+                    </button>
+                    
+                    <button class="border border-input bg-card hover:bg-accent px-3 py-1 rounded-md flex items-center gap-1" aria-label="Firmar documento">
+                      <span data-lucide="file-signature" class="w-4 h-4"></span> 
+                      <span>Firmar</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Additional history items -->
+              <div class="border rounded-lg">
+                <div class="p-6">
+                  <div class="flex justify-between items-start">
+                    <div>
+                      <h3 class="font-medium text-lg">Contrato de servicios profesionales</h3>
+                      <div class="flex gap-6 mt-1 text-sm text-muted-foreground">
+                        <div class="flex items-center gap-1">
+                          <span data-lucide="clock" class="w-[14px] h-[14px]"></span> 10/Abr/2025
+                        </div>
+                        <div>Contrato de servicios</div>
+                      </div>
+                    </div>
+                    <div class="flex gap-1">
+                      <span class="border border-input px-2 py-1 text-xs font-medium rounded-full">
+                        Borrador
+                      </span>
+                    </div>
+                  </div>
+                  
+                  <div class="flex flex-wrap gap-2 mt-4">
+                    <button class="border border-input bg-card hover:bg-accent px-3 py-1 rounded-md flex items-center gap-1" aria-label="Ver documento">
+                      <span data-lucide="eye" class="w-4 h-4"></span>
+                      <span>Ver</span>
+                    </button>
+                    
+                    <button class="border border-input bg-card hover:bg-accent px-3 py-1 rounded-md flex items-center gap-1" aria-label="Editar documento">
+                      <span data-lucide="pencil" class="w-4 h-4"></span>
+                      <span>Editar</span>
+                    </button>
+                    
+                    <button class="border border-input bg-card hover:bg-accent px-3 py-1 rounded-md flex items-center gap-1" aria-label="Duplicar documento">
+                      <span data-lucide="copy" class="w-4 h-4"></span>
+                      <span>Duplicar</span>
+                    </button>
+                    
+                    <button class="border border-input bg-card hover:bg-accent px-3 py-1 rounded-md flex items-center gap-1" aria-label="Descargar documento">
+                      <span data-lucide="download" class="w-4 h-4"></span>
+                      <span>Descargar</span>
+                    </button>
+                    
+                    <button class="border border-input bg-card hover:bg-accent px-3 py-1 rounded-md flex items-center gap-1" aria-label="Compartir documento">
+                      <span data-lucide="share" class="w-4 h-4"></span>
+                      <span>Compartir</span>
+                    </button>
+                    
+                    <button class="border border-input bg-card hover:bg-accent px-3 py-1 rounded-md flex items-center gap-1" aria-label="Firmar documento">
+                      <span data-lucide="file-signature" class="w-4 h-4"></span> 
+                      <span>Firmar</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <!-- Document preview modal -->
+  <div id="preview-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+    <div class="bg-background rounded-lg w-full max-w-4xl max-h-[90vh] overflow-auto">
+      <div class="border-b p-4 flex justify-between items-center">
+        <h3 class="font-bold text-lg">Vista previa del documento</h3>
+        <button id="close-modal" class="text-muted-foreground hover:text-foreground">
+          <span data-lucide="x" class="w-5 h-5"></span>
+        </button>
+      </div>
+      <div class="p-6">
+        <div class="border rounded-lg p-6">
+          <h1 class="text-2xl font-bold text-center mb-6">ACUERDO DE CONFIDENCIALIDAD</h1>
+          <p class="mb-4">Este Acuerdo de Confidencialidad (el "Acuerdo") se celebra en la fecha indicada al final de este documento.</p>
+          <p class="mb-4">ENTRE:</p>
+          <p class="mb-4 font-semibold">[NOMBRE DE SU EMPRESA], con domicilio en [DIRECCIÓN], (en adelante, la "Parte Reveladora").</p>
+          <p class="mb-4">Y:</p>
+          <p class="mb-4 font-semibold">[NOMBRE DE LA CONTRAPARTE], con domicilio en [DIRECCIÓN], (en adelante, la "Parte Receptora").</p>
+          <p class="mb-4">(Las Partes Reveladora y Receptora serán referidas conjuntamente como las "Partes" e individualmente como una "Parte").</p>
+          
+          <h2 class="text-xl font-bold mt-6 mb-3">1. OBJETO DEL ACUERDO</h2>
+          <p class="mb-4">El presente Acuerdo tiene por objeto establecer los términos y condiciones bajo los cuales la Parte Receptora mantendrá la confidencialidad de la información que le sea divulgada por la Parte Reveladora en relación con [PROPÓSITO DEL INTERCAMBIO DE INFORMACIÓN].</p>
+          
+          <!-- More document content would go here -->
+          
+          <h2 class="text-xl font-bold mt-6 mb-3">9. FIRMAS</h2>
+          <p class="mb-4">EN TESTIMONIO DE LO CUAL, las Partes han ejecutado este Acuerdo a través de sus representantes debidamente autorizados en la fecha indicada a continuación.</p>
+          
+          <div class="grid grid-cols-2 gap-6 mt-8">
+            <div>
+              <p class="font-semibold">Por la Parte Reveladora:</p>
+              <div class="mt-10 border-t border-black pt-2">
+                <p>Nombre y firma:</p>
+                <p>Cargo:</p>
+                <p>Fecha:</p>
+              </div>
+            </div>
+            <div>
+              <p class="font-semibold">Por la Parte Receptora:</p>
+              <div class="mt-10 border-t border-black pt-2">
+                <p>Nombre y firma:</p>
+                <p>Cargo:</p>
+                <p>Fecha:</p>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="flex justify-end mt-6 gap-4">
+          <button class="border border-input bg-card hover:bg-accent px-4 py-2 rounded-md">Cerrar</button>
+          <button class="bg-primary text-primary-foreground hover:bg-primary/90 px-4 py-2 rounded-md flex items-center gap-2">
+            <span data-lucide="download" class="w-4 h-4"></span> Descargar PDF
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Initialize Lucide icons
+    lucide.createIcons();
+
+    // Tab functionality
+    document.getElementById('templates-tab').addEventListener('click', function() {
+      document.getElementById('templates-content').classList.remove('hidden');
+      document.getElementById('custom-content').classList.add('hidden');
+      document.getElementById('history-content').classList.add('hidden');
+      
+      document.getElementById('templates-tab').classList.add('border-primary');
+      document.getElementById('custom-tab').classList.remove('border-primary');
+      document.getElementById('history-tab').classList.remove('border-primary');
+      
+      document.getElementById('templates-tab').classList.remove('border-transparent');
+      document.getElementById('custom-tab').classList.add('border-transparent');
+      document.getElementById('history-tab').classList.add('border-transparent');
+    });
+    
+    document.getElementById('custom-tab').addEventListener('click', function() {
+      document.getElementById('templates-content').classList.add('hidden');
+      document.getElementById('custom-content').classList.remove('hidden');
+      document.getElementById('history-content').classList.add('hidden');
+      
+      document.getElementById('templates-tab').classList.remove('border-primary');
+      document.getElementById('custom-tab').classList.add('border-primary');
+      document.getElementById('history-tab').classList.remove('border-primary');
+      
+      document.getElementById('templates-tab').classList.add('border-transparent');
+      document.getElementById('custom-tab').classList.remove('border-transparent');
+      document.getElementById('history-tab').classList.add('border-transparent');
+    });
+    
+    document.getElementById('history-tab').addEventListener('click', function() {
+      document.getElementById('templates-content').classList.add('hidden');
+      document.getElementById('custom-content').classList.add('hidden');
+      document.getElementById('history-content').classList.remove('hidden');
+      
+      document.getElementById('templates-tab').classList.remove('border-primary');
+      document.getElementById('custom-tab').classList.remove('border-primary');
+      document.getElementById('history-tab').classList.add('border-primary');
+      
+      document.getElementById('templates-tab').classList.add('border-transparent');
+      document.getElementById('custom-tab').classList.add('border-transparent');
+      document.getElementById('history-tab').classList.remove('border-transparent');
+    });
+
+    // Preview functionality
+    const previewButtons = document.querySelectorAll('button[aria-label="Ver documento"]');
+    const closeModal = document.getElementById('close-modal');
+    const modal = document.getElementById('preview-modal');
+
+    previewButtons.forEach(button => {
+      button.addEventListener('click', () => {
+        modal.classList.remove('hidden');
+      });
+    });
+
+    document.querySelector('button:has(span[data-lucide="eye"])').addEventListener('click', () => {
+      modal.classList.remove('hidden');
+    });
+
+    closeModal.addEventListener('click', () => {
+      modal.classList.add('hidden');
+    });
+
+    modal.addEventListener('click', (e) => {
+      if (e.target === modal) {
+        modal.classList.add('hidden');
+      }
+    });
+
+    // Document actions functionality
+    // These would show toasts in a real implementation
+    const showToast = (title, message) => {
+      alert(`${title}: ${message}`);
+    };
+
+    // Set up document action buttons
+    document.querySelectorAll('button[aria-label="Editar documento"]').forEach(btn => {
+      btn.addEventListener('click', () => showToast('Editar documento', 'Editando documento'));
+    });
+
+    document.querySelectorAll('button[aria-label="Duplicar documento"]').forEach(btn => {
+      btn.addEventListener('click', () => showToast('Documento duplicado', 'Se ha creado una copia del documento'));
+    });
+
+    document.querySelectorAll('button[aria-label="Descargar documento"]').forEach(btn => {
+      btn.addEventListener('click', () => showToast('Descargando documento', 'Descargando documento como PDF'));
+    });
+
+    document.querySelectorAll('button[aria-label="Compartir documento"]').forEach(btn => {
+      btn.addEventListener('click', () => showToast('Compartir documento', 'Opciones para compartir documento abiertas'));
+    });
+
+    document.querySelectorAll('button[aria-label="Firmar documento"]').forEach(btn => {
+      btn.addEventListener('click', () => showToast('Firmar documento', 'Proceso de firma iniciado'));
+    });
+  </script>
+</body>
+</html>

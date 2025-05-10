@@ -1,0 +1,380 @@
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chatbot Legal con IA - Colombia</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+  <script src="https://cdn.jsdelivr.net/npm/lucide@latest/dist/umd/lucide.min.js"></script>
+</head>
+<body class="bg-background text-foreground">
+  <div class="flex min-h-screen">
+    <!-- Sidebar would go here -->
+    <div class="flex-1 ml-[250px]">
+      <!-- Header would go here -->
+      <main class="p-6">
+        <div class="space-y-6">
+          <div>
+            <h1 class="text-3xl font-bold tracking-tight">Chatbot Legal con IA - Colombia</h1>
+            <p class="text-muted-foreground mt-1">
+              Consultas instantáneas con IA para preguntas legales frecuentes en el contexto jurídico colombiano
+            </p>
+          </div>
+
+          <div class="grid md:grid-cols-4 gap-6">
+            <div class="md:col-span-3">
+              <div class="h-[calc(100vh-220px)] flex flex-col">
+                <div class="border-b border-muted">
+                  <div class="grid grid-cols-2">
+                    <button class="px-4 py-2 border-b-2 border-primary font-medium flex items-center gap-2" id="chat-tab">
+                      <span data-lucide="message-square" class="w-4 h-4"></span> Chat
+                    </button>
+                    <button class="px-4 py-2 border-b-2 border-transparent hover:text-primary hover:border-primary/40 transition-colors flex items-center gap-2" id="topics-tab">
+                      <span data-lucide="check-circle" class="w-4 h-4"></span> Temas populares
+                    </button>
+                  </div>
+                </div>
+
+                <div id="chat-content" class="flex-1 flex flex-col overflow-hidden mt-2">
+                  <div class="border rounded-lg flex-1 flex flex-col overflow-hidden">
+                    <div class="flex-1 overflow-y-auto p-4 space-y-4" id="chat-messages">
+                      <div class="flex justify-start">
+                        <div class="flex gap-3 max-w-[80%]">
+                          <div class="rounded-full p-2 bg-accent">
+                            <span data-lucide="bot" class="w-[18px] h-[18px]"></span>
+                          </div>
+                          <div class="rounded-lg p-4 bg-secondary border">
+                            <p>Bienvenido al Chatbot Legal con IA para el contexto jurídico colombiano. ¿En qué puedo ayudarte hoy?</p>
+                            <div class="flex justify-between items-center mt-2">
+                              <span class="text-xs opacity-70">
+                                12:00
+                              </span>
+                              
+                              <div class="flex gap-1">
+                                <button class="h-6 w-6 p-0">
+                                  <span data-lucide="thumbs-up" class="w-[14px] h-[14px]"></span>
+                                </button>
+                                <button class="h-6 w-6 p-0">
+                                  <span data-lucide="thumbs-down" class="w-[14px] h-[14px]"></span>
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                      <!-- Additional messages will be added here dynamically -->
+                    </div>
+                    
+                    <div class="p-4 border-t bg-background">
+                      <div class="flex gap-2">
+                        <button class="border border-input bg-card hover:bg-accent w-10 h-10 rounded-md flex items-center justify-center">
+                          <span data-lucide="paperclip" class="w-4 h-4"></span>
+                        </button>
+                        <input
+                          id="chat-input"
+                          placeholder="Escribe tu consulta legal en el contexto colombiano..."
+                          class="border border-input px-3 py-2 rounded-md flex-1"
+                        />
+                        <button 
+                          id="send-button"
+                          class="bg-primary text-primary-foreground hover:bg-primary/90 w-10 h-10 rounded-md flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
+                          disabled
+                        >
+                          <span data-lucide="send" class="w-4 h-4"></span>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div id="topics-content" class="flex-1 overflow-auto hidden mt-2">
+                  <div class="grid sm:grid-cols-2 gap-4">
+                    <div class="border rounded-lg cursor-pointer hover:border-primary transition-colors">
+                      <div class="p-6">
+                        <h3 class="font-medium text-lg mb-1">Derecho Laboral Colombiano</h3>
+                        <p class="text-sm text-muted-foreground mb-4">Despidos, indemnizaciones, prestaciones sociales...</p>
+                        <button 
+                          class="bg-primary text-primary-foreground hover:bg-primary/90 px-4 py-2 rounded-md w-full flex justify-between items-center"
+                          data-topic="Derecho Laboral Colombiano"
+                        >
+                          Consultar <span data-lucide="arrow-right" class="w-4 h-4"></span>
+                        </button>
+                      </div>
+                    </div>
+
+                    <div class="border rounded-lg cursor-pointer hover:border-primary transition-colors">
+                      <div class="p-6">
+                        <h3 class="font-medium text-lg mb-1">Arrendamientos en Colombia</h3>
+                        <p class="text-sm text-muted-foreground mb-4">Contratos, desalojos según Ley 820 de 2003...</p>
+                        <button 
+                          class="bg-primary text-primary-foreground hover:bg-primary/90 px-4 py-2 rounded-md w-full flex justify-between items-center"
+                          data-topic="Arrendamientos en Colombia"
+                        >
+                          Consultar <span data-lucide="arrow-right" class="w-4 h-4"></span>
+                        </button>
+                      </div>
+                    </div>
+
+                    <div class="border rounded-lg cursor-pointer hover:border-primary transition-colors">
+                      <div class="p-6">
+                        <h3 class="font-medium text-lg mb-1">Derecho de Familia</h3>
+                        <p class="text-sm text-muted-foreground mb-4">Divorcio, custodia, alimentos según Código Civil colombiano...</p>
+                        <button 
+                          class="bg-primary text-primary-foreground hover:bg-primary/90 px-4 py-2 rounded-md w-full flex justify-between items-center"
+                          data-topic="Derecho de Familia"
+                        >
+                          Consultar <span data-lucide="arrow-right" class="w-4 h-4"></span>
+                        </button>
+                      </div>
+                    </div>
+
+                    <div class="border rounded-lg cursor-pointer hover:border-primary transition-colors">
+                      <div class="p-6">
+                        <h3 class="font-medium text-lg mb-1">Protección al Consumidor</h3>
+                        <p class="text-sm text-muted-foreground mb-4">Reclamaciones según Estatuto del Consumidor (Ley 1480)...</p>
+                        <button 
+                          class="bg-primary text-primary-foreground hover:bg-primary/90 px-4 py-2 rounded-md w-full flex justify-between items-center"
+                          data-topic="Protección al Consumidor"
+                        >
+                          Consultar <span data-lucide="arrow-right" class="w-4 h-4"></span>
+                        </button>
+                      </div>
+                    </div>
+
+                    <div class="border rounded-lg cursor-pointer hover:border-primary transition-colors">
+                      <div class="p-6">
+                        <h3 class="font-medium text-lg mb-1">Tránsito y Transporte</h3>
+                        <p class="text-sm text-muted-foreground mb-4">Multas, recursos, Código Nacional de Tránsito...</p>
+                        <button 
+                          class="bg-primary text-primary-foreground hover:bg-primary/90 px-4 py-2 rounded-md w-full flex justify-between items-center"
+                          data-topic="Tránsito y Transporte"
+                        >
+                          Consultar <span data-lucide="arrow-right" class="w-4 h-4"></span>
+                        </button>
+                      </div>
+                    </div>
+
+                    <div class="border rounded-lg cursor-pointer hover:border-primary transition-colors">
+                      <div class="p-6">
+                        <h3 class="font-medium text-lg mb-1">Protección de Datos</h3>
+                        <p class="text-sm text-muted-foreground mb-4">Ley 1581 de 2012, derechos ARCO...</p>
+                        <button 
+                          class="bg-primary text-primary-foreground hover:bg-primary/90 px-4 py-2 rounded-md w-full flex justify-between items-center"
+                          data-topic="Protección de Datos"
+                        >
+                          Consultar <span data-lucide="arrow-right" class="w-4 h-4"></span>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <div class="space-y-6">
+              <div class="border rounded-lg">
+                <div class="p-4">
+                  <h3 class="font-medium mb-2">Historial de consultas</h3>
+                  <div class="space-y-3">
+                    <div class="flex items-center justify-between py-1 border-b">
+                      <div>
+                        <p class="text-sm">Consulta sobre despido en Colombia</p>
+                        <div class="flex items-center text-muted-foreground text-xs">
+                          <span data-lucide="clock" class="w-3 h-3 mr-1"></span> Ayer
+                        </div>
+                      </div>
+                      <button class="h-8 w-8 p-0">
+                        <span data-lucide="arrow-right" class="w-4 h-4"></span>
+                      </button>
+                    </div>
+
+                    <div class="flex items-center justify-between py-1 border-b">
+                      <div>
+                        <p class="text-sm">Problemas con contrato de alquiler en Bogotá</p>
+                        <div class="flex items-center text-muted-foreground text-xs">
+                          <span data-lucide="clock" class="w-3 h-3 mr-1"></span> 23/04/2025
+                        </div>
+                      </div>
+                      <button class="h-8 w-8 p-0">
+                        <span data-lucide="arrow-right" class="w-4 h-4"></span>
+                      </button>
+                    </div>
+
+                    <div class="flex items-center justify-between py-1">
+                      <div>
+                        <p class="text-sm">Reclamación a aerolínea colombiana</p>
+                        <div class="flex items-center text-muted-foreground text-xs">
+                          <span data-lucide="clock" class="w-3 h-3 mr-1"></span> 15/04/2025
+                        </div>
+                      </div>
+                      <button class="h-8 w-8 p-0">
+                        <span data-lucide="arrow-right" class="w-4 h-4"></span>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              <div class="border rounded-lg">
+                <div class="p-4">
+                  <h3 class="font-medium mb-2">Documentos relacionados</h3>
+                  <div class="space-y-2">
+                    <button class="border border-input bg-card hover:bg-accent px-4 py-2 rounded-md w-full text-left text-sm">
+                      Código Sustantivo del Trabajo de Colombia
+                    </button>
+                    <button class="border border-input bg-card hover:bg-accent px-4 py-2 rounded-md w-full text-left text-sm">
+                      Formulario de conciliación prejudicial
+                    </button>
+                    <button class="border border-input bg-card hover:bg-accent px-4 py-2 rounded-md w-full text-left text-sm">
+                      Plazos legales importantes en Colombia
+                    </button>
+                  </div>
+                </div>
+              </div>
+              
+              <div class="border rounded-lg">
+                <div class="p-4 text-center">
+                  <p class="text-sm mb-2">¿Necesitas hablar con un abogado real en Colombia?</p>
+                  <button class="bg-primary text-primary-foreground hover:bg-primary/90 px-4 py-2 rounded-md w-full">Solicitar consulta</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <script>
+    // Initialize Lucide icons
+    lucide.createIcons();
+
+    // Tab functionality
+    document.getElementById('chat-tab').addEventListener('click', function() {
+      document.getElementById('chat-content').classList.remove('hidden');
+      document.getElementById('topics-content').classList.add('hidden');
+      
+      document.getElementById('chat-tab').classList.add('border-primary');
+      document.getElementById('topics-tab').classList.remove('border-primary');
+      
+      document.getElementById('chat-tab').classList.remove('border-transparent');
+      document.getElementById('topics-tab').classList.add('border-transparent');
+    });
+    
+    document.getElementById('topics-tab').addEventListener('click', function() {
+      document.getElementById('chat-content').classList.add('hidden');
+      document.getElementById('topics-content').classList.remove('hidden');
+      
+      document.getElementById('chat-tab').classList.remove('border-primary');
+      document.getElementById('topics-tab').classList.add('border-primary');
+      
+      document.getElementById('chat-tab').classList.add('border-transparent');
+      document.getElementById('topics-tab').classList.remove('border-transparent');
+    });
+
+    // Chat functionality
+    const chatInput = document.getElementById('chat-input');
+    const sendButton = document.getElementById('send-button');
+    const chatMessages = document.getElementById('chat-messages');
+    
+    // Enable/disable send button based on input
+    chatInput.addEventListener('input', function() {
+      sendButton.disabled = !chatInput.value.trim();
+    });
+    
+    // Send message on Enter key
+    chatInput.addEventListener('keydown', function(e) {
+      if (e.key === 'Enter' && !e.shiftKey && chatInput.value.trim()) {
+        e.preventDefault();
+        sendMessage();
+      }
+    });
+    
+    // Send message on button click
+    sendButton.addEventListener('click', sendMessage);
+    
+    function sendMessage() {
+      const message = chatInput.value.trim();
+      if (!message) return;
+      
+      // Add user message to chat
+      addMessageToChat(message, 'user');
+      chatInput.value = '';
+      sendButton.disabled = true;
+      
+      // Simulate bot response after a delay
+      setTimeout(() => {
+        const botResponses = [
+          "Según la legislación colombiana actual, específicamente el Código Sustantivo del Trabajo, tienes derecho a solicitar una indemnización por este tipo de situación. Te recomendaría los siguientes pasos conforme a la ley laboral de Colombia...",
+          "En casos de despido sin justa causa en Colombia, la ley establece que el empleador debe proporcionar una indemnización según el artículo 64 del CST, que varía dependiendo del tiempo trabajado y el salario devengado.",
+          "Para tu situación específica en el contexto jurídico colombiano, deberías considerar presentar una demanda laboral ante el juzgado laboral del circuito. Los plazos para hacerlo en Colombia son de tres años desde la fecha del despido según la jurisprudencia reciente."
+        ];
+        
+        const randomResponse = botResponses[Math.floor(Math.random() * botResponses.length)];
+        addMessageToChat(randomResponse, 'bot');
+      }, 1000);
+    }
+    
+    function addMessageToChat(content, sender) {
+      const messageElement = document.createElement('div');
+      messageElement.className = `flex justify-${sender === 'user' ? 'end' : 'start'}`;
+      
+      const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      
+      messageElement.innerHTML = `
+        <div class="flex gap-3 max-w-[80%] ${sender === 'user' ? 'flex-row-reverse' : 'flex-row'}">
+          <div class="rounded-full p-2 ${sender === 'user' ? 'bg-primary text-primary-foreground' : 'bg-accent'}">
+            <span data-lucide="${sender === 'user' ? 'user' : 'bot'}" class="w-[18px] h-[18px]"></span>
+          </div>
+          <div class="rounded-lg p-4 ${sender === 'user' ? 'bg-primary text-primary-foreground' : 'bg-secondary border'}">
+            <p>${content}</p>
+            <div class="flex justify-between items-center mt-2">
+              <span class="text-xs opacity-70">${time}</span>
+              
+              ${sender === 'bot' ? `
+                <div class="flex gap-1">
+                  <button class="h-6 w-6 p-0">
+                    <span data-lucide="thumbs-up" class="w-[14px] h-[14px]"></span>
+                  </button>
+                  <button class="h-6 w-6 p-0">
+                    <span data-lucide="thumbs-down" class="w-[14px] h-[14px]"></span>
+                  </button>
+                </div>
+              ` : ''}
+            </div>
+          </div>
+        </div>
+      `;
+      
+      chatMessages.appendChild(messageElement);
+      lucide.createIcons({
+        icons: {
+          user: messageElement.querySelector('[data-lucide="user"]'),
+          bot: messageElement.querySelector('[data-lucide="bot"]'),
+          thumbsUp: messageElement.querySelector('[data-lucide="thumbs-up"]'),
+          thumbsDown: messageElement.querySelector('[data-lucide="thumbs-down"]')
+        }
+      });
+      
+      // Scroll to bottom
+      chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+
+    // Topic button functionality
+    document.querySelectorAll('[data-topic]').forEach(button => {
+      button.addEventListener('click', function() {
+        const topic = this.getAttribute('data-topic');
+        
+        // Switch to chat tab
+        document.getElementById('chat-tab').click();
+        
+        // Set input value to the selected topic
+        chatInput.value = `Necesito información sobre ${topic.toLowerCase()}`;
+        sendButton.disabled = false;
+      });
+    });
+  </script>
+</body>
+</html>

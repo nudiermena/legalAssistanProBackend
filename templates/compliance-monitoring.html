@@ -1,0 +1,333 @@
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sistema de Monitoreo de Cumplimiento</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+  <script src="https://cdn.jsdelivr.net/npm/lucide@latest/dist/umd/lucide.min.js"></script>
+</head>
+<body class="bg-background text-foreground">
+  <div class="flex min-h-screen">
+    <!-- Sidebar would go here -->
+    <div class="flex-1 ml-[250px]">
+      <!-- Header would go here -->
+      <main class="p-6">
+        <div class="space-y-6">
+          <div>
+            <div class="flex items-center gap-2">
+              <h1 class="text-3xl font-bold tracking-tight">Sistema de Monitoreo de Cumplimiento</h1>
+              <span class="bg-yellow-50 text-yellow-700 border border-yellow-200 px-2 py-1 text-xs font-medium rounded-full">
+                Próximamente
+              </span>
+            </div>
+            <p class="text-muted-foreground mt-1">
+              Monitoreo continuo de cambios regulatorios con alertas y reportes
+            </p>
+          </div>
+          
+          <div class="border border-amber-300 bg-amber-50 rounded-lg">
+            <div class="p-6">
+              <div class="flex gap-3">
+                <div class="flex-shrink-0 rounded-full bg-amber-100 p-3">
+                  <span data-lucide="info" class="h-6 w-6 text-amber-700"></span>
+                </div>
+                <div>
+                  <h3 class="font-semibold text-lg mb-1">Funcionalidad en desarrollo</h3>
+                  <p class="text-muted-foreground">
+                    Estamos trabajando en esta herramienta. Regístrese para ser notificado cuando esté disponible
+                    y obtener acceso anticipado.
+                  </p>
+                  
+                  <div class="mt-4">
+                    <form class="flex gap-4">
+                      <input type="email" placeholder="Su correo electrónico" class="border border-input px-3 py-2 rounded-md max-w-sm">
+                      <button class="bg-primary text-primary-foreground hover:bg-primary/90 px-4 py-2 rounded-md flex items-center gap-2">
+                        <span data-lucide="bell" class="w-[18px] h-[18px]"></span> Notificarme
+                      </button>
+                    </form>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <h2 class="text-2xl font-semibold mt-10">Vista previa de la funcionalidad</h2>
+          
+          <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div class="border rounded-lg opacity-75">
+              <div class="px-6 py-4 border-b">
+                <h3 class="font-medium">Panel de control</h3>
+                <p class="text-sm text-muted-foreground">Visualización de cumplimiento legal</p>
+              </div>
+              <div class="p-6">
+                <div class="space-y-4">
+                  <div>
+                    <div class="flex justify-between text-sm mb-1">
+                      <span>Cumplimiento general</span>
+                      <span class="font-medium">92%</span>
+                    </div>
+                    <div class="bg-muted h-2 rounded-full">
+                      <div class="bg-green-500 h-full rounded-full" style="width: 92%"></div>
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <div class="flex justify-between text-sm mb-1">
+                      <span>Actualizaciones pendientes</span>
+                      <span class="font-medium text-amber-600">3</span>
+                    </div>
+                    <div class="bg-muted h-2 rounded-full">
+                      <div class="bg-amber-500 h-full rounded-full" style="width: 60%"></div>
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <div class="flex justify-between text-sm mb-1">
+                      <span>Riesgos identificados</span>
+                      <span class="font-medium text-red-600">1</span>
+                    </div>
+                    <div class="bg-muted h-2 rounded-full">
+                      <div class="bg-red-500 h-full rounded-full" style="width: 10%"></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <div class="border rounded-lg opacity-75">
+              <div class="px-6 py-4 border-b">
+                <h3 class="font-medium">Cambios regulatorios</h3>
+                <p class="text-sm text-muted-foreground">Actualizaciones recientes</p>
+              </div>
+              <div class="p-6 space-y-4">
+                <div class="flex justify-between items-start pb-2 border-b">
+                  <div>
+                    <p class="font-medium">Ley de Protección de Datos</p>
+                    <div class="flex items-center gap-1 text-sm text-muted-foreground">
+                      <span data-lucide="calendar" class="w-[14px] h-[14px]"></span>
+                      <span>15/Jun/2025</span>
+                    </div>
+                  </div>
+                  <span class="bg-primary text-primary-foreground px-2 py-1 text-xs font-medium rounded-full">
+                    Nueva
+                  </span>
+                </div>
+                
+                <div class="flex justify-between items-start pb-2 border-b">
+                  <div>
+                    <p class="font-medium">Reforma Fiscal</p>
+                    <div class="flex items-center gap-1 text-sm text-muted-foreground">
+                      <span data-lucide="calendar" class="w-[14px] h-[14px]"></span>
+                      <span>03/May/2025</span>
+                    </div>
+                  </div>
+                  <span class="border border-input px-2 py-1 text-xs font-medium rounded-full">
+                    Actualización
+                  </span>
+                </div>
+                
+                <div class="flex justify-between items-start pb-2">
+                  <div>
+                    <p class="font-medium">Regulaciones Laborales</p>
+                    <div class="flex items-center gap-1 text-sm text-muted-foreground">
+                      <span data-lucide="calendar" class="w-[14px] h-[14px]"></span>
+                      <span>22/Mar/2025</span>
+                    </div>
+                  </div>
+                  <span class="border border-input px-2 py-1 text-xs font-medium rounded-full">
+                    Actualización
+                  </span>
+                </div>
+              </div>
+            </div>
+            
+            <div class="border rounded-lg opacity-75">
+              <div class="px-6 py-4 border-b">
+                <h3 class="font-medium">Alertas personalizadas</h3>
+                <p class="text-sm text-muted-foreground">Configure su sistema de alerta</p>
+              </div>
+              <div class="p-6 space-y-4">
+                <div class="grid grid-cols-2 gap-2">
+                  <button class="border border-input bg-card hover:bg-accent px-4 py-2 rounded-md text-left">Laboral</button>
+                  <button class="border border-input bg-card hover:bg-accent px-4 py-2 rounded-md text-left">Fiscal</button>
+                  <button class="bg-primary text-primary-foreground hover:bg-primary/90 px-4 py-2 rounded-md text-left">Protección de datos</button>
+                  <button class="border border-input bg-card hover:bg-accent px-4 py-2 rounded-md text-left">Ambiental</button>
+                  <button class="border border-input bg-card hover:bg-accent px-4 py-2 rounded-md text-left">Comercial</button>
+                  <button class="bg-primary text-primary-foreground hover:bg-primary/90 px-4 py-2 rounded-md text-left">Corporativo</button>
+                </div>
+                <div class="flex justify-end">
+                  <button class="bg-primary text-primary-foreground hover:bg-primary/90 px-4 py-2 rounded-md w-full mt-2">Configurar alertas</button>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="opacity-75 mt-10">
+            <div class="border-b border-muted">
+              <div class="grid grid-cols-3">
+                <button class="px-4 py-2 border-b-2 border-primary font-medium" id="updates-tab">Actualizaciones</button>
+                <button class="px-4 py-2 border-b-2 border-transparent hover:text-primary hover:border-primary/40 transition-colors" id="calendar-tab">Calendario</button>
+                <button class="px-4 py-2 border-b-2 border-transparent hover:text-primary hover:border-primary/40 transition-colors" id="reports-tab">Informes</button>
+              </div>
+            </div>
+            
+            <div class="flex justify-between my-4">
+              <div class="flex gap-2">
+                <button class="border border-input bg-card hover:bg-accent px-3 py-1 rounded-md text-sm flex items-center gap-1">
+                  <span data-lucide="filter" class="w-4 h-4"></span> Filtrar
+                </button>
+              </div>
+              <input type="text" placeholder="Buscar..." class="border border-input px-3 py-1 rounded-md max-w-xs">
+            </div>
+            
+            <div id="updates-content">
+              <div class="space-y-4">
+                <div class="border rounded-lg">
+                  <div class="p-4">
+                    <div class="flex justify-between">
+                      <div>
+                        <h3 class="font-semibold">Nueva regulación sobre protección de datos en el sector legal</h3>
+                        <p class="text-sm text-muted-foreground mt-1">
+                          Publicada el 10/Jun/2025 • Aplicable desde 01/Ene/2026
+                        </p>
+                      </div>
+                      <span class="bg-primary text-primary-foreground px-2 py-1 text-xs font-medium rounded-full">
+                        Impacto: Alto
+                      </span>
+                    </div>
+                    <p class="mt-2 text-sm">
+                      Esta nueva regulación establece requisitos adicionales para el manejo de datos sensibles en despachos jurídicos...
+                    </p>
+                    <div class="flex justify-end mt-4">
+                      <button class="border border-input bg-card hover:bg-accent px-3 py-1 rounded-md text-sm">Ver detalles</button>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="border rounded-lg">
+                  <div class="p-4">
+                    <div class="flex justify-between">
+                      <div>
+                        <h3 class="font-semibold">Nueva regulación sobre protección de datos en el sector legal</h3>
+                        <p class="text-sm text-muted-foreground mt-1">
+                          Publicada el 10/Jun/2025 • Aplicable desde 01/Ene/2026
+                        </p>
+                      </div>
+                      <span class="bg-primary text-primary-foreground px-2 py-1 text-xs font-medium rounded-full">
+                        Impacto: Alto
+                      </span>
+                    </div>
+                    <p class="mt-2 text-sm">
+                      Esta nueva regulación establece requisitos adicionales para el manejo de datos sensibles en despachos jurídicos...
+                    </p>
+                    <div class="flex justify-end mt-4">
+                      <button class="border border-input bg-card hover:bg-accent px-3 py-1 rounded-md text-sm">Ver detalles</button>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="border rounded-lg">
+                  <div class="p-4">
+                    <div class="flex justify-between">
+                      <div>
+                        <h3 class="font-semibold">Nueva regulación sobre protección de datos en el sector legal</h3>
+                        <p class="text-sm text-muted-foreground mt-1">
+                          Publicada el 10/Jun/2025 • Aplicable desde 01/Ene/2026
+                        </p>
+                      </div>
+                      <span class="bg-primary text-primary-foreground px-2 py-1 text-xs font-medium rounded-full">
+                        Impacto: Alto
+                      </span>
+                    </div>
+                    <p class="mt-2 text-sm">
+                      Esta nueva regulación establece requisitos adicionales para el manejo de datos sensibles en despachos jurídicos...
+                    </p>
+                    <div class="flex justify-end mt-4">
+                      <button class="border border-input bg-card hover:bg-accent px-3 py-1 rounded-md text-sm">Ver detalles</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <div id="calendar-content" class="hidden">
+              <div class="border rounded-lg">
+                <div class="p-6">
+                  <div class="text-center p-8 opacity-50">
+                    <span data-lucide="calendar" class="w-16 h-16 mx-auto mb-2"></span>
+                    <h3 class="text-xl font-bold">Calendario de cumplimiento</h3>
+                    <p>Vista previa no disponible</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <div id="reports-content" class="hidden">
+              <div class="border rounded-lg">
+                <div class="p-6">
+                  <div class="text-center p-8 opacity-50">
+                    <div class="w-16 h-16 mx-auto mb-2">📊</div>
+                    <h3 class="text-xl font-bold">Informes de cumplimiento</h3>
+                    <p>Vista previa no disponible</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <script>
+    // Initialize Lucide icons
+    lucide.createIcons();
+
+    // Tab functionality
+    document.getElementById('updates-tab').addEventListener('click', function() {
+      document.getElementById('updates-content').classList.remove('hidden');
+      document.getElementById('calendar-content').classList.add('hidden');
+      document.getElementById('reports-content').classList.add('hidden');
+      
+      document.getElementById('updates-tab').classList.add('border-primary');
+      document.getElementById('calendar-tab').classList.remove('border-primary');
+      document.getElementById('reports-tab').classList.remove('border-primary');
+      
+      document.getElementById('updates-tab').classList.remove('border-transparent');
+      document.getElementById('calendar-tab').classList.add('border-transparent');
+      document.getElementById('reports-tab').classList.add('border-transparent');
+    });
+    
+    document.getElementById('calendar-tab').addEventListener('click', function() {
+      document.getElementById('updates-content').classList.add('hidden');
+      document.getElementById('calendar-content').classList.remove('hidden');
+      document.getElementById('reports-content').classList.add('hidden');
+      
+      document.getElementById('updates-tab').classList.remove('border-primary');
+      document.getElementById('calendar-tab').classList.add('border-primary');
+      document.getElementById('reports-tab').classList.remove('border-primary');
+      
+      document.getElementById('updates-tab').classList.add('border-transparent');
+      document.getElementById('calendar-tab').classList.remove('border-transparent');
+      document.getElementById('reports-tab').classList.add('border-transparent');
+    });
+    
+    document.getElementById('reports-tab').addEventListener('click', function() {
+      document.getElementById('updates-content').classList.add('hidden');
+      document.getElementById('calendar-content').classList.add('hidden');
+      document.getElementById('reports-content').classList.remove('hidden');
+      
+      document.getElementById('updates-tab').classList.remove('border-primary');
+      document.getElementById('calendar-tab').classList.remove('border-primary');
+      document.getElementById('reports-tab').classList.add('border-primary');
+      
+      document.getElementById('updates-tab').classList.add('border-transparent');
+      document.getElementById('calendar-tab').classList.add('border-transparent');
+      document.getElementById('reports-tab').classList.remove('border-transparent');
+    });
+  </script>
+</body>
+</html>

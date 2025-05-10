@@ -1,0 +1,336 @@
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Generador de Notificaciones Legales</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+  <script src="https://cdn.jsdelivr.net/npm/lucide@latest/dist/umd/lucide.min.js"></script>
+</head>
+<body class="bg-background text-foreground">
+  <div class="flex min-h-screen">
+    <!-- Sidebar would go here -->
+    <div class="flex-1 ml-[250px]">
+      <!-- Header would go here -->
+      <main class="p-6">
+        <div class="space-y-6">
+          <div>
+            <h1 class="text-3xl font-bold tracking-tight">Generador de Notificaciones Legales</h1>
+            <p class="text-muted-foreground mt-1">
+              Cree notificaciones legales personalizadas para múltiples casos y procedimientos
+            </p>
+          </div>
+
+          <div class="grid md:grid-cols-3 gap-6">
+            <div class="md:col-span-2 space-y-6">
+              <div class="border rounded-lg shadow-sm bg-card">
+                <div class="p-6 border-b">
+                  <h2 class="text-xl font-bold">Crear nueva notificación</h2>
+                </div>
+                <div class="p-6 space-y-4">
+                  <div class="grid md:grid-cols-2 gap-4">
+                    <div class="space-y-2">
+                      <label for="notification-type" class="text-sm font-medium">Tipo de notificación</label>
+                      <select id="notification-type" class="w-full px-3 py-2 border rounded-md">
+                        <option value="" selected disabled>Seleccionar tipo</option>
+                        <option value="court-date">Fecha de audiencia</option>
+                        <option value="document-request">Solicitud de documentos</option>
+                        <option value="legal-action">Notificación de acción legal</option>
+                        <option value="settlement">Propuesta de acuerdo</option>
+                        <option value="hearing">Citación a comparecencia</option>
+                        <option value="custom">Personalizada</option>
+                      </select>
+                    </div>
+                    
+                    <div class="space-y-2">
+                      <label for="notification-priority" class="text-sm font-medium">Prioridad</label>
+                      <select id="notification-priority" class="w-full px-3 py-2 border rounded-md">
+                        <option value="normal" selected>Normal</option>
+                        <option value="high">Alta</option>
+                        <option value="urgent">Urgente</option>
+                      </select>
+                    </div>
+                  </div>
+                  
+                  <div class="space-y-2">
+                    <label for="recipient" class="text-sm font-medium">Destinatario(s)</label>
+                    <div class="flex gap-2">
+                      <input id="recipient" placeholder="Nombre o correo electrónico" class="flex-1 px-3 py-2 border rounded-md" />
+                      <button class="px-3 py-2 border rounded-md flex items-center gap-2">
+                        <span data-lucide="plus"></span> Añadir
+                      </button>
+                    </div>
+                    <div class="flex flex-wrap gap-2 mt-2">
+                      <div class="bg-secondary px-3 py-1 rounded-full text-sm flex items-center gap-2">
+                        Juan Pérez <button class="text-muted-foreground hover:text-foreground"><span data-lucide="x" class="h-3 w-3"></span></button>
+                      </div>
+                      <div class="bg-secondary px-3 py-1 rounded-full text-sm flex items-center gap-2">
+                        María Gómez <button class="text-muted-foreground hover:text-foreground"><span data-lucide="x" class="h-3 w-3"></span></button>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div class="space-y-2">
+                    <label for="subject" class="text-sm font-medium">Asunto</label>
+                    <input id="subject" class="w-full px-3 py-2 border rounded-md" placeholder="Asunto de la notificación" />
+                  </div>
+                  
+                  <div class="grid md:grid-cols-2 gap-4">
+                    <div class="space-y-2">
+                      <label for="case-number" class="text-sm font-medium">Número de caso/expediente</label>
+                      <input id="case-number" class="w-full px-3 py-2 border rounded-md" placeholder="Ej: EXP-2025-1234" />
+                    </div>
+                    
+                    <div class="space-y-2">
+                      <label for="notification-date" class="text-sm font-medium">Fecha de notificación</label>
+                      <input id="notification-date" type="date" class="w-full px-3 py-2 border rounded-md" />
+                    </div>
+                  </div>
+                  
+                  <div class="space-y-2">
+                    <label for="template" class="text-sm font-medium">Plantilla</label>
+                    <select id="template" class="w-full px-3 py-2 border rounded-md">
+                      <option value="" selected disabled>Seleccionar plantilla</option>
+                      <option value="court-date">Audiencia judicial</option>
+                      <option value="default-notice">Notificación básica</option>
+                      <option value="settlement-proposal">Propuesta de acuerdo</option>
+                      <option value="legal-requirement">Requerimiento legal</option>
+                      <option value="custom">Sin plantilla</option>
+                    </select>
+                  </div>
+                  
+                  <div class="space-y-2">
+                    <div class="flex justify-between">
+                      <label for="content" class="text-sm font-medium">Contenido</label>
+                      <div class="flex gap-2">
+                        <button class="text-sm text-primary hover:underline flex items-center gap-1">
+                          <span data-lucide="wand-2" class="h-3 w-3"></span> Generar con IA
+                        </button>
+                      </div>
+                    </div>
+                    <textarea 
+                      id="content" 
+                      class="w-full min-h-[200px] px-3 py-2 border rounded-md"
+                      placeholder="Contenido de la notificación..."
+                    ></textarea>
+                  </div>
+                  
+                  <div class="space-y-2">
+                    <label class="text-sm font-medium">Adjuntos</label>
+                    <div class="border border-dashed rounded-md p-4 text-center">
+                      <div class="flex flex-col items-center gap-2">
+                        <span data-lucide="upload" class="h-8 w-8 text-muted-foreground"></span>
+                        <p class="text-sm">Arrastra archivos aquí o <span class="text-primary hover:underline cursor-pointer">selecciona archivos</span></p>
+                        <p class="text-xs text-muted-foreground">PDF, DOC, DOCX, JPG, PNG (Max. 10MB)</p>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div class="space-y-2">
+                    <label class="text-sm font-medium">Opciones de entrega</label>
+                    <div class="flex flex-wrap gap-4">
+                      <div class="flex items-center gap-2">
+                        <input type="checkbox" id="delivery-email" checked class="h-4 w-4 rounded border-gray-300" />
+                        <label for="delivery-email" class="text-sm">Email</label>
+                      </div>
+                      <div class="flex items-center gap-2">
+                        <input type="checkbox" id="delivery-sms" class="h-4 w-4 rounded border-gray-300" />
+                        <label for="delivery-sms" class="text-sm">SMS</label>
+                      </div>
+                      <div class="flex items-center gap-2">
+                        <input type="checkbox" id="delivery-physical" class="h-4 w-4 rounded border-gray-300" />
+                        <label for="delivery-physical" class="text-sm">Correo físico</label>
+                      </div>
+                      <div class="flex items-center gap-2">
+                        <input type="checkbox" id="delivery-platform" class="h-4 w-4 rounded border-gray-300" />
+                        <label for="delivery-platform" class="text-sm">Plataforma</label>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div class="flex justify-end gap-4 pt-2">
+                    <button class="border px-4 py-2 rounded-md">Guardar borrador</button>
+                    <button class="bg-primary text-primary-foreground px-4 py-2 rounded-md">Vista previa</button>
+                    <button class="bg-primary text-primary-foreground px-4 py-2 rounded-md flex items-center gap-2">
+                      <span data-lucide="send"></span> Enviar notificación
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <div class="space-y-6">
+              <div class="border rounded-lg shadow-sm bg-card">
+                <div class="p-6 border-b">
+                  <h2 class="text-xl font-bold">Plantillas guardadas</h2>
+                </div>
+                <div class="p-3">
+                  <div class="space-y-1">
+                    <div class="flex items-center gap-2 p-3 hover:bg-accent rounded-md cursor-pointer">
+                      <span data-lucide="file-text" class="h-4 w-4 text-blue-500"></span>
+                      <span class="text-sm font-medium">Audiencia judicial</span>
+                      <span class="ml-auto text-xs text-muted-foreground">5/May</span>
+                    </div>
+                    
+                    <div class="flex items-center gap-2 p-3 hover:bg-accent rounded-md cursor-pointer">
+                      <span data-lucide="file-text" class="h-4 w-4 text-amber-500"></span>
+                      <span class="text-sm font-medium">Notificación básica</span>
+                      <span class="ml-auto text-xs text-muted-foreground">12/Abr</span>
+                    </div>
+                    
+                    <div class="flex items-center gap-2 p-3 hover:bg-accent rounded-md cursor-pointer">
+                      <span data-lucide="file-text" class="h-4 w-4 text-green-500"></span>
+                      <span class="text-sm font-medium">Propuesta de acuerdo</span>
+                      <span class="ml-auto text-xs text-muted-foreground">28/Mar</span>
+                    </div>
+                    
+                    <div class="flex items-center gap-2 p-3 hover:bg-accent rounded-md cursor-pointer">
+                      <span data-lucide="file-text" class="h-4 w-4 text-red-500"></span>
+                      <span class="text-sm font-medium">Requerimiento legal</span>
+                      <span class="ml-auto text-xs text-muted-foreground">15/Mar</span>
+                    </div>
+                  </div>
+                  
+                  <div class="mt-3 p-3 border-t">
+                    <button class="w-full text-primary text-sm hover:underline flex items-center justify-center gap-1">
+                      <span data-lucide="plus" class="h-3 w-3"></span> Crear nueva plantilla
+                    </button>
+                  </div>
+                </div>
+              </div>
+              
+              <div class="border rounded-lg shadow-sm bg-card">
+                <div class="p-6 border-b">
+                  <h2 class="text-xl font-bold">Notificaciones recientes</h2>
+                </div>
+                <div class="p-3">
+                  <div class="space-y-3">
+                    <div class="flex items-start gap-3 p-3 hover:bg-accent rounded-md">
+                      <span data-lucide="mail" class="h-4 w-4 text-blue-500 mt-0.5"></span>
+                      <div class="flex-1">
+                        <p class="text-sm font-medium">Audiencia caso #28456</p>
+                        <div class="flex justify-between items-center">
+                          <p class="text-xs text-muted-foreground">Enviado a 2 destinatarios</p>
+                          <span class="text-xs text-muted-foreground">Hoy</span>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div class="flex items-start gap-3 p-3 hover:bg-accent rounded-md">
+                      <span data-lucide="mail" class="h-4 w-4 text-green-500 mt-0.5"></span>
+                      <div class="flex-1">
+                        <p class="text-sm font-medium">Acuerdo extrajudicial</p>
+                        <div class="flex justify-between items-center">
+                          <p class="text-xs text-muted-foreground">Enviado a 3 destinatarios</p>
+                          <span class="text-xs text-muted-foreground">Ayer</span>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div class="flex items-start gap-3 p-3 hover:bg-accent rounded-md">
+                      <span data-lucide="mail" class="h-4 w-4 text-amber-500 mt-0.5"></span>
+                      <div class="flex-1">
+                        <p class="text-sm font-medium">Solicitud de documentación</p>
+                        <div class="flex justify-between items-center">
+                          <p class="text-xs text-muted-foreground">Enviado a 1 destinatario</p>
+                          <span class="text-xs text-muted-foreground">10/May</span>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div class="flex items-start gap-3 p-3 hover:bg-accent rounded-md">
+                      <span data-lucide="mail" class="h-4 w-4 text-red-500 mt-0.5"></span>
+                      <div class="flex-1">
+                        <p class="text-sm font-medium">Requerimiento legal urgente</p>
+                        <div class="flex justify-between items-center">
+                          <p class="text-xs text-muted-foreground">Enviado a 4 destinatarios</p>
+                          <span class="text-xs text-muted-foreground">5/May</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div class="mt-3 p-3 border-t">
+                    <button class="w-full text-primary text-sm hover:underline">
+                      Ver historial completo
+                    </button>
+                  </div>
+                </div>
+              </div>
+              
+              <div class="border rounded-lg shadow-sm bg-card">
+                <div class="p-6 border-b">
+                  <h2 class="text-xl font-bold">Estado de entregas</h2>
+                </div>
+                <div class="p-6">
+                  <div class="space-y-6">
+                    <div>
+                      <div class="flex justify-between text-sm mb-1">
+                        <span>Tasa de apertura</span>
+                        <span class="font-medium">78%</span>
+                      </div>
+                      <div class="h-2 bg-muted rounded-full overflow-hidden">
+                        <div class="bg-green-500 h-full" style="width: 78%"></div>
+                      </div>
+                    </div>
+                    
+                    <div>
+                      <div class="flex justify-between text-sm mb-1">
+                        <span>Tasa de respuesta</span>
+                        <span class="font-medium">45%</span>
+                      </div>
+                      <div class="h-2 bg-muted rounded-full overflow-hidden">
+                        <div class="bg-amber-500 h-full" style="width: 45%"></div>
+                      </div>
+                    </div>
+                    
+                    <div>
+                      <div class="flex justify-between text-sm mb-1">
+                        <span>Entregas exitosas</span>
+                        <span class="font-medium">98%</span>
+                      </div>
+                      <div class="h-2 bg-muted rounded-full overflow-hidden">
+                        <div class="bg-blue-500 h-full" style="width: 98%"></div>
+                      </div>
+                    </div>
+                    
+                    <div class="pt-2 flex justify-center">
+                      <button class="text-primary text-sm hover:underline">
+                        Ver informe completo
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+  </div>
+  
+  <script>
+    // Initialize Lucide icons
+    lucide.createIcons();
+
+    // Demo functionality for template selection
+    document.getElementById('template').addEventListener('change', function(e) {
+      const templates = {
+        'court-date': 'Por medio de la presente, se le notifica que deberá comparecer a la audiencia programada para el caso [NÚMERO DE CASO] el día [FECHA] a las [HORA] en [LUGAR].\n\nSe requiere puntualidad y traer consigo identificación oficial.',
+        'default-notice': 'Estimado/a [NOMBRE]:\n\nLe informamos que en relación al expediente [NÚMERO DE EXPEDIENTE], se ha [ACCIÓN/EVENTO].\n\nAgradecemos su atención a la presente notificación.',
+        'settlement-proposal': 'En referencia al caso [NÚMERO DE CASO], por medio de la presente se le hace llegar una propuesta de acuerdo con los siguientes términos:\n\n1. [TÉRMINO 1]\n2. [TÉRMINO 2]\n3. [TÉRMINO 3]\n\nLe solicitamos revisar los términos propuestos y responder en un plazo no mayor a [PLAZO].',
+        'legal-requirement': 'ASUNTO: REQUERIMIENTO LEGAL\n\nPor medio de la presente, y en cumplimiento de [FUNDAMENTO LEGAL], se le requiere formalmente para que en el término improrrogable de [PLAZO] proceda a [ACCIÓN REQUERIDA].\n\nSe le apercibe que de no dar cumplimiento a lo anterior, se procederá conforme a derecho.'
+      };
+      
+      const contentArea = document.getElementById('content');
+      if (templates[e.target.value]) {
+        contentArea.value = templates[e.target.value];
+      } else if (e.target.value === 'custom') {
+        contentArea.value = '';
+      }
+    });
+  </script>
+</body>
+</html>
