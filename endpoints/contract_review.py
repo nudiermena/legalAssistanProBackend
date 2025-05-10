@@ -415,21 +415,25 @@ def clean_base64_content(content: str) -> str:
         logging.error(f"Error cleaning base64 content: {str(e)}")
         return ""
 
+def get_file_type(filename: str) -> str:
+    """Get file type using mimetypes module"""
+    mime_type, _ = mimetypes.guess_type(filename)
+    if mime_type:
+        return mime_type
+    return 'application/octet-stream'
+
 def validate_pdf_content(content: bytes) -> Tuple[bool, str]:
     """
     Validate if content is actually a PDF file
     Returns: (is_valid, error_message)
     """
     try:
-        # Check file signature using python-magic
-        mime = magic.Magic(mime=True)
-        file_type = mime.from_buffer(content)
-        
-        if file_type != 'application/pdf':
-            return False, f"Tipo de archivo detectado: {file_type}. Se requiere un PDF válido."
+        # Check PDF header
+        if not content.startswith(b'%PDF-'):
+            return False, "El archivo no tiene la estructura correcta de un PDF."
             
-        # Additional PDF header validation
-        if not (content.startswith(b'%PDF-') and b'.PDF' in content[:1024]):
+        # Additional PDF validation
+        if b'.PDF' not in content[:1024]:
             return False, "El archivo no tiene la estructura correcta de un PDF."
             
         return True, ""
@@ -622,13 +626,6 @@ def cleanup_old_files(max_age_hours: int = 24):
     except Exception as e:
         logger.error(f"Error during cleanup: {e}")
 
-def get_file_type(filename: str) -> str:
-    """Get file type using mimetypes module"""
-    mime_type, _ = mimetypes.guess_type(filename)
-    if mime_type:
-        return mime_type
-    return 'application/octet-stream'
-
 @router.post("/analyze")
 async def analyze_contract(
     file: Optional[UploadFile] = File(None),
@@ -645,6 +642,12 @@ async def analyze_contract(
             
             # Read file content
             content = await file.read()
+            
+            # Validate PDF if it's supposed to be one
+            if file_type == 'application/pdf':
+                is_valid, error_msg = validate_pdf_content(content)
+                if not is_valid:
+                    raise HTTPException(status_code=422, detail=error_msg)
             
             # Create a temporary file
             temp_file_path = f"temp_{file.filename}"
