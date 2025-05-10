@@ -15,13 +15,11 @@ from io import BytesIO
 import logging
 import base64
 import unicodedata
-from utils.pdf_processor import extract_text_from_pdf_content
-import magic  # pip install python-magic
+from utils.pdf_processor import extract_text_from_pdf_content, sanitize_text
 import json
 import io
 import tempfile
 import os
-import PyPDF2
 import fitz  # PyMuPDF
 import shutil
 import mimetypes
@@ -341,49 +339,6 @@ Provide:
             }
         )
 
-def sanitize_text(text: str) -> str:
-    """
-    Sanitize text by removing control characters and normalizing Unicode characters
-    """
-    if not text:
-        return ""
-    
-    # Normalize Unicode characters
-    text = unicodedata.normalize('NFKD', text)
-    
-    # Remove control characters but keep newlines and tabs
-    text = ''.join(char for char in text if char == '\n' or char == '\t' or (ord(char) >= 32 and ord(char) != 127))
-    
-    return text.strip()
-
-def extract_text_from_pdf_content(pdf_content: bytes) -> Optional[str]:
-    """
-    Extract and clean text from PDF content
-    """
-    try:
-        # Create a temporary file-like object in memory
-        from io import BytesIO
-        pdf_file = BytesIO(pdf_content)
-        
-        # Extract text using pdfplumber
-        with pdfplumber.open(pdf_file) as pdf:
-            text_parts = []
-            for page in pdf.pages:
-                page_text = page.extract_text() or ""
-                if page_text:
-                    # Clean and sanitize the text
-                    cleaned_text = sanitize_text(page_text)
-                    if cleaned_text:
-                        text_parts.append(cleaned_text)
-            
-            # Join all parts with newlines
-            final_text = '\n'.join(text_parts)
-            return final_text if final_text else None
-            
-    except Exception as e:
-        logging.error(f"Error extracting text from PDF: {str(e)}")
-        return None
-
 def is_valid_base64(content: str) -> bool:
     """Check if string is valid base64"""
     try:
@@ -502,35 +457,27 @@ def decode_base64_safely(content: str, filename: str) -> Tuple[Optional[bytes], 
         return None, f"Error en el proceso de decodificación: {str(e)}"
 
 async def extract_text_from_pdf(pdf_bytes: bytes) -> str:
-    """Extract text from PDF bytes using a temporary file."""
-    with tempfile.NamedTemporaryFile(suffix='.pdf', delete=False) as tmp_file:
-        try:
-            # Write PDF bytes to temporary file
-            tmp_file.write(pdf_bytes)
-            tmp_file.flush()
+    """Extract text from PDF bytes using pypdf"""
+    try:
+        # Create a BytesIO object from the PDF content
+        pdf_file = BytesIO(pdf_bytes)
+        
+        # Extract text using pypdf
+        reader = PdfReader(pdf_file)
+        text_parts = []
+        
+        for page in reader.pages:
+            page_text = page.extract_text() or ""
+            if page_text:
+                text_parts.append(page_text.strip())
+        
+        # Join all parts with newlines
+        final_text = '\n'.join(text_parts)
+        return final_text if final_text else None
             
-            # Extract text using pdfplumber
-            with pdfplumber.open(tmp_file.name) as pdf:
-                text = []
-                for page in pdf.pages:
-                    try:
-                        page_text = page.extract_text()
-                        if page_text:
-                            text.append(page_text.strip())
-                    except Exception as e:
-                        logger.warning(f"Error extracting text from page: {str(e)}")
-                        continue
-                
-                return '\n'.join(text)
-        except Exception as e:
-            logger.error(f"Error processing PDF: {str(e)}")
-            raise
-        finally:
-            # Clean up temporary file
-            try:
-                os.unlink(tmp_file.name)
-            except Exception as e:
-                logger.warning(f"Error removing temporary file: {str(e)}")
+    except Exception as e:
+        logger.error(f"Error extracting text from PDF: {str(e)}")
+        return None
 
 def decode_pdf_field(field_value: str) -> str:
     """Decode PDF form field values that might be hex-encoded."""
@@ -649,8 +596,13 @@ async def analyze_contract(
                 if not is_valid:
                     raise HTTPException(status_code=422, detail=error_msg)
                 
-                # Extract text from PDF
-                text_content = extract_text_from_pdf(content)
+                # Extract text from PDF using our utility function
+                text_content = extract_text_from_pdf_content(content)
+                if not text_content:
+                    raise HTTPException(
+                        status_code=422,
+                        detail="No se pudo extraer texto del PDF"
+                    )
             else:
                 text_content = content.decode('utf-8')
             
