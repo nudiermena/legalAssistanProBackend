@@ -2,19 +2,10 @@ import os
 from agno.knowledge.pdf_url import PDFUrlKnowledgeBase
 from agno.knowledge.website import WebsiteKnowledgeBase
 from agno.knowledge.combined import CombinedKnowledgeBase
-from agno.vectordb.qdrant import Qdrant
+from agno.vectordb.memory import MemoryVectorDB
 
-# Vector database configuration
-qdrant_api_key = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhY2Nlc3MiOiJtIn0.si5dt8LrrOg1cIngEUoDg15xVcqWmoq6fm9mJIfmDJA"
-qdrant_url = "https://1a0aea0b-e070-4e05-981e-4a23be0d7150.us-west-2-0.aws.cloud.qdrant.io"
-collection_name = "legal_documents"
-
-# Initialize vector database
-vector_db = Qdrant(
-    collection=collection_name,
-    url=qdrant_url,
-    api_key=qdrant_api_key,
-)
+# Initialize in-memory vector database
+vector_db = MemoryVectorDB()
 
 # Initialize knowledge bases
 pdf_knowledge_base = PDFUrlKnowledgeBase(
