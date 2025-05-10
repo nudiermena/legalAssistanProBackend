@@ -24,6 +24,7 @@ import os
 import PyPDF2
 import fitz  # PyMuPDF
 import shutil
+import mimetypes
 
 # Configure logging
 logging.basicConfig(level=logging.DEBUG)
@@ -621,171 +622,58 @@ def cleanup_old_files(max_age_hours: int = 24):
     except Exception as e:
         logger.error(f"Error during cleanup: {e}")
 
-@router.post("/contract-review/analyze")
+def get_file_type(filename: str) -> str:
+    """Get file type using mimetypes module"""
+    mime_type, _ = mimetypes.guess_type(filename)
+    if mime_type:
+        return mime_type
+    return 'application/octet-stream'
+
+@router.post("/analyze")
 async def analyze_contract(
-    file: UploadFile = File(...),
-    analysis_options: Optional[str] = Form(None),
-    metadata: Optional[str] = Form(None),
-    jurisdiction: str = Form("Colombia"),
-    language: str = Form("es")
+    file: Optional[UploadFile] = File(None),
+    request: Optional[ContractReviewRequest] = None
 ):
-    """
-    Process uploaded PDF contract and extract data using PyMuPDF.
-    """
+    """Analyze a contract file and provide legal insights"""
     try:
-        # Parse the JSON strings from form fields
-        analysis_options = json.loads(analysis_options) if analysis_options else {}
-        metadata = json.loads(metadata) if metadata else {}
-
-        # Validate and extract selected analysis options
-        selected_analysis = {
-            "risk_analysis": {
-                "financial": analysis_options.get("risk_analysis", {}).get("financial", False),
-                "legal": analysis_options.get("risk_analysis", {}).get("legal", False),
-                "compliance": analysis_options.get("risk_analysis", {}).get("compliance", False)
-            },
-            "clause_extraction": {
-                "important": analysis_options.get("clause_extraction", {}).get("important", False),
-                "obligations": analysis_options.get("clause_extraction", {}).get("obligations", False),
-                "termination": analysis_options.get("clause_extraction", {}).get("termination", False)
-            },
-            "compliance_check": {
-                "regulatory": analysis_options.get("compliance_check", {}).get("regulatory", False),
-                "internal": analysis_options.get("compliance_check", {}).get("internal", False),
-                "industry": analysis_options.get("compliance_check", {}).get("industry", False)
-            }
-        }
-
-        # Validate file type
-        if not file.content_type == "application/pdf":
-            raise HTTPException(
-                status_code=422,
-                detail={"message": "El archivo debe ser un PDF válido"}
-            )
-
-        # Create temporary subfolder
-        temp_folder = create_temp_subfolder()
+        if not file and not request:
+            raise HTTPException(status_code=400, detail="No file or request provided")
         
-        try:
-            # Save uploaded file
-            pdf_path = await save_upload_file(file, temp_folder)
+        if file:
+            # Get file type using mimetypes
+            file_type = get_file_type(file.filename)
             
-            # Validate file size
-            if pdf_path.stat().st_size == 0:
-                raise HTTPException(
-                    status_code=422,
-                    detail={"message": "El archivo está vacío"}
-                )
-
-            # Extract PDF data
-            pdf_data = await extract_pdf_data(pdf_path)
-            form_data = pdf_data["form_data"]
-            text_content = pdf_data["text_content"]
+            # Read file content
+            content = await file.read()
             
-            if not form_data and not text_content:
-                raise HTTPException(
-                    status_code=422,
-                    detail={"message": "No se pudo extraer contenido del PDF"}
+            # Create a temporary file
+            temp_file_path = f"temp_{file.filename}"
+            try:
+                with open(temp_file_path, "wb") as temp_file:
+                    temp_file.write(content)
+                
+                # Analyze the contract
+                result = await analyze_contract_file(
+                    file_path=temp_file_path,
+                    file_type=file_type,
+                    instructions=request.instructions if request else None
                 )
-
-            # Analyze the contract using the extracted text and selected filters
-            analysis_result = await analyze_contract_file(
-                contract_text=text_content,
-                contract_type=metadata.get("contract_type", "general"),
-                analysis_options=selected_analysis,  # Pass the selected filters
-                specific_concerns=[
-                    "confidencialidad" if selected_analysis["clause_extraction"]["important"] else None,
-                    "obligaciones" if selected_analysis["clause_extraction"]["obligations"] else None,
-                    "terminacion" if selected_analysis["clause_extraction"]["termination"] else None
-                ],
-                risk_analysis={
-                    "include_financial": selected_analysis["risk_analysis"]["financial"],
-                    "include_legal": selected_analysis["risk_analysis"]["legal"],
-                    "include_compliance": selected_analysis["risk_analysis"]["compliance"]
-                },
-                compliance_checks={
-                    "check_regulatory": selected_analysis["compliance_check"]["regulatory"],
-                    "check_internal": selected_analysis["compliance_check"]["internal"],
-                    "check_industry": selected_analysis["compliance_check"]["industry"]
-                }
+                
+                return format_response(result)
+            finally:
+                # Clean up temporary file
+                if os.path.exists(temp_file_path):
+                    os.remove(temp_file_path)
+        else:
+            # Handle text-based analysis
+            result = await analyze_contract_file(
+                text=request.text,
+                instructions=request.instructions
             )
-
-            # Filter the results based on selected options
-            filtered_result = {
-                "status": "success",
-                "message": "Análisis completado exitosamente",
-                "data": {
-                    "analysis_results": {
-                        "risk_assessment": (
-                            analysis_result.get("risk_assessment", {})
-                            if any(selected_analysis["risk_analysis"].values())
-                            else None
-                        ),
-                        "extracted_clauses": (
-                            analysis_result.get("extracted_clauses", {})
-                            if any(selected_analysis["clause_extraction"].values())
-                            else None
-                        ),
-                        "compliance_analysis": (
-                            analysis_result.get("compliance_analysis", {})
-                            if any(selected_analysis["compliance_check"].values())
-                            else None
-                        )
-                    },
-                    "metadata": {
-                        **metadata,
-                        "analysis_options": selected_analysis,
-                        "filename": file.filename,
-                        "file_size": pdf_path.stat().st_size,
-                        "upload_time": datetime.now().isoformat(),
-                        "jurisdiction": jurisdiction,
-                        "language": language
-                    }
-                }
-            }
-
-            # Trigger cleanup of old files
-            cleanup_old_files()
-
-            return JSONResponse(content=filtered_result)
-
-        except Exception as e:
-            logger.error(f"Error processing PDF: {str(e)}", exc_info=True)
-            raise HTTPException(
-                status_code=422,
-                detail={"message": f"Error al procesar el PDF: {str(e)}"}
-            )
-        finally:
-            # Clean up temporary file
-            if temp_folder and temp_folder.exists():
-                shutil.rmtree(temp_folder)
-
-    except HTTPException:
-        raise
+            return format_response(result)
+            
     except Exception as e:
-        logger.error(f"Unexpected error: {str(e)}", exc_info=True)
-        raise HTTPException(
-            status_code=500,
-            detail={"message": f"Error interno del servidor: {str(e)}"}
-        )
-
-# Optional: Add a cleanup endpoint for maintenance
-@router.post("/contract-review/cleanup")
-async def cleanup_files():
-    """Manually trigger cleanup of old files."""
-    try:
-        cleanup_old_files()
-        return JSONResponse(
-            content={
-                "status": "success",
-                "message": "Limpieza de archivos completada"
-            }
-        )
-    except Exception as e:
-        raise HTTPException(
-            status_code=500,
-            detail={"message": f"Error durante la limpieza: {str(e)}"}
-        )
+        return handle_error(e)
 
 @router.get(
     "/contract-types",

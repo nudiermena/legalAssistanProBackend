@@ -2,11 +2,9 @@ from typing import Dict, List, Optional
 from pydantic import BaseModel
 
 class ContractReviewRequest(BaseModel):
-    contract_text: str
-    contract_type: str
-    parties: List[str]
-    specific_concerns: Optional[List[str]] = None
-    relevant_regulations: Optional[List[str]] = None
+    """Request model for contract review"""
+    text: Optional[str] = None
+    instructions: Optional[str] = None
 
 class LegalResearchRequest(BaseModel):
     jurisdiction: str
@@ -74,4 +72,10 @@ class LegalDiagnosisRequest(BaseModel):
     jurisdiction: str
     user_goal: str
     timeline: Optional[str] = None
-    financial_considerations: Optional[str] = None 
+    financial_considerations: Optional[str] = None
+
+class ChatRequest(BaseModel):
+    """Request model for chat interactions"""
+    message: str
+    instructions: Optional[str] = None
+    context: Optional[dict] = None 
