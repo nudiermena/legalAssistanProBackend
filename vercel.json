@@ -21,7 +21,6 @@
     }
   ],
   "env": {
-    "PYTHONPATH": ".",
-    "DATABASE_URL": "@database_url"
+    "PYTHONPATH": "."
   }
 }
