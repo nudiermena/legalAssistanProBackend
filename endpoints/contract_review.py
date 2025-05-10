@@ -10,7 +10,7 @@ from config.colombian_compliance import ColombianLegalFramework
 from pathlib import Path
 import tiktoken
 from math import ceil
-import pdfplumber
+from pypdf import PdfReader
 from io import BytesIO
 import logging
 import base64
@@ -648,6 +648,11 @@ async def analyze_contract(
                 is_valid, error_msg = validate_pdf_content(content)
                 if not is_valid:
                     raise HTTPException(status_code=422, detail=error_msg)
+                
+                # Extract text from PDF
+                text_content = extract_text_from_pdf(content)
+            else:
+                text_content = content.decode('utf-8')
             
             # Create a temporary file
             temp_file_path = f"temp_{file.filename}"
@@ -853,19 +858,17 @@ async def upload_and_analyze_contract(
         )
 
 def extract_text_from_pdf(content: bytes) -> str:
-    """Extract text from PDF content"""
+    """Extract text from PDF content using pypdf"""
     try:
-        with pdfplumber.open(BytesIO(content)) as pdf:
-            if pdf.is_encrypted:
-                raise ValueError("PDF is encrypted. Please provide decrypted PDF.")
-            
+        with BytesIO(content) as pdf_file:
+            reader = PdfReader(pdf_file)
             text = ""
-            for page in pdf.pages:
-                extracted = page.extract_text()
-                if extracted:
-                    text += extracted + "\n"
-            
+            for page in reader.pages:
+                text += page.extract_text() + "\n"
             return text.strip()
-            
     except Exception as e:
-        raise Exception(f"Error extracting text from PDF: {str(e)}") 
+        logger.error(f"Error extracting text from PDF: {str(e)}")
+        raise HTTPException(
+            status_code=422,
+            detail=f"Error extracting text from PDF: {str(e)}"
+        ) 
