@@ -1,33 +1,33 @@
 import asyncio
 import argparse
 from pathlib import Path
-import pdfplumber
-from typing import Dict, Any
+import json
+from pypdf import PdfReader
+from io import BytesIO
+import logging
 
 from agents.contract_agent import analyze_contract_file
 from models.request_models import ContractReviewRequest
+
+logger = logging.getLogger(__name__)
 
 class ContractAnalyzer:
     def __init__(self):
         self.supported_file_types = ['.pdf', '.txt']
 
     def extract_text_from_pdf(self, pdf_path: str) -> str:
-        """Extract text from a PDF file."""
+        """Extract text from PDF file using pypdf"""
         try:
-            with pdfplumber.open(pdf_path) as pdf:
-                if pdf.is_encrypted:
-                    raise ValueError("PDF is encrypted. Please provide decrypted PDF.")
-                
+            with open(pdf_path, 'rb') as file:
+                pdf_file = BytesIO(file.read())
+                reader = PdfReader(pdf_file)
                 text = ""
-                for page in pdf.pages:
-                    extracted = page.extract_text()
-                    if extracted:
-                        text += extracted + "\n"
-                
+                for page in reader.pages:
+                    text += page.extract_text() + "\n"
                 return text.strip()
-                
         except Exception as e:
-            raise Exception(f"Error extracting text from PDF: {str(e)}")
+            logger.error(f"Error extracting text from PDF: {str(e)}")
+            return None
 
     def read_file_content(self, file_path: str) -> str:
         """Read content from a file based on its extension."""
@@ -44,8 +44,8 @@ class ContractAnalyzer:
         else:
             return path.read_text(encoding='utf-8')
 
-    async def analyze_contract(self, file_path: str, contract_type: str) -> Dict[str, Any]:
-        """Analyze a contract file."""
+    async def analyze_contract(self, file_path: str, contract_type: str) -> dict:
+        """Analyze contract and return results"""
         try:
             # Extract text from file
             print(f"Reading file: {file_path}")
@@ -79,8 +79,11 @@ class ContractAnalyzer:
             return result
             
         except Exception as e:
-            print(f"Error analyzing contract: {str(e)}")
-            raise
+            logger.error(f"Error analyzing contract: {str(e)}")
+            return {
+                "status": "error",
+                "message": str(e)
+            }
 
 async def main():
     parser = argparse.ArgumentParser(description='Analyze contract documents')
@@ -113,12 +116,10 @@ async def main():
             output_path = Path(args.output)
             output_path.parent.mkdir(parents=True, exist_ok=True)
             
-            import json
             with open(output_path, 'w', encoding='utf-8') as f:
                 json.dump(result, f, indent=2, ensure_ascii=False)
             print(f"\nResults saved to: {output_path}")
         else:
-            import json
             print("\nAnalysis Results:")
             print(json.dumps(result, indent=2, ensure_ascii=False))
             
