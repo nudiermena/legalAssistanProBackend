@@ -12,3 +12,10 @@ sqlalchemy
 psycopg2-binary
 alembic
 asyncpg
+mistralai
+pypdf
+qdrant-client
+openai
+tiktoken
+pdfplumber
+python-magic-bin

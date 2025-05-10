@@ -1,6 +1,8 @@
 import datetime
-from typing import Dict, Any
+from typing import Dict, Any, Optional
 from pydantic import BaseModel
+from fastapi import HTTPException
+import json
 
 class BaseResponse(BaseModel):
     status: str
@@ -11,16 +13,70 @@ class DocumentDraftingResponse(BaseModel):
     document: str
     metadata: Dict[str, Any]
 
-async def format_response(data: Dict[str, Any]) -> BaseResponse:
-    return BaseResponse(
-        status="success",
-        timestamp=datetime.datetime.now(),
-        data=data
-    )
+def format_response(data: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    Format the response data with standard structure
+    
+    Args:
+        data: Response data to format
+        
+    Returns:
+        Formatted response dictionary
+    """
+    return {
+        "status": "success",
+        "message": "Operación completada exitosamente",
+        "data": data
+    }
 
-async def handle_error(e: Exception) -> Dict[str, Any]:
+def handle_error(error: Exception) -> Dict[str, Any]:
+    """
+    Handle and format error responses
+    
+    Args:
+        error: Exception to handle
+        
+    Returns:
+        Formatted error response
+    """
+    if isinstance(error, HTTPException):
+        return {
+            "status": "error",
+            "message": error.detail,
+            "code": error.status_code
+        }
+    
     return {
         "status": "error",
-        "timestamp": datetime.datetime.now(),
-        "error": str(e)
-    } 
+        "message": str(error),
+        "code": 500
+    }
+
+class ContractAnalysisResponse:
+    """Response model for contract analysis"""
+    
+    @staticmethod
+    def success(data: Dict[str, Any]) -> Dict[str, Any]:
+        return format_response({
+            "analysis": data.get("analysis", {}),
+            "metadata": data.get("metadata", {})
+        })
+    
+    @staticmethod
+    def error(error: Exception) -> Dict[str, Any]:
+        return handle_error(error)
+
+class ChatResponse:
+    """Response model for chat interactions"""
+    
+    @staticmethod
+    def success(data: Dict[str, Any]) -> Dict[str, Any]:
+        return format_response({
+            "message": data.get("message", ""),
+            "context": data.get("context", {}),
+            "metadata": data.get("metadata", {})
+        })
+    
+    @staticmethod
+    def error(error: Exception) -> Dict[str, Any]:
+        return handle_error(error) 
