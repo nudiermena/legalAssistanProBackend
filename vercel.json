@@ -2,7 +2,7 @@
   "version": 2,
   "builds": [
     {
-      "src": "main.py",
+      "src": "api/index.py",
       "use": "@vercel/python",
       "config": {
         "maxLambdaSize": "15mb",
@@ -17,10 +17,11 @@
     },
     {
       "src": "/(.*)",
-      "dest": "main.py"
+      "dest": "api/index.py"
     }
   ],
   "env": {
-    "PYTHONPATH": "."
+    "PYTHONPATH": ".",
+    "DATABASE_URL": "@database_url"
   }
 }
