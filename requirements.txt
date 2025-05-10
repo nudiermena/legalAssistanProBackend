@@ -8,3 +8,7 @@ googlesearch-python
 pycountry
 uvicorn
 agno
+sqlalchemy
+psycopg2-binary
+alembic
+asyncpg
