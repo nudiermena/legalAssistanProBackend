@@ -1,0 +1,388 @@
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Búsqueda de Patentes y Marcas</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+  <script src="https://cdn.jsdelivr.net/npm/lucide@latest/dist/umd/lucide.min.js"></script>
+</head>
+<body class="bg-background text-foreground">
+  <div class="flex min-h-screen">
+    <!-- Sidebar would go here -->
+    <div class="flex-1 ml-[250px]">
+      <!-- Header would go here -->
+      <main class="p-6">
+        <div class="space-y-6">
+          <div>
+            <h1 class="text-3xl font-bold tracking-tight">Búsqueda de Patentes y Marcas</h1>
+            <p class="text-muted-foreground mt-1">
+              Búsqueda inteligente de similitud de patentes, análisis de arte previo y verificación
+            </p>
+          </div>
+
+          <div>
+            <div class="border-b mb-6">
+              <div class="grid grid-cols-2 gap-1">
+                <button class="py-2 border-b-2 border-primary font-medium text-foreground">Patentes</button>
+                <button class="py-2 border-b-2 border-transparent font-medium text-muted-foreground hover:text-foreground transition-colors">Marcas</button>
+              </div>
+            </div>
+            
+            <div>
+              <!-- Patents tab content -->
+              <div>
+                <div class="border rounded-lg shadow-sm bg-card">
+                  <div class="p-6 border-b">
+                    <h2 class="text-xl font-bold">Búsqueda de patentes</h2>
+                  </div>
+                  <div class="p-6 space-y-4">
+                    <div class="grid md:grid-cols-3 gap-4">
+                      <div class="space-y-2 md:col-span-2">
+                        <label for="search-query" class="text-sm font-medium">Términos de búsqueda</label>
+                        <input id="search-query" placeholder="Ej: sistema de energía renovable basado en..." class="w-full px-3 py-2 border rounded-md" />
+                      </div>
+                      
+                      <div class="space-y-2">
+                        <label for="patent-type" class="text-sm font-medium">Tipo de patente</label>
+                        <select id="patent-type" class="w-full px-3 py-2 border rounded-md">
+                          <option value="" disabled selected>Seleccionar tipo</option>
+                          <option value="utility">Patente de utilidad</option>
+                          <option value="design">Patente de diseño</option>
+                          <option value="plant">Patente de planta</option>
+                          <option value="all">Todos los tipos</option>
+                        </select>
+                      </div>
+                    </div>
+                    
+                    <div class="grid md:grid-cols-2 gap-4">
+                      <div class="space-y-2">
+                        <label for="filing-date" class="text-sm font-medium">Fecha de presentación</label>
+                        <div class="flex gap-2">
+                          <input id="filing-date-start" type="date" class="flex-1 px-3 py-2 border rounded-md" />
+                          <span class="flex items-center">a</span>
+                          <input id="filing-date-end" type="date" class="flex-1 px-3 py-2 border rounded-md" />
+                        </div>
+                      </div>
+                      
+                      <div class="space-y-2">
+                        <label for="classification" class="text-sm font-medium">Clasificación IPC</label>
+                        <input id="classification" placeholder="Ej: G06F 16/00" class="w-full px-3 py-2 border rounded-md" />
+                      </div>
+                    </div>
+                    
+                    <div class="space-y-2">
+                      <label for="patent-description" class="text-sm font-medium">Descripción de la invención</label>
+                      <textarea 
+                        id="patent-description" 
+                        placeholder="Describa la invención para buscar similitudes..." 
+                        class="w-full min-h-[120px] px-3 py-2 border rounded-md"
+                      ></textarea>
+                    </div>
+                    
+                    <div class="grid md:grid-cols-2 gap-4">
+                      <div class="space-y-2">
+                        <label for="inventor" class="text-sm font-medium">Inventor(es)</label>
+                        <input id="inventor" placeholder="Nombre del inventor" class="w-full px-3 py-2 border rounded-md" />
+                      </div>
+                      
+                      <div class="space-y-2">
+                        <label for="applicant" class="text-sm font-medium">Solicitante</label>
+                        <input id="applicant" placeholder="Nombre de la empresa o persona" class="w-full px-3 py-2 border rounded-md" />
+                      </div>
+                    </div>
+                    
+                    <div class="flex justify-end gap-4 pt-2">
+                      <button class="border px-4 py-2 rounded-md flex items-center gap-2">
+                        <span data-lucide="filter"></span> Más filtros
+                      </button>
+                      <button class="bg-primary text-primary-foreground px-4 py-2 rounded-md flex items-center gap-2">
+                        <span data-lucide="search"></span> Buscar patentes
+                      </button>
+                    </div>
+                  </div>
+                </div>
+                
+                <div class="mt-8 space-y-6">
+                  <div class="flex justify-between items-center">
+                    <h2 class="text-xl font-semibold">Resultados de búsqueda</h2>
+                    <button class="border px-4 py-2 rounded-md flex items-center gap-2">
+                      <span data-lucide="download"></span> Exportar resultados
+                    </button>
+                  </div>
+                  
+                  <div class="grid lg:grid-cols-3 gap-6">
+                    <div class="lg:col-span-2 space-y-6">
+                      <!-- Patent result cards -->
+                      <div class="border rounded-lg shadow-sm bg-card">
+                        <div class="p-6">
+                          <div class="flex justify-between items-start mb-4">
+                            <div>
+                              <h3 class="font-bold text-lg">Sistema de generación de energía renovable</h3>
+                              <p class="text-sm text-muted-foreground">Patente Nº US10234567B2</p>
+                            </div>
+                            <span class="bg-amber-500 text-white text-xs px-2 py-1 rounded-md font-medium">Similitud alta</span>
+                          </div>
+                          
+                          <div class="space-y-2 mb-4">
+                            <div class="grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
+                              <div class="text-muted-foreground">Solicitante:</div>
+                              <div>Tecnología Renovable, Inc.</div>
+                              
+                              <div class="text-muted-foreground">Fecha de presentación:</div>
+                              <div>15/Jun/2022</div>
+                              
+                              <div class="text-muted-foreground">Estado:</div>
+                              <div>Concedida</div>
+                              
+                              <div class="text-muted-foreground">Clasificación:</div>
+                              <div>F03G 7/00</div>
+                            </div>
+                          </div>
+                          
+                          <p class="text-sm mb-4">
+                            Sistema que comprende un conjunto de paneles solares interconectados con capacidad de ajuste automático basado en la posición del sol, almacenamiento de energía mediante baterías de estado sólido y...
+                          </p>
+                          
+                          <div class="flex flex-wrap gap-1 mb-4">
+                            <span class="bg-secondary text-secondary-foreground text-xs px-2 py-1 rounded">Energía solar</span>
+                            <span class="bg-secondary text-secondary-foreground text-xs px-2 py-1 rounded">Almacenamiento</span>
+                            <span class="bg-secondary text-secondary-foreground text-xs px-2 py-1 rounded">Paneles ajustables</span>
+                          </div>
+                          
+                          <div class="flex justify-between items-center">
+                            <div class="flex gap-2">
+                              <button class="text-muted-foreground hover:text-foreground">
+                                <span data-lucide="star"></span>
+                              </button>
+                              <button class="text-muted-foreground hover:text-foreground">
+                                <span data-lucide="download"></span>
+                              </button>
+                            </div>
+                            <button class="bg-primary text-primary-foreground px-4 py-2 rounded-md">Ver detalles</button>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div class="border rounded-lg shadow-sm bg-card">
+                        <div class="p-6">
+                          <div class="flex justify-between items-start mb-4">
+                            <div>
+                              <h3 class="font-bold text-lg">Sistema de generación de energía sostenible</h3>
+                              <p class="text-sm text-muted-foreground">Patente Nº US10234568B2</p>
+                            </div>
+                            <span class="bg-green-500 text-white text-xs px-2 py-1 rounded-md font-medium">Similitud media</span>
+                          </div>
+                          
+                          <div class="space-y-2 mb-4">
+                            <div class="grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
+                              <div class="text-muted-foreground">Solicitante:</div>
+                              <div>EcoSistemas S.A.</div>
+                              
+                              <div class="text-muted-foreground">Fecha de presentación:</div>
+                              <div>22/Jul/2022</div>
+                              
+                              <div class="text-muted-foreground">Estado:</div>
+                              <div>Concedida</div>
+                              
+                              <div class="text-muted-foreground">Clasificación:</div>
+                              <div>F03G 7/01</div>
+                            </div>
+                          </div>
+                          
+                          <p class="text-sm mb-4">
+                            Sistema que comprende un conjunto de paneles solares con almacenamiento de energía mediante baterías de litio y sistema de control automatizado para maximizar la captación energética...
+                          </p>
+                          
+                          <div class="flex flex-wrap gap-1 mb-4">
+                            <span class="bg-secondary text-secondary-foreground text-xs px-2 py-1 rounded">Energía solar</span>
+                            <span class="bg-secondary text-secondary-foreground text-xs px-2 py-1 rounded">Almacenamiento</span>
+                            <span class="bg-secondary text-secondary-foreground text-xs px-2 py-1 rounded">Automatización</span>
+                          </div>
+                          
+                          <div class="flex justify-between items-center">
+                            <div class="flex gap-2">
+                              <button class="text-muted-foreground hover:text-foreground">
+                                <span data-lucide="star"></span>
+                              </button>
+                              <button class="text-muted-foreground hover:text-foreground">
+                                <span data-lucide="download"></span>
+                              </button>
+                            </div>
+                            <button class="bg-primary text-primary-foreground px-4 py-2 rounded-md">Ver detalles</button>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <div class="border rounded-lg shadow-sm bg-card">
+                        <div class="p-6">
+                          <div class="flex justify-between items-start mb-4">
+                            <div>
+                              <h3 class="font-bold text-lg">Método de optimización de captación solar</h3>
+                              <p class="text-sm text-muted-foreground">Patente Nº US10234569B2</p>
+                            </div>
+                            <span class="bg-green-500 text-white text-xs px-2 py-1 rounded-md font-medium">Similitud media</span>
+                          </div>
+                          
+                          <div class="space-y-2 mb-4">
+                            <div class="grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
+                              <div class="text-muted-foreground">Solicitante:</div>
+                              <div>GreenTech Industries</div>
+                              
+                              <div class="text-muted-foreground">Fecha de presentación:</div>
+                              <div>05/Sep/2022</div>
+                              
+                              <div class="text-muted-foreground">Estado:</div>
+                              <div>En trámite</div>
+                              
+                              <div class="text-muted-foreground">Clasificación:</div>
+                              <div>F03G 7/05</div>
+                            </div>
+                          </div>
+                          
+                          <p class="text-sm mb-4">
+                            Método para optimizar la captación de energía solar mediante algoritmos predictivos basados en datos meteorológicos y posicionamiento dinámico de paneles solares...
+                          </p>
+                          
+                          <div class="flex flex-wrap gap-1 mb-4">
+                            <span class="bg-secondary text-secondary-foreground text-xs px-2 py-1 rounded">Algoritmos</span>
+                            <span class="bg-secondary text-secondary-foreground text-xs px-2 py-1 rounded">Predicción</span>
+                            <span class="bg-secondary text-secondary-foreground text-xs px-2 py-1 rounded">Optimización</span>
+                          </div>
+                          
+                          <div class="flex justify-between items-center">
+                            <div class="flex gap-2">
+                              <button class="text-muted-foreground hover:text-foreground">
+                                <span data-lucide="star"></span>
+                              </button>
+                              <button class="text-muted-foreground hover:text-foreground">
+                                <span data-lucide="download"></span>
+                              </button>
+                            </div>
+                            <button class="bg-primary text-primary-foreground px-4 py-2 rounded-md">Ver detalles</button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div class="space-y-6">
+                      <!-- Analysis sidebar -->
+                      <div class="border rounded-lg shadow-sm bg-card">
+                        <div class="p-6 border-b">
+                          <h2 class="text-lg font-bold">Análisis de resultados</h2>
+                        </div>
+                        <div class="p-6 space-y-4">
+                          <div>
+                            <div class="text-sm text-muted-foreground mb-1">Similitud de patentes</div>
+                            <div class="grid grid-cols-3 gap-2 mb-3">
+                              <div class="text-center bg-red-100 p-2 rounded-lg">
+                                <div class="text-red-700 font-medium">1</div>
+                                <div class="text-xs">Alta</div>
+                              </div>
+                              <div class="text-center bg-amber-100 p-2 rounded-lg">
+                                <div class="text-amber-700 font-medium">2</div>
+                                <div class="text-xs">Media</div>
+                              </div>
+                              <div class="text-center bg-green-100 p-2 rounded-lg">
+                                <div class="text-green-700 font-medium">12</div>
+                                <div class="text-xs">Baja</div>
+                              </div>
+                            </div>
+                          </div>
+                          
+                          <div>
+                            <div class="text-sm text-muted-foreground mb-1">Distribución por año</div>
+                            <div class="h-24 flex items-end gap-1">
+                              <div class="bg-primary/80 rounded-t w-full" style="height: 15%"></div>
+                              <div class="bg-primary/80 rounded-t w-full" style="height: 20%"></div>
+                              <div class="bg-primary/80 rounded-t w-full" style="height: 35%"></div>
+                              <div class="bg-primary/80 rounded-t w-full" style="height: 50%"></div>
+                              <div class="bg-primary/80 rounded-t w-full" style="height: 45%"></div>
+                              <div class="bg-primary/80 rounded-t w-full" style="height: 60%"></div>
+                              <div class="bg-primary/80 rounded-t w-full" style="height: 40%"></div>
+                            </div>
+                            <div class="flex justify-between text-xs text-muted-foreground mt-1">
+                              <span>2019</span>
+                              <span>2025</span>
+                            </div>
+                          </div>
+                          
+                          <div>
+                            <div class="text-sm text-muted-foreground mb-1">Principales solicitantes</div>
+                            <div class="space-y-2">
+                              <div class="flex justify-between items-center">
+                                <span class="text-sm">Tecnología Renovable, Inc.</span>
+                                <span class="border px-2 py-0.5 rounded-full text-xs">8</span>
+                              </div>
+                              <div class="flex justify-between items-center">
+                                <span class="text-sm">EcoSistemas S.A.</span>
+                                <span class="border px-2 py-0.5 rounded-full text-xs">5</span>
+                              </div>
+                              <div class="flex justify-between items-center">
+                                <span class="text-sm">GreenTech Industries</span>
+                                <span class="border px-2 py-0.5 rounded-full text-xs">3</span>
+                              </div>
+                            </div>
+                          </div>
+                          
+                          <button class="w-full border px-4 py-2 rounded-md flex items-center gap-2 justify-center">
+                            <span data-lucide="bar-chart"></span> Ver análisis completo
+                          </button>
+                        </div>
+                      </div>
+                      
+                      <div class="border rounded-lg shadow-sm bg-card">
+                        <div class="p-6 border-b">
+                          <h2 class="text-lg font-bold">Recomendaciones</h2>
+                        </div>
+                        <div class="p-6 space-y-4">
+                          <div class="flex gap-3">
+                            <span data-lucide="alert-circle" class="text-amber-500 shrink-0"></span>
+                            <div>
+                              <p class="font-medium text-sm">Riesgo potencial de infracción</p>
+                              <p class="text-xs text-muted-foreground">La patente US10234567B2 tiene elementos muy similares a su búsqueda.</p>
+                            </div>
+                          </div>
+                          
+                          <div class="flex gap-3">
+                            <span data-lucide="check-circle" class="text-green-500 shrink-0"></span>
+                            <div>
+                              <p class="font-medium text-sm">Oportunidad de diferenciación</p>
+                              <p class="text-xs text-muted-foreground">Considere enfocarse en el sistema de almacenamiento, un área menos cubierta.</p>
+                            </div>
+                          </div>
+                          
+                          <div class="flex gap-3">
+                            <span data-lucide="info" class="text-blue-500 shrink-0"></span>
+                            <div>
+                              <p class="font-medium text-sm">Área de novedad</p>
+                              <p class="text-xs text-muted-foreground">La integración con IA para optimización de energía parece un área poco explorada.</p>
+                            </div>
+                          </div>
+                          
+                          <button class="w-full bg-primary text-primary-foreground px-4 py-2 rounded-md">
+                            Consultar con especialista
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              <!-- Trademarks tab content would be here, but hidden -->
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <script>
+    // Initialize Lucide icons
+    lucide.createIcons();
+  </script>
+</body>
+</html>

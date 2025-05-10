@@ -110,6 +110,11 @@ app.include_router(legal_diagnosis.router)
 app.include_router(case_prediction.router)
 app.include_router(dashboard.router)
 
+# Root route for Vercel
+@app.get("/")
+async def root():
+    return {"message": "Welcome to Legal AI Assistant API"}
+
 # Error handling for 404
 @app.exception_handler(404)
 async def custom_404_handler(request: Request, exc):
@@ -126,3 +131,8 @@ async def server_error_handler(request: Request, exc):
         status_code=500,
         content={"detail": {"message": "Internal server error"}}
     )
+
+# For local development
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=8000)

@@ -1,0 +1,255 @@
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Asistente de Investigación Legal</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+  <script src="https://cdn.jsdelivr.net/npm/lucide@latest/dist/umd/lucide.min.js"></script>
+</head>
+<body class="bg-background text-foreground">
+  <div class="flex min-h-screen">
+    <!-- Sidebar would go here -->
+    <div class="flex-1 ml-[250px]">
+      <!-- Header would go here -->
+      <main class="p-6">
+        <div class="space-y-6">
+          <div>
+            <h1 class="text-3xl font-bold tracking-tight">Asistente de Investigación Legal</h1>
+            <p class="text-muted-foreground mt-1">
+              Búsqueda potenciada por NLP en jurisprudencia, leyes y regulaciones
+            </p>
+          </div>
+
+          <div class="border rounded-lg shadow-sm bg-card">
+            <div class="p-6 border-b">
+              <h2 class="text-xl font-bold">Nueva consulta legal</h2>
+              <p class="text-muted-foreground text-sm mt-1">
+                Describa su consulta con el mayor detalle posible para obtener resultados más precisos.
+              </p>
+            </div>
+            <div class="p-6 space-y-4">
+              <div>
+                <p class="mb-2 text-sm font-medium">Jurisdicción</p>
+                <div class="flex flex-wrap gap-2">
+                  <button class="border rounded-full px-4 py-1 text-sm hover:bg-accent">Federal</button>
+                  <button class="border rounded-full px-4 py-1 text-sm hover:bg-accent">Estatal</button>
+                  <button class="border rounded-full px-4 py-1 text-sm hover:bg-accent">Local</button>
+                  <button class="border rounded-full px-4 py-1 text-sm hover:bg-accent">Internacional</button>
+                </div>
+              </div>
+              
+              <div>
+                <p class="mb-2 text-sm font-medium">Tipo de documento</p>
+                <div class="flex flex-wrap gap-2">
+                  <button class="border rounded-full px-4 py-1 text-sm hover:bg-accent">Jurisprudencia</button>
+                  <button class="border rounded-full px-4 py-1 text-sm hover:bg-accent">Legislación</button>
+                  <button class="border rounded-full px-4 py-1 text-sm hover:bg-accent">Doctrina</button>
+                  <button class="border rounded-full px-4 py-1 text-sm hover:bg-accent">Precedentes</button>
+                </div>
+              </div>
+              
+              <div>
+                <p class="mb-2 text-sm font-medium">Tema legal</p>
+                <div class="flex flex-wrap gap-2">
+                  <button class="border rounded-full px-4 py-1 text-sm hover:bg-accent">Civil</button>
+                  <button class="border rounded-full px-4 py-1 text-sm hover:bg-accent">Penal</button>
+                  <button class="border rounded-full px-4 py-1 text-sm hover:bg-accent">Administrativo</button>
+                  <button class="border rounded-full px-4 py-1 text-sm hover:bg-accent">Laboral</button>
+                  <button class="border rounded-full px-4 py-1 text-sm hover:bg-accent">Mercantil</button>
+                  <button class="border rounded-full px-4 py-1 text-sm hover:bg-accent">Constitucional</button>
+                </div>
+              </div>
+              
+              <div class="space-y-2">
+                <label for="query" class="text-sm font-medium">
+                  Su consulta detallada
+                </label>
+                <textarea
+                  id="query"
+                  placeholder="Describa su consulta legal aquí. Por ejemplo: Jurisprudencia reciente sobre casos de indemnización por despido injustificado en sector tecnológico..."
+                  class="w-full min-h-[120px] px-3 py-2 border rounded-md"
+                ></textarea>
+              </div>
+              
+              <div>
+                <label for="keywords" class="text-sm font-medium">
+                  Palabras clave (opcional)
+                </label>
+                <input 
+                  id="keywords" 
+                  placeholder="despido, indemnización, sector tecnológico..." 
+                  class="w-full px-3 py-2 border rounded-md mt-1"
+                />
+              </div>
+            </div>
+            <div class="p-6 border-t flex justify-between">
+              <button class="border px-4 py-2 rounded-md hover:bg-accent">Guardar borrador</button>
+              <button class="bg-primary text-primary-foreground px-4 py-2 rounded-md flex gap-2 items-center">
+                <span data-lucide="search"></span> Buscar
+              </button>
+            </div>
+          </div>
+
+          <div>
+            <h2 class="text-xl font-bold mb-4">Resultados de investigación</h2>
+          
+            <div class="flex justify-between mb-4">
+              <div class="flex gap-2">
+                <button class="border px-3 py-1 rounded-md text-sm flex items-center gap-1">
+                  <span data-lucide="filter"></span> Filtrar
+                </button>
+                <button class="border px-3 py-1 rounded-md text-sm">Más reciente</button>
+                <button class="border px-3 py-1 rounded-md text-sm">Más relevante</button>
+              </div>
+              <button class="border px-3 py-1 rounded-md text-sm flex items-center gap-1">
+                <span data-lucide="download"></span> Exportar
+              </button>
+            </div>
+            
+            <div class="mb-6">
+              <div class="border-b">
+                <div class="flex space-x-1">
+                  <button class="border-b-2 border-primary px-4 py-2 text-sm font-medium">Casos</button>
+                  <button class="px-4 py-2 text-sm font-medium text-muted-foreground">Legislación</button>
+                  <button class="px-4 py-2 text-sm font-medium text-muted-foreground">Artículos</button>
+                  <button class="px-4 py-2 text-sm font-medium text-muted-foreground">Resumen</button>
+                </div>
+              </div>
+              
+              <div class="space-y-4 mt-4">
+                <div class="border rounded-lg shadow-sm bg-card">
+                  <div class="p-6">
+                    <div class="flex justify-between mb-2">
+                      <h3 class="font-bold text-lg">Suprema Corte de Justicia - Exp. 284/2023</h3>
+                      <div class="flex gap-2">
+                        <button class="text-muted-foreground hover:text-foreground">
+                          <span data-lucide="star"></span>
+                        </button>
+                        <button class="text-muted-foreground hover:text-foreground">
+                          <span data-lucide="download"></span>
+                        </button>
+                      </div>
+                    </div>
+                    
+                    <div class="flex gap-2 text-sm text-muted-foreground mb-3">
+                      <span class="flex items-center gap-1">
+                        <span data-lucide="clock"></span> 12/Marzo/2023
+                      </span>
+                      <span class="flex items-center gap-1">
+                        <span data-lucide="book-open"></span> Federal
+                      </span>
+                    </div>
+                    
+                    <p class="mb-3">
+                      En este caso se estableció un precedente importante sobre la indemnización en casos de despido injustificado en empresas del sector tecnológico, considerando factores como...
+                    </p>
+                    
+                    <div class="flex flex-wrap gap-1 mb-3">
+                      <span class="bg-secondary text-secondary-foreground text-xs px-2 py-1 rounded">Despido</span>
+                      <span class="bg-secondary text-secondary-foreground text-xs px-2 py-1 rounded">Indemnización</span>
+                      <span class="bg-secondary text-secondary-foreground text-xs px-2 py-1 rounded">Tecnología</span>
+                    </div>
+                    
+                    <div class="flex justify-between items-center">
+                      <span class="text-sm font-medium">Relevancia: <span class="text-green-600">95%</span></span>
+                      <button class="bg-primary text-primary-foreground px-4 py-2 rounded-md">Ver completo</button>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="border rounded-lg shadow-sm bg-card">
+                  <div class="p-6">
+                    <div class="flex justify-between mb-2">
+                      <h3 class="font-bold text-lg">Suprema Corte de Justicia - Exp. 285/2023</h3>
+                      <div class="flex gap-2">
+                        <button class="text-muted-foreground hover:text-foreground">
+                          <span data-lucide="star"></span>
+                        </button>
+                        <button class="text-muted-foreground hover:text-foreground">
+                          <span data-lucide="download"></span>
+                        </button>
+                      </div>
+                    </div>
+                    
+                    <div class="flex gap-2 text-sm text-muted-foreground mb-3">
+                      <span class="flex items-center gap-1">
+                        <span data-lucide="clock"></span> 15/Marzo/2023
+                      </span>
+                      <span class="flex items-center gap-1">
+                        <span data-lucide="book-open"></span> Federal
+                      </span>
+                    </div>
+                    
+                    <p class="mb-3">
+                      En este caso se estableció un precedente importante sobre la indemnización en casos de despido injustificado en empresas del sector tecnológico, considerando factores como...
+                    </p>
+                    
+                    <div class="flex flex-wrap gap-1 mb-3">
+                      <span class="bg-secondary text-secondary-foreground text-xs px-2 py-1 rounded">Despido</span>
+                      <span class="bg-secondary text-secondary-foreground text-xs px-2 py-1 rounded">Indemnización</span>
+                      <span class="bg-secondary text-secondary-foreground text-xs px-2 py-1 rounded">Tecnología</span>
+                    </div>
+                    
+                    <div class="flex justify-between items-center">
+                      <span class="text-sm font-medium">Relevancia: <span class="text-green-600">92%</span></span>
+                      <button class="bg-primary text-primary-foreground px-4 py-2 rounded-md">Ver completo</button>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="border rounded-lg shadow-sm bg-card">
+                  <div class="p-6">
+                    <div class="flex justify-between mb-2">
+                      <h3 class="font-bold text-lg">Suprema Corte de Justicia - Exp. 286/2023</h3>
+                      <div class="flex gap-2">
+                        <button class="text-muted-foreground hover:text-foreground">
+                          <span data-lucide="star"></span>
+                        </button>
+                        <button class="text-muted-foreground hover:text-foreground">
+                          <span data-lucide="download"></span>
+                        </button>
+                      </div>
+                    </div>
+                    
+                    <div class="flex gap-2 text-sm text-muted-foreground mb-3">
+                      <span class="flex items-center gap-1">
+                        <span data-lucide="clock"></span> 18/Marzo/2023
+                      </span>
+                      <span class="flex items-center gap-1">
+                        <span data-lucide="book-open"></span> Federal
+                      </span>
+                    </div>
+                    
+                    <p class="mb-3">
+                      En este caso se estableció un precedente importante sobre la indemnización en casos de despido injustificado en empresas del sector tecnológico, considerando factores como...
+                    </p>
+                    
+                    <div class="flex flex-wrap gap-1 mb-3">
+                      <span class="bg-secondary text-secondary-foreground text-xs px-2 py-1 rounded">Despido</span>
+                      <span class="bg-secondary text-secondary-foreground text-xs px-2 py-1 rounded">Indemnización</span>
+                      <span class="bg-secondary text-secondary-foreground text-xs px-2 py-1 rounded">Tecnología</span>
+                    </div>
+                    
+                    <div class="flex justify-between items-center">
+                      <span class="text-sm font-medium">Relevancia: <span class="text-green-600">90%</span></span>
+                      <button class="bg-primary text-primary-foreground px-4 py-2 rounded-md">Ver completo</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <script>
+    // Initialize Lucide icons
+    lucide.createIcons();
+  </script>
+</body>
+</html>

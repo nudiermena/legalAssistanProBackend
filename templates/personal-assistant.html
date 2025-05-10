@@ -1,0 +1,1189 @@
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Asistente Personal Legal</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+  <script src="https://cdn.jsdelivr.net/npm/lucide@latest/dist/umd/lucide.min.js"></script>
+</head>
+<body class="bg-background text-foreground">
+  <div class="flex min-h-screen">
+    <!-- Sidebar would go here -->
+    <div class="flex-1 ml-[250px]">
+      <!-- Header would go here -->
+      <main class="p-6">
+        <div class="space-y-6">
+          <div>
+            <h1 class="text-3xl font-bold tracking-tight">Asistente Personal Legal</h1>
+            <p class="text-muted-foreground mt-1">
+              Su compañero legal inteligente para gestionar tareas, recordatorios y calendario
+            </p>
+          </div>
+
+          <div class="grid md:grid-cols-3 gap-6">
+            <div class="space-y-6">
+              <!-- Tasks and calendar -->
+              <div class="border rounded-lg shadow-sm bg-card">
+                <div class="p-6 border-b flex items-center justify-between">
+                  <h2 class="text-xl font-bold">Próximas tareas</h2>
+                  <button class="rounded-full h-8 w-8 flex items-center justify-center bg-primary text-primary-foreground">
+                    <span data-lucide="plus" class="h-4 w-4"></span>
+                  </button>
+                </div>
+                <div class="p-3">
+                  <div class="space-y-1">
+                    <div class="flex items-center gap-2 p-3 hover:bg-accent rounded-md">
+                      <input type="checkbox" class="h-4 w-4 rounded border-gray-300" />
+                      <span class="text-sm font-medium">Revisar contrato de Tecnologías ABC</span>
+                      <span class="ml-auto text-xs text-muted-foreground">Hoy</span>
+                    </div>
+
+                    <div class="flex items-center gap-2 p-3 hover:bg-accent rounded-md">
+                      <input type="checkbox" class="h-4 w-4 rounded border-gray-300" />
+                      <span class="text-sm font-medium">Preparar respuesta para caso #28456</span>
+                      <span class="ml-auto text-xs text-muted-foreground">Mañana</span>
+                    </div>
+
+                    <div class="flex items-center gap-2 p-3 hover:bg-accent rounded-md">
+                      <input type="checkbox" class="h-4 w-4 rounded border-gray-300" />
+                      <span class="text-sm font-medium">Reunión con el cliente Empresas XYZ</span>
+                      <span class="ml-auto text-xs text-muted-foreground">18/May</span>
+                    </div>
+
+                    <div class="flex items-center gap-2 p-3 hover:bg-accent rounded-md">
+                      <input type="checkbox" class="h-4 w-4 rounded border-gray-300" />
+                      <span class="text-sm font-medium">Revisión de documentación patente #2023/456</span>
+                      <span class="ml-auto text-xs text-muted-foreground">19/May</span>
+                    </div>
+
+                    <div class="flex items-center gap-2 p-3 hover:bg-accent rounded-md">
+                      <input type="checkbox" class="h-4 w-4 rounded border-gray-300" checked />
+                      <span class="text-sm font-medium line-through text-muted-foreground">Enviar factura a Consultas Legales SA</span>
+                      <span class="ml-auto text-xs text-muted-foreground">Ayer</span>
+                    </div>
+                  </div>
+                </div>
+                <div class="p-3 border-t">
+                  <button class="text-sm text-primary hover:underline w-full text-center">
+                    Ver todas las tareas
+                  </button>
+                </div>
+              </div>
+
+              <div class="border rounded-lg shadow-sm bg-card">
+                <div class="p-6 border-b">
+                  <h2 class="text-xl font-bold">Calendario</h2>
+                </div>
+                <div class="p-3">
+                  <!-- Simple calendar header -->
+                  <div class="mb-4 flex items-center justify-between">
+                    <button class="text-muted-foreground hover:text-foreground">
+                      <span data-lucide="chevron-left" class="h-4 w-4"></span>
+                    </button>
+                    <span class="font-medium">Mayo 2025</span>
+                    <button class="text-muted-foreground hover:text-foreground">
+                      <span data-lucide="chevron-right" class="h-4 w-4"></span>
+                    </button>
+                  </div>
+
+                  <!-- Calendar weekdays header -->
+                  <div class="grid grid-cols-7 mb-1">
+                    <div class="text-center text-xs text-muted-foreground">L</div>
+                    <div class="text-center text-xs text-muted-foreground">M</div>
+                    <div class="text-center text-xs text-muted-foreground">X</div>
+                    <div class="text-center text-xs text-muted-foreground">J</div>
+                    <div class="text-center text-xs text-muted-foreground">V</div>
+                    <div class="text-center text-xs text-muted-foreground">S</div>
+                    <div class="text-center text-xs text-muted-foreground">D</div>
+                  </div>
+
+                  <!-- Calendar days -->
+                  <div class="grid grid-cols-7 gap-1">
+                    <div class="text-center text-xs p-2 text-muted-foreground">29</div>
+                    <div class="text-center text-xs p-2 text-muted-foreground">30</div>
+                    <div class="text-center text-xs p-2">1</div>
+                    <div class="text-center text-xs p-2">2</div>
+                    <div class="text-center text-xs p-2">3</div>
+                    <div class="text-center text-xs p-2">4</div>
+                    <div class="text-center text-xs p-2">5</div>
+
+                    <div class="text-center text-xs p-2">6</div>
+                    <div class="text-center text-xs p-2">7</div>
+                    <div class="text-center text-xs p-2">8</div>
+                    <div class="text-center text-xs p-2">9</div>
+                    <div class="text-center text-xs p-2">10</div>
+                    <div class="text-center text-xs p-2">11</div>
+                    <div class="text-center text-xs p-2">12</div>
+
+                    <div class="text-center text-xs p-2">13</div>
+                    <div class="text-center text-xs p-2">14</div>
+                    <div class="text-center text-xs p-2">15</div>
+                    <div class="text-center text-xs p-2">16</div>
+                    <div class="text-center text-xs p-2 rounded-full bg-primary text-primary-foreground">17</div>
+                    <div class="text-center text-xs p-2 underline">18</div>
+                    <div class="text-center text-xs p-2 underline">19</div>
+
+                    <div class="text-center text-xs p-2">20</div>
+                    <div class="text-center text-xs p-2">21</div>
+                    <div class="text-center text-xs p-2">22</div>
+                    <div class="text-center text-xs p-2">23</div>
+                    <div class="text-center text-xs p-2">24</div>
+                    <div class="text-center text-xs p-2">25</div>
+                    <div class="text-center text-xs p-2">26</div>
+
+                    <div class="text-center text-xs p-2">27</div>
+                    <div class="text-center text-xs p-2">28</div>
+                    <div class="text-center text-xs p-2">29</div>
+                    <div class="text-center text-xs p-2">30</div>
+                    <div class="text-center text-xs p-2">31</div>
+                    <div class="text-center text-xs p-2 text-muted-foreground">1</div>
+                    <div class="text-center text-xs p-2 text-muted-foreground">2</div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="border rounded-lg shadow-sm bg-card">
+                <div class="p-6 border-b">
+                  <h2 class="text-xl font-bold">Recordatorios</h2>
+                </div>
+                <div class="p-3">
+                  <div class="space-y-3">
+                    <div class="flex items-start gap-3 p-2 rounded-md hover:bg-accent">
+                      <span data-lucide="bell" class="h-4 w-4 text-amber-500 mt-0.5"></span>
+                      <div>
+                        <p class="text-sm font-medium">Audiencia caso López vs. García</p>
+                        <p class="text-xs text-muted-foreground">20/May - 11:00 AM</p>
+                      </div>
+                    </div>
+
+                    <div class="flex items-start gap-3 p-2 rounded-md hover:bg-accent">
+                      <span data-lucide="bell" class="h-4 w-4 text-red-500 mt-0.5"></span>
+                      <div>
+                        <p class="text-sm font-medium">Vencimiento plazo impugnación</p>
+                        <p class="text-xs text-muted-foreground">24/May - 15:00 PM</p>
+                      </div>
+                    </div>
+
+                    <div class="flex items-start gap-3 p-2 rounded-md hover:bg-accent">
+                      <span data-lucide="bell" class="h-4 w-4 text-blue-500 mt-0.5"></span>
+                      <div>
+                        <p class="text-sm font-medium">Renovación licencia software</p>
+                        <p class="text-xs text-muted-foreground">28/May</p>
+                      </div>
+                    </div>
+
+                    <div class="flex justify-center pt-2">
+                      <button class="text-sm text-primary hover:underline">
+                        Configurar nuevo recordatorio
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="md:col-span-2 space-y-6">
+              <!-- Main work area -->
+              <div class="border rounded-lg shadow-sm bg-card">
+                <div class="p-6 border-b">
+                  <h2 class="text-xl font-bold">Asistente de voz</h2>
+                </div>
+                <div class="p-6">
+                  <div class="bg-accent/50 rounded-lg p-6 mb-4 space-y-4">
+                    <div class="flex gap-4">
+                      <div class="h-10 w-10 rounded-full bg-primary flex items-center justify-center text-primary-foreground">
+                        <span data-lucide="bot" class="h-5 w-5"></span>
+                      </div>
+                      <div class="flex-1">
+                        <p class="text-sm mb-1 text-muted-foreground">Asistente</p>
+                        <p>Buenos días, ¿en qué puedo ayudarle hoy?</p>
+                      </div>
+                    </div>
+                    
+                    <div class="flex gap-4">
+                      <div class="h-10 w-10 rounded-full bg-secondary flex items-center justify-center">
+                        <span data-lucide="user" class="h-5 w-5"></span>
+                      </div>
+                      <div class="flex-1">
+                        <p class="text-sm mb-1 text-muted-foreground">Usted</p>
+                        <p>Necesito agendar una reunión con el cliente Empresas XYZ para revisar el contrato de licencia.</p>
+                      </div>
+                    </div>
+                    
+                    <div class="flex gap-4">
+                      <div class="h-10 w-10 rounded-full bg-primary flex items-center justify-center text-primary-foreground">
+                        <span data-lucide="bot" class="h-5 w-5"></span>
+                      </div>
+                      <div class="flex-1">
+                        <p class="text-sm mb-1 text-muted-foreground">Asistente</p>
+                        <p>Entendido. ¿Para qué fecha y hora desea agendar esta reunión con Empresas XYZ?</p>
+                      </div>
+                    </div>
+
+                    <div class="flex gap-4">
+                      <div class="h-10 w-10 rounded-full bg-secondary flex items-center justify-center">
+                        <span data-lucide="user" class="h-5 w-5"></span>
+                      </div>
+                      <div class="flex-1">
+                        <p class="text-sm mb-1 text-muted-foreground">Usted</p>
+                        <p>Para el próximo lunes a las 10 de la mañana.</p>
+                      </div>
+                    </div>
+
+                    <div class="flex gap-4">
+                      <div class="h-10 w-10 rounded-full bg-primary flex items-center justify-center text-primary-foreground">
+                        <span data-lucide="bot" class="h-5 w-5"></span>
+                      </div>
+                      <div class="flex-1">
+                        <p class="text-sm mb-1 text-muted-foreground">Asistente</p>
+                        <p>He programado una reunión con Empresas XYZ para el lunes 19 de mayo a las 10:00 AM. ¿Desea enviar una invitación por correo electrónico a los participantes?</p>
+
+                        <div class="mt-3 flex gap-3">
+                          <button class="bg-primary text-primary-foreground px-4 py-1 rounded-md text-sm">Sí, enviar invitación</button>
+                          <button class="border px-4 py-1 rounded-md text-sm">No, solo agendar</button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div class="flex gap-4 mt-6">
+                    <input type="text" placeholder="Escribe o haz clic en el micrófono para hablar..." class="flex-1 px-4 py-2 border rounded-md" />
+                    <button class="h-10 w-10 rounded-full bg-primary text-primary-foreground flex items-center justify-center">
+                      <span data-lucide="mic" class="h-5 w-5"></span>
+                    </button>
+                  </div>
+
+                  <div class="mt-4 flex flex-wrap gap-2">
+                    <button onclick="handleFeatureClick('agendar-reunion')" class="bg-secondary px-3 py-1 rounded-full text-xs">Agendar reunión</button>
+                    <button onclick="handleFeatureClick('recordatorio')" class="bg-secondary px-3 py-1 rounded-full text-xs">Recordatorio</button>
+                    <button onclick="handleFeatureClick('buscar-documento')" class="bg-secondary px-3 py-1 rounded-full text-xs">Buscar documento</button>
+                    <button onclick="handleFeatureClick('resumen-caso')" class="bg-secondary px-3 py-1 rounded-full text-xs">Resumen de caso</button>
+                  </div>
+                </div>
+              </div>
+
+              <div class="border rounded-lg shadow-sm bg-card">
+                <div class="p-6 border-b">
+                  <h2 class="text-xl font-bold">Eventos de hoy</h2>
+                </div>
+                <div class="p-6">
+                  <div class="space-y-4">
+                    <div class="flex gap-4">
+                      <div class="text-center">
+                        <div class="text-3xl font-bold">10:00</div>
+                        <div class="text-xs text-muted-foreground">AM</div>
+                      </div>
+                      <div class="flex-1 border-l pl-4">
+                        <h3 class="font-medium">Audiencia preliminar caso #28456</h3>
+                        <p class="text-sm text-muted-foreground">Juzgado Civil N°5, Sala 302</p>
+                        <div class="mt-2 flex gap-2">
+                          <span class="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded">Documentos listos</span>
+                          <span class="bg-green-100 text-green-800 text-xs px-2 py-1 rounded">Confirmado</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div class="flex gap-4">
+                      <div class="text-center">
+                        <div class="text-3xl font-bold">12:30</div>
+                        <div class="text-xs text-muted-foreground">PM</div>
+                      </div>
+                      <div class="flex-1 border-l pl-4">
+                        <h3 class="font-medium">Reunión con equipo legal</h3>
+                        <p class="text-sm text-muted-foreground">Sala de conferencias principal</p>
+                        <div class="mt-2 flex gap-2">
+                          <span class="bg-amber-100 text-amber-800 text-xs px-2 py-1 rounded">Preparar presentación</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div class="flex gap-4">
+                      <div class="text-center">
+                        <div class="text-3xl font-bold">15:00</div>
+                        <div class="text-xs text-muted-foreground">PM</div>
+                      </div>
+                      <div class="flex-1 border-l pl-4">
+                        <h3 class="font-medium">Revisión de contrato Tecnologías ABC</h3>
+                        <p class="text-sm text-muted-foreground">Fecha límite</p>
+                        <div class="mt-2 flex gap-2">
+                          <span class="bg-red-100 text-red-800 text-xs px-2 py-1 rounded">Urgente</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div class="flex gap-4">
+                      <div class="text-center">
+                        <div class="text-3xl font-bold">17:30</div>
+                        <div class="text-xs text-muted-foreground">PM</div>
+                      </div>
+                      <div class="flex-1 border-l pl-4">
+                        <h3 class="font-medium">Videollamada con cliente internacional</h3>
+                        <p class="text-sm text-muted-foreground">Zoom - ID: 987 654 321</p>
+                        <div class="mt-2 flex gap-2">
+                          <button class="bg-primary text-primary-foreground text-xs px-3 py-1 rounded flex items-center gap-1">
+                            <span data-lucide="video" class="h-3 w-3"></span> Unirse ahora
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              <div class="grid md:grid-cols-2 gap-6">
+                <div class="border rounded-lg shadow-sm bg-card">
+                  <div class="p-6 border-b">
+                    <h2 class="text-xl font-bold">Documentos recientes</h2>
+                  </div>
+                  <div class="p-3">
+                    <div class="space-y-1">
+                      <div class="flex items-center gap-2 p-2 hover:bg-accent rounded-md">
+                        <span data-lucide="file-text" class="h-4 w-4 text-blue-500"></span>
+                        <span class="text-sm">Contrato_Tecnologías_ABC_v2.docx</span>
+                        <span class="ml-auto text-xs text-muted-foreground">Hoy</span>
+                      </div>
+
+                      <div class="flex items-center gap-2 p-2 hover:bg-accent rounded-md">
+                        <span data-lucide="file-text" class="h-4 w-4 text-red-500"></span>
+                        <span class="text-sm">Respuesta_Caso_28456.pdf</span>
+                        <span class="ml-auto text-xs text-muted-foreground">Ayer</span>
+                      </div>
+
+                      <div class="flex items-center gap-2 p-2 hover:bg-accent rounded-md">
+                        <span data-lucide="file-text" class="h-4 w-4 text-green-500"></span>
+                        <span class="text-sm">Presupuesto_Q2_2025.xlsx</span>
+                        <span class="ml-auto text-xs text-muted-foreground">15/May</span>
+                      </div>
+
+                      <div class="flex items-center gap-2 p-2 hover:bg-accent rounded-md">
+                        <span data-lucide="file-text" class="h-4 w-4 text-amber-500"></span>
+                        <span class="text-sm">Patente_2023_456_Análisis.pdf</span>
+                        <span class="ml-auto text-xs text-muted-foreground">14/May</span>
+                      </div>
+
+                      <div class="flex items-center gap-2 p-2 hover:bg-accent rounded-md">
+                        <span data-lucide="file-text" class="h-4 w-4 text-purple-500"></span>
+                        <span class="text-sm">Presentación_Equipo.pptx</span>
+                        <span class="ml-auto text-xs text-muted-foreground">10/May</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="border rounded-lg shadow-sm bg-card">
+                  <div class="p-6 border-b">
+                    <h2 class="text-xl font-bold">Mensajes pendientes</h2>
+                  </div>
+                  <div class="p-3">
+                    <div class="space-y-3">
+                      <div class="flex items-start gap-3 p-2 rounded-md hover:bg-accent">
+                        <div class="h-8 w-8 rounded-full bg-red-500 flex items-center justify-center text-white text-xs font-medium">
+                          JL
+                        </div>
+                        <div class="flex-1">
+                          <div class="flex justify-between">
+                            <p class="text-sm font-medium">Juan López</p>
+                            <span class="text-xs text-muted-foreground">10:25 AM</span>
+                          </div>
+                          <p class="text-xs text-muted-foreground line-clamp-1">Le envío los documentos solicitados para el caso...</p>
+                        </div>
+                      </div>
+
+                      <div class="flex items-start gap-3 p-2 rounded-md hover:bg-accent">
+                        <div class="h-8 w-8 rounded-full bg-blue-500 flex items-center justify-center text-white text-xs font-medium">
+                          MG
+                        </div>
+                        <div class="flex-1">
+                          <div class="flex justify-between">
+                            <p class="text-sm font-medium">María González</p>
+                            <span class="text-xs text-muted-foreground">9:15 AM</span>
+                          </div>
+                          <p class="text-xs text-muted-foreground line-clamp-1">Necesitamos revisar las cláusulas del contrato...</p>
+                        </div>
+                      </div>
+
+                      <div class="flex items-start gap-3 p-2 rounded-md hover:bg-accent">
+                        <div class="h-8 w-8 rounded-full bg-green-500 flex items-center justify-center text-white text-xs font-medium">
+                          PR
+                        </div>
+                        <div class="flex-1">
+                          <div class="flex justify-between">
+                            <p class="text-sm font-medium">Pedro Rodríguez</p>
+                            <span class="text-xs text-muted-foreground">Ayer</span>
+                          </div>
+                          <p class="text-xs text-muted-foreground line-clamp-1">Confirmación de la reunión para mañana a las...</p>
+                        </div>
+                      </div>
+
+                      <div class="flex justify-center pt-2">
+                        <button class="text-sm text-primary hover:underline">
+                          Ver todos los mensajes
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <!-- Modales para las funcionalidades -->
+  <div id="modal-explorar-tema" class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center hidden">
+    <div class="bg-background rounded-lg shadow-lg p-6 max-w-md w-full">
+      <div class="flex justify-between items-center mb-4">
+        <h2 class="text-xl font-bold">Explorar tema legal</h2>
+        <button onclick="closeModal('modal-explorar-tema')" class="p-1 rounded-full hover:bg-accent">
+          <span data-lucide="x" class="h-5 w-5"></span>
+        </button>
+      </div>
+      <div class="space-y-4">
+        <div>
+          <label for="tema-legal" class="block text-sm font-medium mb-1">Seleccione un tema</label>
+          <select id="tema-legal" class="w-full p-2 border rounded-md">
+            <option value="laboral">Derecho Laboral</option>
+            <option value="civil">Derecho Civil</option>
+            <option value="familiar">Derecho Familiar</option>
+            <option value="mercantil">Derecho Mercantil</option>
+            <option value="penal">Derecho Penal</option>
+            <option value="administrativo">Derecho Administrativo</option>
+          </select>
+        </div>
+        <div>
+          <label for="subtema-legal" class="block text-sm font-medium mb-1">Subtema específico</label>
+          <input type="text" id="subtema-legal" class="w-full p-2 border rounded-md" placeholder="Ej. Despido injustificado">
+        </div>
+        <div class="flex justify-end gap-2">
+          <button onclick="closeModal('modal-explorar-tema')" class="px-4 py-2 border rounded-md">Cancelar</button>
+          <button onclick="handleExplorarTema()" class="px-4 py-2 bg-primary text-primary-foreground rounded-md">Explorar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="modal-calculadora-indemnizacion" class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center hidden">
+    <div class="bg-background rounded-lg shadow-lg p-6 max-w-md w-full">
+      <div class="flex justify-between items-center mb-4">
+        <h2 class="text-xl font-bold">Calculadora de Indemnización</h2>
+        <button onclick="closeModal('modal-calculadora-indemnizacion')" class="p-1 rounded-full hover:bg-accent">
+          <span data-lucide="x" class="h-5 w-5"></span>
+        </button>
+      </div>
+      <div class="space-y-4">
+        <div>
+          <label for="sueldo-diario" class="block text-sm font-medium mb-1">Sueldo diario (MXN)</label>
+          <input type="number" id="sueldo-diario" class="w-full p-2 border rounded-md" placeholder="Ej. 500">
+        </div>
+        <div>
+          <label for="antiguedad" class="block text-sm font-medium mb-1">Antigüedad (Años)</label>
+          <input type="number" id="antiguedad" class="w-full p-2 border rounded-md" placeholder="Ej. 5">
+        </div>
+        <div>
+          <label for="tipo-despido" class="block text-sm font-medium mb-1">Tipo de despido</label>
+          <select id="tipo-despido" class="w-full p-2 border rounded-md">
+            <option value="justificado">Justificado</option>
+            <option value="injustificado">Injustificado</option>
+          </select>
+        </div>
+        <div>
+          <label for="vacaciones-pendientes" class="block text-sm font-medium mb-1">Días de vacaciones pendientes</label>
+          <input type="number" id="vacaciones-pendientes" class="w-full p-2 border rounded-md" placeholder="Ej. 10">
+        </div>
+        <div>
+          <label for="aguinaldo-pendiente" class="block text-sm font-medium mb-1">Días de aguinaldo pendientes</label>
+          <input type="number" id="aguinaldo-pendiente" class="w-full p-2 border rounded-md" placeholder="Ej. 15">
+        </div>
+        <div id="resultado-indemnizacion" class="border p-4 rounded-md hidden">
+          <h3 class="font-bold mb-2">Resultado del cálculo:</h3>
+          <div class="space-y-1">
+            <p class="text-sm flex justify-between"><span>3 meses de salario:</span> <span id="tres-meses">$0.00 MXN</span></p>
+            <p class="text-sm flex justify-between"><span>20 días por año:</span> <span id="veinte-dias">$0.00 MXN</span></p>
+            <p class="text-sm flex justify-between"><span>Prima de antigüedad:</span> <span id="prima-antiguedad">$0.00 MXN</span></p>
+            <p class="text-sm flex justify-between"><span>Aguinaldo proporcional:</span> <span id="aguinaldo">$0.00 MXN</span></p>
+            <p class="text-sm flex justify-between"><span>Vacaciones proporcionales:</span> <span id="vacaciones">$0.00 MXN</span></p>
+            <div class="border-t pt-1 mt-2">
+              <p class="font-bold flex justify-between"><span>Total:</span> <span id="total-indemnizacion">$0.00 MXN</span></p>
+            </div>
+          </div>
+        </div>
+        <div class="flex justify-end gap-2">
+          <button onclick="closeModal('modal-calculadora-indemnizacion')" class="px-4 py-2 border rounded-md">Cancelar</button>
+          <button onclick="calcularIndemnizacion()" class="px-4 py-2 bg-primary text-primary-foreground rounded-md">Calcular</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="modal-glosario-legal" class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center hidden">
+    <div class="bg-background rounded-lg shadow-lg p-6 max-w-2xl w-full max-h-[80vh] overflow-auto">
+      <div class="flex justify-between items-center mb-4">
+        <h2 class="text-xl font-bold">Glosario Legal</h2>
+        <div class="flex gap-2 items-center">
+          <input type="text" id="buscar-termino" placeholder="Buscar término..." class="p-2 border rounded-md">
+          <button onclick="closeModal('modal-glosario-legal')" class="p-1 rounded-full hover:bg-accent">
+            <span data-lucide="x" class="h-5 w-5"></span>
+          </button>
+        </div>
+      </div>
+      <div class="space-y-4">
+        <div id="glosario-contenido" class="space-y-3">
+          <div class="border-b pb-3">
+            <h3 class="font-bold">A</h3>
+            <div class="mt-2 space-y-2">
+              <div>
+                <p class="font-medium">Acción</p>
+                <p class="text-sm text-muted-foreground">Derecho que tiene todo individuo para solicitar la intervención de los tribunales.</p>
+              </div>
+              <div>
+                <p class="font-medium">Alegato</p>
+                <p class="text-sm text-muted-foreground">Argumentos orales o escritos que exponen las partes para defender sus pretensiones.</p>
+              </div>
+              <div>
+                <p class="font-medium">Amparo</p>
+                <p class="text-sm text-muted-foreground">Procedimiento jurídico para garantizar los derechos fundamentales frente a actos u omisiones de autoridades.</p>
+              </div>
+            </div>
+          </div>
+          <div class="border-b pb-3">
+            <h3 class="font-bold">C</h3>
+            <div class="mt-2 space-y-2">
+              <div>
+                <p class="font-medium">Caducidad</p>
+                <p class="text-sm text-muted-foreground">Extinción de un derecho por no ejercitarlo en el plazo establecido por la ley.</p>
+              </div>
+              <div>
+                <p class="font-medium">Cláusula</p>
+                <p class="text-sm text-muted-foreground">Cada una de las disposiciones de un contrato, tratado, testamento o cualquier otro documento similar.</p>
+              </div>
+            </div>
+          </div>
+          <div class="border-b pb-3">
+            <h3 class="font-bold">D</h3>
+            <div class="mt-2 space-y-2">
+              <div>
+                <p class="font-medium">Demanda</p>
+                <p class="text-sm text-muted-foreground">Escrito que inicia el juicio y tiene por objeto determinar las pretensiones del actor.</p>
+              </div>
+              <div>
+                <p class="font-medium">Diligencia</p>
+                <p class="text-sm text-muted-foreground">Actuación o trámite que forma parte de un procedimiento judicial.</p>
+              </div>
+            </div>
+          </div>
+          <div class="border-b pb-3">
+            <h3 class="font-bold">P</h3>
+            <div class="mt-2 space-y-2">
+              <div>
+                <p class="font-medium">Prescripción</p>
+                <p class="text-sm text-muted-foreground">Manera de adquirir un derecho o de perder una acción por el transcurso del tiempo.</p>
+              </div>
+              <div>
+                <p class="font-medium">Prueba</p>
+                <p class="text-sm text-muted-foreground">Actividad procesal que tiene por finalidad acreditar los hechos controvertidos.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="modal-buscador-leyes" class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center hidden">
+    <div class="bg-background rounded-lg shadow-lg p-6 max-w-2xl w-full max-h-[80vh] overflow-auto">
+      <div class="flex justify-between items-center mb-4">
+        <h2 class="text-xl font-bold">Buscador de Leyes</h2>
+        <button onclick="closeModal('modal-buscador-leyes')" class="p-1 rounded-full hover:bg-accent">
+          <span data-lucide="x" class="h-5 w-5"></span>
+        </button>
+      </div>
+      <div class="space-y-4">
+        <div class="flex gap-2">
+          <input type="text" id="busqueda-leyes" placeholder="Ingrese palabras clave..." class="flex-1 p-2 border rounded-md">
+          <button onclick="buscarLeyes()" class="px-4 py-2 bg-primary text-primary-foreground rounded-md flex items-center gap-1">
+            <span data-lucide="search" class="h-4 w-4"></span>
+            Buscar
+          </button>
+        </div>
+        <div>
+          <label for="filtro-jurisdiccion" class="block text-sm font-medium mb-1">Jurisdicción</label>
+          <select id="filtro-jurisdiccion" class="w-full p-2 border rounded-md">
+            <option value="federal">Federal</option>
+            <option value="estatal">Estatal</option>
+            <option value="local">Municipal</option>
+          </select>
+        </div>
+        <div>
+          <label for="filtro-materia" class="block text-sm font-medium mb-1">Materia</label>
+          <select id="filtro-materia" class="w-full p-2 border rounded-md">
+            <option value="todas">Todas</option>
+            <option value="civil">Civil</option>
+            <option value="penal">Penal</option>
+            <option value="laboral">Laboral</option>
+            <option value="fiscal">Fiscal</option>
+            <option value="administrativo">Administrativo</option>
+          </select>
+        </div>
+        <div id="resultados-busqueda" class="border rounded-md p-4 mt-4 hidden">
+          <h3 class="font-bold mb-3">Resultados de búsqueda</h3>
+          <div class="space-y-3" id="lista-resultados">
+            <!-- Los resultados de búsqueda se mostrarán aquí -->
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="modal-evaluador-casos" class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center hidden">
+    <div class="bg-background rounded-lg shadow-lg p-6 max-w-2xl w-full max-h-[80vh] overflow-auto">
+      <div class="flex justify-between items-center mb-4">
+        <h2 class="text-xl font-bold">Evaluador de Casos</h2>
+        <button onclick="closeModal('modal-evaluador-casos')" class="p-1 rounded-full hover:bg-accent">
+          <span data-lucide="x" class="h-5 w-5"></span>
+        </button>
+      </div>
+      <div class="space-y-4">
+        <div>
+          <label for="tipo-caso" class="block text-sm font-medium mb-1">Tipo de caso</label>
+          <select id="tipo-caso" class="w-full p-2 border rounded-md">
+            <option value="laboral">Laboral</option>
+            <option value="civil">Civil</option>
+            <option value="familiar">Familiar</option>
+            <option value="mercantil">Mercantil</option>
+            <option value="penal">Penal</option>
+          </select>
+        </div>
+        <div>
+          <label for="descripcion-caso" class="block text-sm font-medium mb-1">Descripción del caso</label>
+          <textarea id="descripcion-caso" rows="4" class="w-full p-2 border rounded-md" placeholder="Describa brevemente los hechos relevantes del caso..."></textarea>
+        </div>
+        <div>
+          <label class="block text-sm font-medium mb-1">Documentos disponibles</label>
+          <div class="space-y-2">
+            <div class="flex items-center gap-2">
+              <input type="checkbox" id="doc-contratos" class="h-4 w-4 rounded">
+              <label for="doc-contratos" class="text-sm">Contratos o acuerdos</label>
+            </div>
+            <div class="flex items-center gap-2">
+              <input type="checkbox" id="doc-comunicaciones" class="h-4 w-4 rounded">
+              <label for="doc-comunicaciones" class="text-sm">Comunicaciones (emails, cartas)</label>
+            </div>
+            <div class="flex items-center gap-2">
+              <input type="checkbox" id="doc-facturas" class="h-4 w-4 rounded">
+              <label for="doc-facturas" class="text-sm">Facturas o recibos</label>
+            </div>
+            <div class="flex items-center gap-2">
+              <input type="checkbox" id="doc-testimonios" class="h-4 w-4 rounded">
+              <label for="doc-testimonios" class="text-sm">Testimonios o declaraciones</label>
+            </div>
+          </div>
+        </div>
+        <div id="evaluacion-resultado" class="border p-4 rounded-md hidden">
+          <h3 class="font-bold mb-2">Evaluación preliminar:</h3>
+          <div class="space-y-3">
+            <div>
+              <p class="font-medium">Viabilidad del caso:</p>
+              <div class="flex items-center mt-1">
+                <div class="h-2 w-full bg-gray-200 rounded-full">
+                  <div id="viabilidad-barra" class="h-2 bg-blue-500 rounded-full" style="width: 75%"></div>
+                </div>
+                <span id="viabilidad-porcentaje" class="ml-2 text-sm">75%</span>
+              </div>
+            </div>
+            <div>
+              <p class="font-medium">Análisis jurídico:</p>
+              <p id="analisis-juridico" class="text-sm mt-1">
+                Basado en la información proporcionada, su caso tiene fundamentos legales para proceder. Los documentos mencionados respaldan su posición y las leyes aplicables favorecen su argumento principal.
+              </p>
+            </div>
+            <div>
+              <p class="font-medium">Recomendaciones:</p>
+              <ul id="recomendaciones" class="text-sm mt-1 list-disc pl-5 space-y-1">
+                <li>Recopilar evidencia documental adicional que respalde su posición.</li>
+                <li>Considerar la posibilidad de una negociación extrajudicial antes de iniciar un proceso legal.</li>
+                <li>Consultar con un abogado especializado para una evaluación más detallada.</li>
+              </ul>
+            </div>
+            <div>
+              <p class="font-medium">Estimación de tiempos y costos:</p>
+              <div class="grid grid-cols-2 gap-2 mt-1">
+                <div>
+                  <p class="text-xs text-muted-foreground">Duración estimada:</p>
+                  <p id="duracion-estimada" class="text-sm">6-8 meses</p>
+                </div>
+                <div>
+                  <p class="text-xs text-muted-foreground">Costo aproximado:</p>
+                  <p id="costo-aproximado" class="text-sm">$25,000 - $35,000 MXN</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="flex justify-end gap-2">
+          <button onclick="closeModal('modal-evaluador-casos')" class="px-4 py-2 border rounded-md">Cancelar</button>
+          <button onclick="evaluarCaso()" class="px-4 py-2 bg-primary text-primary-foreground rounded-md">Evaluar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="modal-hacer-pregunta" class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center hidden">
+    <div class="bg-background rounded-lg shadow-lg p-6 max-w-2xl w-full">
+      <div class="flex justify-between items-center mb-4">
+        <h2 class="text-xl font-bold">Hacer una pregunta</h2>
+        <button onclick="closeModal('modal-hacer-pregunta')" class="p-1 rounded-full hover:bg-accent">
+          <span data-lucide="x" class="h-5 w-5"></span>
+        </button>
+      </div>
+      <div class="space-y-4">
+        <div>
+          <label for="categoria-pregunta" class="block text-sm font-medium mb-1">Categoría</label>
+          <select id="categoria-pregunta" class="w-full p-2 border rounded-md">
+            <option value="general">Consulta general</option>
+            <option value="laboral">Derecho laboral</option>
+            <option value="civil">Derecho civil</option>
+            <option value="familiar">Derecho familiar</option>
+            <option value="mercantil">Derecho mercantil</option>
+            <option value="administrativo">Derecho administrativo</option>
+          </select>
+        </div>
+        <div>
+          <label for="texto-pregunta" class="block text-sm font-medium mb-1">Su pregunta</label>
+          <textarea id="texto-pregunta" rows="4" class="w-full p-2 border rounded-md" placeholder="Escriba su pregunta de forma clara y concisa..."></textarea>
+        </div>
+        <div>
+          <label class="block text-sm font-medium mb-1">Adjuntar documentos (opcional)</label>
+          <div class="border-dashed border-2 rounded-md p-4 text-center">
+            <span data-lucide="upload" class="h-6 w-6 mx-auto mb-2 text-muted-foreground"></span>
+            <p class="text-sm text-muted-foreground">Arrastre documentos aquí o haga clic para seleccionar</p>
+            <input type="file" class="hidden" id="subir-documentos" multiple>
+            <button onclick="document.getElementById('subir-documentos').click()" class="mt-2 px-3 py-1 bg-secondary text-sm rounded-md">Seleccionar archivos</button>
+          </div>
+        </div>
+        <div class="flex items-center gap-2">
+          <input type="checkbox" id="urgente-checkbox" class="h-4 w-4 rounded">
+          <label for="urgente-checkbox" class="text-sm">Marcar como urgente (respuesta en menos de 24 horas)</label>
+        </div>
+        <div class="flex justify-end gap-2">
+          <button onclick="closeModal('modal-hacer-pregunta')" class="px-4 py-2 border rounded-md">Cancelar</button>
+          <button onclick="enviarPregunta()" class="px-4 py-2 bg-primary text-primary-foreground rounded-md">Enviar pregunta</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="modal-consultar-abogado" class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center hidden">
+    <div class="bg-background rounded-lg shadow-lg p-6 max-w-2xl w-full">
+      <div class="flex justify-between items-center mb-4">
+        <h2 class="text-xl font-bold">Consultar con un abogado</h2>
+        <button onclick="closeModal('modal-consultar-abogado')" class="p-1 rounded-full hover:bg-accent">
+          <span data-lucide="x" class="h-5 w-5"></span>
+        </button>
+      </div>
+      <div class="space-y-4">
+        <div>
+          <label for="especialidad-abogado" class="block text-sm font-medium mb-1">Especialidad requerida</label>
+          <select id="especialidad-abogado" class="w-full p-2 border rounded-md">
+            <option value="laboral">Derecho laboral</option>
+            <option value="civil">Derecho civil</option>
+            <option value="familiar">Derecho familiar</option>
+            <option value="mercantil">Derecho mercantil</option>
+            <option value="penal">Derecho penal</option>
+            <option value="fiscal">Derecho fiscal</option>
+            <option value="administrativo">Derecho administrativo</option>
+          </select>
+        </div>
+        <div>
+          <label for="descripcion-consulta" class="block text-sm font-medium mb-1">Descripción del asunto</label>
+          <textarea id="descripcion-consulta" rows="4" class="w-full p-2 border rounded-md" placeholder="Describa brevemente el motivo de su consulta..."></textarea>
+        </div>
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label for="tipo-consulta" class="block text-sm font-medium mb-1">Tipo de consulta</label>
+            <div class="flex gap-2">
+              <button class="flex-1 border p-2 rounded-md text-sm hover:bg-accent" onclick="seleccionarTipoConsulta('telefonica')">
+                <span data-lucide="phone" class="h-4 w-4 mx-auto mb-1"></span>
+                <span class="block">Telefónica</span>
+              </button>
+              <button class="flex-1 border p-2 rounded-md text-sm hover:bg-accent" onclick="seleccionarTipoConsulta('videollamada')">
+                <span data-lucide="video" class="h-4 w-4 mx-auto mb-1"></span>
+                <span class="block">Videollamada</span>
+              </button>
+            </div>
+          </div>
+          <div>
+            <label for="urgencia-consulta" class="block text-sm font-medium mb-1">Urgencia</label>
+            <div class="flex gap-2">
+              <button class="flex-1 border p-2 rounded-md text-sm hover:bg-accent" onclick="seleccionarUrgencia('normal')">Normal</button>
+              <button class="flex-1 border p-2 rounded-md text-sm hover:bg-accent" onclick="seleccionarUrgencia('urgente')">Urgente</button>
+            </div>
+          </div>
+        </div>
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label for="fecha-consulta" class="block text-sm font-medium mb-1">Fecha preferida</label>
+            <input type="date" id="fecha-consulta" class="w-full p-2 border rounded-md">
+          </div>
+          <div>
+            <label for="hora-consulta" class="block text-sm font-medium mb-1">Hora preferida</label>
+            <input type="time" id="hora-consulta" class="w-full p-2 border rounded-md">
+          </div>
+        </div>
+        <div class="border p-3 rounded-md bg-primary/5">
+          <p class="text-sm font-medium">Información sobre tarifas:</p>
+          <p class="text-xs text-muted-foreground mt-1">La consulta inicial de 30 minutos tiene un costo de $800 MXN. Para consultas urgentes (menos de 24 horas) aplica un cargo adicional de $300 MXN.</p>
+        </div>
+        <div class="flex justify-end gap-2">
+          <button onclick="closeModal('modal-consultar-abogado')" class="px-4 py-2 border rounded-md">Cancelar</button>
+          <button onclick="solicitarConsulta()" class="px-4 py-2 bg-primary text-primary-foreground rounded-md">Solicitar consulta</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast" class="fixed bottom-4 right-4 p-4 rounded-md bg-card border shadow-lg transform translate-y-full opacity-0 transition-all duration-300 z-50 max-w-xs">
+    <div class="flex items-center gap-3">
+      <span data-lucide="check-circle" class="h-5 w-5 text-green-500" id="toast-icon"></span>
+      <div>
+        <p class="font-medium" id="toast-title">Operación exitosa</p>
+        <p class="text-sm text-muted-foreground" id="toast-message">Su acción ha sido procesada correctamente.</p>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Initialize Lucide icons
+    lucide.createIcons();
+
+    // Variables globales
+    let tipoConsultaSeleccionada = null;
+    let urgenciaSeleccionada = null;
+    let toastTimeout = null;
+
+    // Funciones para abrir y cerrar modales
+    function openModal(modalId) {
+      document.getElementById(modalId).classList.remove('hidden');
+    }
+
+    function closeModal(modalId) {
+      document.getElementById(modalId).classList.add('hidden');
+    }
+
+    // Funciones para mostrar toast
+    function showToast(title, message, type = 'success') {
+      const toast = document.getElementById('toast');
+      const toastTitle = document.getElementById('toast-title');
+      const toastMessage = document.getElementById('toast-message');
+      const toastIcon = document.getElementById('toast-icon');
+      
+      // Configurar el toast
+      toastTitle.textContent = title;
+      toastMessage.textContent = message;
+      
+      // Configurar el icono según el tipo
+      if (type === 'success') {
+        toastIcon.setAttribute('data-lucide', 'check-circle');
+        toastIcon.className = 'h-5 w-5 text-green-500';
+      } else if (type === 'error') {
+        toastIcon.setAttribute('data-lucide', 'x-circle');
+        toastIcon.className = 'h-5 w-5 text-red-500';
+      } else if (type === 'warning') {
+        toastIcon.setAttribute('data-lucide', 'alert-triangle');
+        toastIcon.className = 'h-5 w-5 text-amber-500';
+      } else if (type === 'info') {
+        toastIcon.setAttribute('data-lucide', 'info');
+        toastIcon.className = 'h-5 w-5 text-blue-500';
+      }
+      
+      // Actualizar el ícono
+      lucide.createIcons();
+      
+      // Mostrar el toast
+      toast.classList.remove('translate-y-full', 'opacity-0');
+      
+      // Limpiar el timeout anterior si existe
+      if (toastTimeout) clearTimeout(toastTimeout);
+      
+      // Ocultar el toast después de 5 segundos
+      toastTimeout = setTimeout(() => {
+        toast.classList.add('translate-y-full', 'opacity-0');
+      }, 5000);
+    }
+    
+    // Manejador para los botones de funcionalidades
+    function handleFeatureClick(feature) {
+      switch(feature) {
+        case 'agendar-reunion':
+          showToast('Funcionalidad activa', 'La característica de agendar reunión está disponible', 'info');
+          break;
+        case 'recordatorio':
+          showToast('Funcionalidad activa', 'La característica de recordatorio está disponible', 'info');
+          break;
+        case 'buscar-documento':
+          showToast('Funcionalidad activa', 'La característica de búsqueda de documentos está disponible', 'info');
+          break;
+        case 'resumen-caso':
+          showToast('Funcionalidad activa', 'La característica de resumen de caso está disponible', 'info');
+          break;
+      }
+    }
+
+    // Funciones para las implementaciones solicitadas
+
+    // Explorar tema
+    function handleExplorarTema() {
+      const tema = document.getElementById('tema-legal').value;
+      const subtema = document.getElementById('subtema-legal').value || 'General';
+      
+      showToast('Tema seleccionado', `Explorando: ${subtema} en ${tema}`, 'success');
+      closeModal('modal-explorar-tema');
+    }
+
+    // Calculadora de indemnización
+    function calcularIndemnizacion() {
+      const sueldoDiario = parseFloat(document.getElementById('sueldo-diario').value) || 0;
+      const antiguedad = parseFloat(document.getElementById('antiguedad').value) || 0;
+      const tipoDespido = document.getElementById('tipo-despido').value;
+      const vacacionesPendientes = parseFloat(document.getElementById('vacaciones-pendientes').value) || 0;
+      const aguinaldoPendiente = parseFloat(document.getElementById('aguinaldo-pendiente').value) || 0;
+      
+      // Realizar los cálculos
+      let tresMeses = sueldoDiario * 90; // 3 meses de salario
+      let veinteDias = 0;
+      let primaAntiguedad = 0;
+      let aguinaldo = sueldoDiario * aguinaldoPendiente;
+      let vacaciones = sueldoDiario * vacacionesPendientes;
+      
+      if (tipoDespido === 'injustificado') {
+        veinteDias = sueldoDiario * 20 * antiguedad; // 20 días por año
+        primaAntiguedad = sueldoDiario * 12 * antiguedad; // 12 días por año
+      }
+      
+      const total = tresMeses + veinteDias + primaAntiguedad + aguinaldo + vacaciones;
+      
+      // Mostrar resultados
+      document.getElementById('tres-meses').textContent = `$${tresMeses.toFixed(2)} MXN`;
+      document.getElementById('veinte-dias').textContent = `$${veinteDias.toFixed(2)} MXN`;
+      document.getElementById('prima-antiguedad').textContent = `$${primaAntiguedad.toFixed(2)} MXN`;
+      document.getElementById('aguinaldo').textContent = `$${aguinaldo.toFixed(2)} MXN`;
+      document.getElementById('vacaciones').textContent = `$${vacaciones.toFixed(2)} MXN`;
+      document.getElementById('total-indemnizacion').textContent = `$${total.toFixed(2)} MXN`;
+      
+      document.getElementById('resultado-indemnizacion').classList.remove('hidden');
+      
+      showToast('Cálculo completado', 'Se ha calculado la indemnización', 'success');
+    }
+
+    // Buscador de leyes
+    function buscarLeyes() {
+      const busqueda = document.getElementById('busqueda-leyes').value;
+      const jurisdiccion = document.getElementById('filtro-jurisdiccion').value;
+      const materia = document.getElementById('filtro-materia').value;
+      
+      if (!busqueda.trim()) {
+        showToast('Error de búsqueda', 'Por favor ingrese términos de búsqueda', 'error');
+        return;
+      }
+      
+      // Simular resultados de búsqueda
+      const resultados = [
+        {
+          titulo: 'Ley Federal del Trabajo',
+          articulo: 'Artículo 48',
+          texto: 'El trabajador podrá solicitar ante la Junta de Conciliación y Arbitraje, que se le reinstale en el trabajo que desempeñaba, o que se le indemnice con el importe de tres meses de salario, a su elección.',
+          relevancia: '95%'
+        },
+        {
+          titulo: 'Código Civil Federal',
+          articulo: 'Artículo 1913',
+          texto: 'Cuando una persona hace uso de mecanismos, instrumentos, aparatos, vehículos, substancias o bienes peligrosos por sí mismos, está obligada a responder del daño que cause, aunque no obre ilícitamente.',
+          relevancia: '87%'
+        },
+        {
+          titulo: 'Ley General de Sociedades Mercantiles',
+          articulo: 'Artículo 6',
+          texto: 'La escritura constitutiva de una sociedad deberá contener: I. Los nombres, nacionalidad y domicilio de las personas físicas o jurídicas que constituyan la sociedad.',
+          relevancia: '82%'
+        }
+      ];
+      
+      // Mostrar resultados
+      const listaResultados = document.getElementById('lista-resultados');
+      listaResultados.innerHTML = '';
+      
+      resultados.forEach(resultado => {
+        const resultadoHTML = `
+          <div class="border-b pb-3">
+            <div class="flex justify-between">
+              <h4 class="font-bold">${resultado.titulo}</h4>
+              <span class="text-xs bg-primary/10 text-primary px-2 py-1 rounded-full">Relevancia: ${resultado.relevancia}</span>
+            </div>
+            <p class="text-sm font-medium mt-1">${resultado.articulo}</p>
+            <p class="text-sm mt-1">${resultado.texto}</p>
+            <button class="text-primary text-sm mt-2">Ver texto completo</button>
+          </div>
+        `;
+        
+        listaResultados.innerHTML += resultadoHTML;
+      });
+      
+      document.getElementById('resultados-busqueda').classList.remove('hidden');
+      showToast('Búsqueda completada', `Se encontraron ${resultados.length} resultados`, 'success');
+    }
+
+    // Evaluador de casos
+    function evaluarCaso() {
+      const tipoCaso = document.getElementById('tipo-caso').value;
+      const descripcion = document.getElementById('descripcion-caso').value;
+      
+      if (!descripcion.trim()) {
+        showToast('Error', 'Por favor describa su caso', 'error');
+        return;
+      }
+      
+      // Mostrar resultado de evaluación
+      document.getElementById('evaluacion-resultado').classList.remove('hidden');
+      
+      // Personalizar la evaluación según el tipo de caso
+      let viabilidad, duracion, costo;
+      
+      switch(tipoCaso) {
+        case 'laboral':
+          viabilidad = '75%';
+          duracion = '6-8 meses';
+          costo = '$25,000 - $35,000 MXN';
+          break;
+        case 'civil':
+          viabilidad = '60%';
+          duracion = '12-18 meses';
+          costo = '$40,000 - $60,000 MXN';
+          break;
+        case 'familiar':
+          viabilidad = '80%';
+          duracion = '3-6 meses';
+          costo = '$20,000 - $30,000 MXN';
+          break;
+        case 'mercantil':
+          viabilidad = '65%';
+          duracion = '8-14 meses';
+          costo = '$35,000 - $50,000 MXN';
+          break;
+        case 'penal':
+          viabilidad = '55%';
+          duracion = '18-24 meses';
+          costo = '$50,000 - $80,000 MXN';
+          break;
+      }
+      
+      document.getElementById('viabilidad-barra').style.width = viabilidad;
+      document.getElementById('viabilidad-porcentaje').textContent = viabilidad;
+      document.getElementById('duracion-estimada').textContent = duracion;
+      document.getElementById('costo-aproximado').textContent = costo;
+      
+      showToast('Evaluación completada', 'Se ha evaluado su caso', 'success');
+    }
+
+    // Hacer pregunta
+    function enviarPregunta() {
+      const categoria = document.getElementById('categoria-pregunta').value;
+      const pregunta = document.getElementById('texto-pregunta').value;
+      const esUrgente = document.getElementById('urgente-checkbox').checked;
+      
+      if (!pregunta.trim()) {
+        showToast('Error', 'Por favor escriba su pregunta', 'error');
+        return;
+      }
+      
+      // Tiempo de respuesta estimado
+      const tiempoRespuesta = esUrgente ? '24 horas' : '2-3 días hábiles';
+      
+      showToast('Pregunta enviada', `Responderemos en ${tiempoRespuesta}`, 'success');
+      closeModal('modal-hacer-pregunta');
+    }
+
+    // Consultar abogado
+    function seleccionarTipoConsulta(tipo) {
+      tipoConsultaSeleccionada = tipo;
+      showToast('Selección guardada', `Tipo de consulta: ${tipo}`, 'info');
+    }
+
+    function seleccionarUrgencia(urgencia) {
+      urgenciaSeleccionada = urgencia;
+      showToast('Selección guardada', `Urgencia: ${urgencia}`, 'info');
+    }
+
+    function solicitarConsulta() {
+      const especialidad = document.getElementById('especialidad-abogado').value;
+      const descripcion = document.getElementById('descripcion-consulta').value;
+      const fecha = document.getElementById('fecha-consulta').value;
+      const hora = document.getElementById('hora-consulta').value;
+      
+      if (!descripcion.trim()) {
+        showToast('Error', 'Por favor describa el motivo de su consulta', 'error');
+        return;
+      }
+      
+      if (!tipoConsultaSeleccionada) {
+        showToast('Error', 'Por favor seleccione un tipo de consulta', 'error');
+        return;
+      }
+      
+      if (!urgenciaSeleccionada) {
+        showToast('Error', 'Por favor seleccione el nivel de urgencia', 'error');
+        return;
+      }
+      
+      if (!fecha || !hora) {
+        showToast('Error', 'Por favor seleccione fecha y hora', 'error');
+        return;
+      }
+      
+      showToast('Consulta solicitada', 'Un abogado le contactará para confirmar', 'success');
+      closeModal('modal-consultar-abogado');
+    }
+
+    // Event listeners para botones de herramientas
+    document.addEventListener('DOMContentLoaded', () => {
+      // Botones para abrir modales de herramientas
+      const botonesHerramientas = [
+        { selector: '.bg-secondary:contains("Explorar tema")', modalId: 'modal-explorar-tema' },
+        { selector: '.bg-secondary:contains("Calculador de indemnización")', modalId: 'modal-calculadora-indemnizacion' },
+        { selector: '.bg-secondary:contains("Glosario legal")', modalId: 'modal-glosario-legal' },
+        { selector: '.bg-secondary:contains("Buscador de leyes")', modalId: 'modal-buscador-leyes' },
+        { selector: '.bg-secondary:contains("Evaluador de casos")', modalId: 'modal-evaluador-casos' },
+        { selector: '.bg-secondary:contains("Hacer pregunta")', modalId: 'modal-hacer-pregunta' },
+        { selector: '.bg-secondary:contains("Consultar abogado")', modalId: 'modal-consultar-abogado' }
+      ];
+      
+      // Implementación personalizada de selector :contains
+      document.querySelectorAll('.bg-secondary').forEach(button => {
+        if (button.textContent.includes('Explorar tema')) {
+          button.addEventListener('click', () => openModal('modal-explorar-tema'));
+        } else if (button.textContent.includes('Calculador de indemnización') || button.textContent.includes('Calculadora de indemnización')) {
+          button.addEventListener('click', () => openModal('modal-calculadora-indemnizacion'));
+        } else if (button.textContent.includes('Glosario legal')) {
+          button.addEventListener('click', () => openModal('modal-glosario-legal'));
+        } else if (button.textContent.includes('Buscador de leyes')) {
+          button.addEventListener('click', () => openModal('modal-buscador-leyes'));
+        } else if (button.textContent.includes('Evaluador de casos')) {
+          button.addEventListener('click', () => openModal('modal-evaluador-casos'));
+        }
+      });
+      
+      // Botones para acciones específicas
+      document.querySelectorAll('button').forEach(button => {
+        if (button.textContent.includes('Hacer pregunta')) {
+          button.addEventListener('click', () => openModal('modal-hacer-pregunta'));
+        } else if (button.textContent.includes('Consultar abogado')) {
+          button.addEventListener('click', () => openModal('modal-consultar-abogado'));
+        }
+      });
+    });
+  </script>
+</body>
+</html>

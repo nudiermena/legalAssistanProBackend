@@ -32,15 +32,18 @@ ENV/
 *.swo
 .DS_Store
 
-# Environment Variables
+# Environment variables
 .env
 .env.local
-.env.*.local
+
+# Vercel
+.vercel
 
 # Logs
 *.log
-logs/
-log/
+
+# Local development
+Thumbs.db
 
 # Database
 *.db

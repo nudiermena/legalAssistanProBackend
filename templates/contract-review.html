@@ -1,0 +1,229 @@
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Revisión de Contratos con IA</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+  <script src="https://cdn.jsdelivr.net/npm/lucide@latest/dist/umd/lucide.min.js"></script>
+</head>
+<body class="bg-background text-foreground">
+  <div class="flex min-h-screen">
+    <!-- Sidebar would go here -->
+    <div class="flex-1 ml-[250px]">
+      <!-- Header would go here -->
+      <main class="p-6">
+        <div class="space-y-6">
+          <div>
+            <h1 class="text-3xl font-bold tracking-tight">Revisión de Contratos con IA</h1>
+            <p class="text-muted-foreground mt-1">
+              Revisión automática de contratos y evaluación de riesgos
+            </p>
+          </div>
+
+          <div class="flex gap-4 items-center border-b pb-4">
+            <button class="bg-primary text-primary-foreground px-4 py-2 rounded-md flex gap-2 items-center" id="upload-tab">
+              <span data-lucide="upload"></span> Subir contrato
+            </button>
+            <button class="text-muted-foreground px-4 py-2 rounded-md flex gap-2 items-center" id="analysis-tab" disabled>
+              <span data-lucide="search"></span> Analizando
+            </button>
+            <button class="text-muted-foreground px-4 py-2 rounded-md flex gap-2 items-center" id="results-tab" disabled>
+              <span data-lucide="file-check"></span> Resultados
+            </button>
+          </div>
+
+          <div id="upload-section">
+            <div class="border-dashed border-2 bg-accent/10 rounded-lg">
+              <div class="p-8 text-center">
+                <div class="flex flex-col items-center gap-4">
+                  <div data-lucide="file-check" class="w-12 h-12 text-primary opacity-60"></div>
+                  <h2 class="text-xl font-bold">Suba su contrato para análisis</h2>
+                  <p class="text-muted-foreground max-w-md">
+                    Soportamos archivos en formato PDF, DOC, DOCX y TXT. El tamaño máximo es 10MB.
+                  </p>
+                  
+                  <label class="cursor-pointer">
+                    <div class="bg-primary text-primary-foreground hover:bg-primary/90 px-4 py-2 rounded-md">
+                      Seleccionar archivo
+                    </div>
+                    <input type="file" class="hidden" accept=".pdf,.doc,.docx,.txt" id="file-input">
+                  </label>
+                  
+                  <div class="mt-4 flex-col gap-2 items-center hidden" id="selected-file-container">
+                    <p class="text-sm font-medium">Archivo seleccionado: <span id="file-name"></span></p>
+                    <button class="bg-primary text-primary-foreground px-4 py-2 rounded-md mt-2" id="analyze-button">Analizar contrato</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div id="analysis-section" class="hidden">
+            <div class="border bg-accent/10 rounded-lg">
+              <div class="p-8 text-center">
+                <div class="flex flex-col items-center gap-4">
+                  <div class="animate-spin">
+                    <div data-lucide="search" class="w-12 h-12 text-primary opacity-60"></div>
+                  </div>
+                  <h2 class="text-xl font-bold">Analizando contrato</h2>
+                  <p class="text-muted-foreground max-w-md">
+                    Nuestro sistema está revisando su documento, identificando cláusulas y evaluando posibles riesgos...
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div id="results-section" class="hidden space-y-6">
+            <div class="border rounded-lg">
+              <div class="px-6 py-4 border-b">
+                <h2 class="text-xl font-bold flex items-center gap-2">
+                  <span data-lucide="check-circle" class="text-green-500"></span> Resumen del análisis
+                </h2>
+              </div>
+              <div class="p-6">
+                <p>El contrato ha sido analizado con éxito. Se identificaron 12 cláusulas principales y 3 puntos de atención.</p>
+                
+                <div class="mt-4 space-y-4">
+                  <h3 class="font-semibold">Puntuación de riesgo: <span class="text-amber-500">Medio</span></h3>
+                  
+                  <div class="bg-muted h-2 rounded-full overflow-hidden">
+                    <div class="bg-amber-500 h-full rounded-full" style="width: 65%"></div>
+                  </div>
+                  
+                  <div class="grid grid-cols-3 gap-4 mt-4">
+                    <div class="border rounded-lg p-4 text-center">
+                      <p class="text-muted-foreground text-sm">Riesgo legal</p>
+                      <p class="text-2xl font-bold text-amber-500">Medio</p>
+                    </div>
+                    <div class="border rounded-lg p-4 text-center">
+                      <p class="text-muted-foreground text-sm">Cumplimiento</p>
+                      <p class="text-2xl font-bold text-green-500">Alto</p>
+                    </div>
+                    <div class="border rounded-lg p-4 text-center">
+                      <p class="text-muted-foreground text-sm">Cláusulas ambiguas</p>
+                      <p class="text-2xl font-bold text-red-500">3</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <div class="border rounded-lg">
+              <div class="px-6 py-4 border-b">
+                <h2 class="text-xl font-bold">Cláusulas identificadas</h2>
+              </div>
+              <div class="p-6">
+                <div class="space-y-4">
+                  <div class="flex items-start gap-3 pb-3 border-b">
+                    <span data-lucide="check-circle" class="text-green-500 mt-0.5 w-5 h-5"></span>
+                    <div>
+                      <p class="font-medium">Cláusula de confidencialidad</p>
+                    </div>
+                  </div>
+                  <div class="flex items-start gap-3 pb-3 border-b">
+                    <span data-lucide="alert-circle" class="text-amber-500 mt-0.5 w-5 h-5"></span>
+                    <div>
+                      <p class="font-medium">Términos de pago</p>
+                      <p class="text-sm text-muted-foreground">Plazo de pago ambiguo</p>
+                    </div>
+                  </div>
+                  <div class="flex items-start gap-3 pb-3 border-b">
+                    <span data-lucide="check-circle" class="text-green-500 mt-0.5 w-5 h-5"></span>
+                    <div>
+                      <p class="font-medium">Resolución de conflictos</p>
+                    </div>
+                  </div>
+                  <div class="flex items-start gap-3 pb-3 border-b">
+                    <span data-lucide="check-circle" class="text-green-500 mt-0.5 w-5 h-5"></span>
+                    <div>
+                      <p class="font-medium">Duración del contrato</p>
+                    </div>
+                  </div>
+                  <div class="flex items-start gap-3 pb-3 border-b">
+                    <span data-lucide="alert-circle" class="text-amber-500 mt-0.5 w-5 h-5"></span>
+                    <div>
+                      <p class="font-medium">Obligaciones de las partes</p>
+                      <p class="text-sm text-muted-foreground">Responsabilidades no claramente definidas</p>
+                    </div>
+                  </div>
+                  <div class="flex items-start gap-3 pb-3">
+                    <span data-lucide="alert-circle" class="text-red-500 mt-0.5 w-5 h-5"></span>
+                    <div>
+                      <p class="font-medium">Cláusula de terminación</p>
+                      <p class="text-sm text-muted-foreground">Condiciones de terminación unilateral potencialmente abusivas</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <div class="border rounded-lg">
+              <div class="px-6 py-4 border-b">
+                <h2 class="text-xl font-bold">Recomendaciones</h2>
+              </div>
+              <div class="p-6">
+                <ul class="list-disc pl-5 space-y-2">
+                  <li>Aclarar los términos de pago especificando fechas concretas o plazos específicos desde la facturación.</li>
+                  <li>Revisar y detallar las obligaciones de las partes para evitar ambigüedades en las responsabilidades.</li>
+                  <li>Modificar la cláusula de terminación para asegurar condiciones equitativas para ambas partes.</li>
+                  <li>Considerar agregar una cláusula de fuerza mayor dada la ausencia de esta protección en el contrato actual.</li>
+                </ul>
+              </div>
+            </div>
+            
+            <div class="flex justify-end space-x-4">
+              <button class="border border-primary/80 text-primary hover:bg-primary/10 px-4 py-2 rounded-md">Descargar informe</button>
+              <button class="bg-primary text-primary-foreground hover:bg-primary/90 px-4 py-2 rounded-md">Consultar con abogado</button>
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <script>
+    // Initialize Lucide icons
+    lucide.createIcons();
+
+    // Handle file selection
+    document.getElementById('file-input').addEventListener('change', function(e) {
+      const fileName = e.target.files[0]?.name;
+      if (fileName) {
+        document.getElementById('file-name').textContent = fileName;
+        document.getElementById('selected-file-container').classList.remove('hidden');
+        document.getElementById('selected-file-container').classList.add('flex');
+      }
+    });
+
+    // Handle analyze button click
+    document.getElementById('analyze-button').addEventListener('click', function() {
+      // Show analysis tab
+      document.getElementById('upload-section').classList.add('hidden');
+      document.getElementById('analysis-section').classList.remove('hidden');
+      
+      document.getElementById('upload-tab').classList.remove('bg-primary', 'text-primary-foreground');
+      document.getElementById('upload-tab').classList.add('text-muted-foreground');
+      
+      document.getElementById('analysis-tab').classList.add('bg-primary', 'text-primary-foreground');
+      document.getElementById('analysis-tab').classList.remove('text-muted-foreground');
+      
+      // Simulate analysis time
+      setTimeout(function() {
+        // Show results tab
+        document.getElementById('analysis-section').classList.add('hidden');
+        document.getElementById('results-section').classList.remove('hidden');
+        
+        document.getElementById('analysis-tab').classList.remove('bg-primary', 'text-primary-foreground');
+        document.getElementById('analysis-tab').classList.add('text-muted-foreground');
+        
+        document.getElementById('results-tab').classList.add('bg-primary', 'text-primary-foreground');
+        document.getElementById('results-tab').classList.remove('text-muted-foreground');
+      }, 2000);
+    });
+  </script>
+</body>
+</html>
