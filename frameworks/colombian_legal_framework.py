@@ -4,7 +4,9 @@ class ColombianLegalFramework:
         "proceso_civil": "Proceso Civil",
         "proceso_penal": "Proceso Penal",
         "proceso_administrativo": "Proceso Administrativo",
-        "proceso_comercial": "Proceso Comercial"
+        "proceso_comercial": "Proceso Comercial",
+        "indigena": "Proceso Indígena",
+        "proceso_arrendamiento": "Proceso de Arrendamiento",
     }
 
     ADMINISTRATIVE_PROCEDURES = {
@@ -24,7 +26,8 @@ class ColombianLegalFramework:
         "ordinaria": "Jurisdicción Ordinaria",
         "administrativa": "Jurisdicción Administrativa",
         "constitucional": "Jurisdicción Constitucional",
-        "especial": "Jurisdicción Especial"
+        "especial": "Jurisdicción Especial",
+        "indigena": "Jurisdicción Especial Indígena"
     }
 
     LEGAL_AREAS = {
@@ -34,7 +37,8 @@ class ColombianLegalFramework:
         "administrativo": "Derecho Administrativo",
         "comercial": "Derecho Comercial",
         "constitucional": "Derecho Constitucional",
-        "familia": "Derecho de Familia"
+        "familia": "Derecho de Familia",
+        "indigena": "Derecho Indígena"
     }
 
     @classmethod

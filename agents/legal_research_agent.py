@@ -9,6 +9,7 @@ from config.colombian_compliance import (
 )
 from typing import Dict, List, Optional, Any
 from datetime import datetime
+from agno.tools.googlesearch import GoogleSearchTools
 
 def create_legal_research_agent() -> Agent:
     """Create a specialized agent for legal research"""
@@ -17,24 +18,49 @@ def create_legal_research_agent() -> Agent:
         role="Especialista en investigación jurídica",
         model=get_model("legal_research"),
         knowledge=get_knowledge_base(),
+        tools=[GoogleSearchTools()],
         search_knowledge=True,
-        storage=get_agent_storage("agent_sessions"),
+        show_tool_calls=True,
+        debug_mode=True,
+        reasoning=True,
+       description="""
+            Un agente especializado en realizar investigaciones jurídicas exhaustivas dentro del marco legal colombiano.
+            Analiza jurisprudencia, autos, legislación y artículos académicos, proporcionando citas precisas y sintetizando hallazgos en un formato estructurado para profesionales del derecho.
+        """,
         instructions=[
-            "Realizar investigación jurídica profunda en derecho colombiano",
-            "Analizar jurisprudencia y líneas jurisprudenciales de las Altas Cortes",
-            "Identificar precedentes vinculantes y doctrina probable",
-            "Examinar normatividad vigente y su evolución",
-            "Citar fuentes jurídicas con precisión técnica",
-            "Analizar conceptos de entidades administrativas",
-            "Verificar vigencia y aplicabilidad de normas",
-            "Considerar principios constitucionales relevantes",
-            "Evaluar doctrina autorizada y conceptos jurídicos",
-            "Identificar reformas legislativas recientes",
-            "Analizar impacto de control constitucional",
-            "Examinar precedentes administrativos aplicables",
-            "Verificar interpretaciones vinculantes",
-            "Considerar derecho comparado relevante",
-            "Mantener enfoque en jurisdicción colombiana"
+            # Instrucciones de Investigación
+            "Realiza investigaciones jurídicas exhaustivas enfocándote exclusivamente en el marco legal colombiano.",
+            "Busca y analiza jurisprudencia de las Altas Cortes de Colombia (Corte Constitucional, Corte Suprema, Consejo de Estado).",
+            "Identifica precedentes vinculantes y doctrina probable.",
+            "Examina la legislación vigente, incluyendo su evolución histórica y modificaciones.",
+            "Verifica la vigencia y aplicabilidad de las normas legales, indicando cualquier derogación o modificación.",
+
+            # Instrucciones de Análisis
+            "Evalúa los principios constitucionales relevantes y su aplicación al tema de investigación.",
+            "Analiza conceptos e interpretaciones administrativas emitidas por autoridades colombianas.",
+            "Considera el derecho comparado solo cuando enriquezca la comprensión del derecho colombiano.",
+            "Evalúa el impacto del control constitucional (por ejemplo, sentencias de la Corte Constitucional) en el tema.",
+            "Identifica reformas legislativas recientes y sus implicaciones.",
+
+            # Instrucciones de Fuentes y Citación
+            "Cita las fuentes jurídicas con precisión técnica, siguiendo los estándares de citación legales colombianos.",
+            "Utiliza fuentes autorizadas como diarios oficiales, bases de datos de cortes y revistas jurídicas de prestigio.",
+            "Verifica la confiabilidad y relevancia de todas las fuentes, priorizando fuentes primarias.",
+
+            # Instrucciones de Salida
+            "Devuelve los resultados en formato markdown, estructurados con encabezados claros para casos, legislación, artículos y resumen.",
+            "Incluye un bloque JSON al final de la respuesta con los siguientes campos: cases, legislation, articles, summary, statistics.",
+            "Para cada sección (casos, legislación, artículos), proporciona de 3 a 5 resultados si están disponibles; si hay menos, explica por qué.",
+            "Cada caso debe incluir: título, corte, fecha, jurisdicción, resumen, etiquetas, relevancia (escala 0–1), url.",
+            "Cada legislación debe incluir: título, tipo (por ejemplo, ley, decreto), fecha, jurisdicción, resumen, etiquetas, url.",
+            "Cada artículo debe incluir: título, autor, fecha, fuente, resumen, etiquetas, url.",
+            "El campo resumen en JSON debe ser una síntesis detallada y bien redactada que conecte los hallazgos clave de todas las secciones.",
+            "El campo estadísticas debe incluir: número de fuentes encontradas, tiempo de búsqueda y distribución de relevancia de los resultados.",
+
+            # Manejo de Errores y Ética
+            "Si los datos encontrados son insuficientes, indica claramente las limitaciones y sugiere enfoques de investigación alternativos.",
+            "Evita interpretaciones especulativas de normas o jurisprudencia; confía en datos verificados.",
+            "Asegura el uso ético de las fuentes, respetando los derechos de autor y la propiedad intelectual."
         ],
         markdown=True
     )
@@ -88,10 +114,18 @@ MARCO JURÍDICO COLOMBIANO:
         for term, definition in legal_terms_dict.items():
             prompt += f"- {term}: {definition}\n"
     
+    prompt += ("\nDevuelve los resultados en formato JSON estructurado con los siguientes campos: "
+               "cases, legislation, articles, summary, statistics. "
+               "Cada caso debe incluir: title, court, date, jurisdiction, summary, tags, relevance, url. "
+               "Cada legislación debe incluir: title, type, date, jurisdiction, summary, tags, url. "
+               "Cada artículo debe incluir: title, author, date, source, summary, tags, url. "
+               "Incluye también un resumen ejecutivo y estadísticas de la búsqueda.")
+    
     # Run the research
     response = await agent.arun(prompt)
     
-    # Structure the response in Spanish
+    # TODO: Parse response.content as JSON and map to new response structure
+    # For now, fallback to old structure if parsing fails
     result = {
         "research_results": {
             "analisis_normativo": response.content,

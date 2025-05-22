@@ -26,6 +26,8 @@ from reportlab.lib.pagesizes import letter
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
 from reportlab.lib.units import inch
+import json
+import re
 
 router = APIRouter(prefix="/dashboard/legal-research", tags=["research"])
 
@@ -87,81 +89,136 @@ class LegalResearchRequest(BaseModel):
             }
         }
 
+class Case(BaseModel):
+    title: str
+    court: str
+    date: str
+    jurisdiction: str
+    summary: str
+    tags: List[str]
+    relevance: float
+    url: Optional[str] = None
+
+class Legislation(BaseModel):
+    title: str
+    type: str
+    date: str
+    jurisdiction: str
+    summary: str
+    tags: List[str]
+    url: Optional[str] = None
+
+class Article(BaseModel):
+    title: str
+    author: str
+    date: str
+    source: str
+    summary: str
+    tags: List[str]
+    url: Optional[str] = None
+
 class LegalResearchResponse(BaseModel):
-    research_results: Dict[str, Any] = Field(
-        ..., 
-        description="Resultados de la investigación"
-    )
-    research_topic: str = Field(
-        ..., 
-        description="Tema investigado"
-    )
-    jurisdiction: str = Field(
-        ..., 
-        description="Jurisdicción"
-    )
-    colombian_compliance: Dict[str, Any] = Field(
-        ..., 
-        description="Cumplimiento normativo colombiano"
-    )
-    legal_framework: Dict[str, List[str]] = Field(
-        ..., 
-        description="Marco jurídico aplicable"
-    )
-    jurisprudence: Optional[List[Dict[str, str]]] = Field(
-        None, 
-        description="Jurisprudencia relevante"
-    )
-    specific_areas: Optional[List[str]] = Field(
-        None,
-        description="Áreas específicas analizadas"
-    )
-    data_processing: Optional[Dict[str, str]] = Field(
-        None,
-        description="Detalles de tratamiento de datos"
-    )
-    legal_terms: Optional[Dict[str, str]] = Field(
-        None,
-        description="Definiciones jurídicas"
-    )
+    cases: List[Case]
+    legislation: List[Legislation]
+    articles: List[Article]
+    summary: str
+    statistics: Dict[str, Any]
+    research_topic: str = Field(..., description="Tema investigado")
+    jurisdiction: str = Field(..., description="Jurisdicción")
+    colombian_compliance: Dict[str, Any] = Field(..., description="Cumplimiento normativo colombiano")
+    legal_framework: Dict[str, List[str]] = Field(..., description="Marco jurídico aplicable")
+    jurisprudence: Optional[List[Dict[str, str]]] = Field(None, description="Jurisprudencia relevante")
+    specific_areas: Optional[List[str]] = Field(None, description="Áreas específicas analizadas")
+    data_processing: Optional[Dict[str, str]] = Field(None, description="Detalles de tratamiento de datos")
+    legal_terms: Optional[Dict[str, str]] = Field(None, description="Definiciones jurídicas")
     timestamp: datetime = Field(default_factory=datetime.now)
 
     class Config:
         json_schema_extra = {
             "example": {
-                "research_results": {
-                    "analisis_normativo": "La telemedicina en Colombia...",
-                    "jurisprudencia_relevante": [
-                        "Sentencia T-123/2023: Establece...",
-                        "Sentencia C-456/2022: Define..."
-                    ],
-                    "doctrina_aplicable": "Los autores coinciden...",
-                    "recomendaciones": "Se sugiere considerar..."
-                },
-                "research_topic": "Responsabilidad civil en telemedicina",
+                "cases": [
+                    {
+                        "title": "Corte Suprema de Justicia - Sala Laboral - Exp. SL-2023-4567",
+                        "court": "Corte Suprema de Justicia",
+                        "date": "2023-03-12",
+                        "jurisdiction": "Colombia - Nacional",
+                        "summary": "En este caso se estableció un precedente importante...",
+                        "tags": ["Despido sin justa causa", "Indemnización", "Código Sustantivo del Trabajo"],
+                        "relevance": 0.95,
+                        "url": "https://ejemplo.com/caso1"
+                    }
+                ],
+                "legislation": [
+                    {
+                        "title": "Ley 1581 de 2012",
+                        "type": "Ley",
+                        "date": "2012-10-17",
                 "jurisdiction": "Colombia",
-                "colombian_compliance": {
-                    "framework_version": "2024.1",
-                    "constitutional_principles": [
-                        "Debido proceso",
-                        "Acceso a la justicia"
-                    ],
-                    "data_protection": "Cumple Ley 1581 de 2012"
+                        "summary": "Ley de protección de datos personales...",
+                        "tags": ["Protección de datos", "Privacidad"],
+                        "url": "https://ejemplo.com/ley1581"
+                    }
+                ],
+                "articles": [
+                    {
+                        "title": "La evolución de la protección de datos en Colombia",
+                        "author": "Juan Pérez",
+                        "date": "2023-01-10",
+                        "source": "Revista Jurídica",
+                        "summary": "Este artículo analiza la evolución...",
+                        "tags": ["Protección de datos", "Doctrina"],
+                        "url": "https://ejemplo.com/articulo1"
+                    }
+                ],
+                "summary": "Resumen ejecutivo de la investigación...",
+                "statistics": {
+                    "total_results": 25,
+                    "national_jurisdiction": 21,
+                    "international_jurisdiction": 4,
+                    "cases": 12,
+                    "legislation": 8,
+                    "articles": 5,
+                    "excluded": 7
                 },
-                "legal_framework": {
-                    "leyes": [
-                        "Ley 2213 de 2022",
-                        "Ley 1581 de 2012"
-                    ],
-                    "decretos": [
-                        "Decreto 538 de 2020"
-                    ],
-                    "resoluciones": [
-                        "Resolución 2654 de 2019"
-                    ]
-                }
+                # ...other example fields as before...
             }
         }
+
+def extract_json_from_markdown(summary: str):
+    match = re.search(r"```json\s*([\s\S]+?)```", summary)
+    if match:
+        json_str = match.group(1)
+        try:
+            return json.loads(json_str)
+        except Exception:
+            return None
+    return None
+
+def normalize_relevance(val):
+    if isinstance(val, (float, int)):
+        return float(val)
+    if isinstance(val, str):
+        mapping = {"high": 1.0, "alta": 1.0, "media": 0.7, "medium": 0.7, "baja": 0.4, "low": 0.4}
+        return mapping.get(val.strip().lower(), 0.0)
+    return 0.0
+
+def normalize_summary(val):
+    if isinstance(val, str):
+        return val
+    if isinstance(val, dict):
+        return val.get("executive_summary") or " ".join(str(v) for v in val.values())
+    return str(val)
+
+def sanitize_for_json(obj):
+    if isinstance(obj, dict):
+        return {k: sanitize_for_json(v) for k, v in obj.items()}
+    elif isinstance(obj, list):
+        return [sanitize_for_json(v) for v in obj]
+    elif hasattr(obj, 'text'):
+        return str(getattr(obj, 'text'))
+    elif not isinstance(obj, (str, int, float, bool, type(None))):
+        return str(obj)
+    return obj
 
 @router.post(
     "/investigate",
@@ -188,7 +245,70 @@ async def research_endpoint(
             legal_terms=request.legal_terms
         )
         
-        return LegalResearchResponse(**result)
+        # Try to parse the agent's response as JSON and map to new fields
+        try:
+            if isinstance(result, dict) and 'cases' in result and 'legislation' in result and 'articles' in result:
+                # Already structured
+                structured = result
+            else:
+                # Try to parse from string (if agent returns JSON as string)
+                structured = json.loads(result["research_results"]["analisis_normativo"])
+
+            response_data = {
+                "cases": structured.get("cases", []),
+                "legislation": structured.get("legislation", []),
+                "articles": structured.get("articles", []),
+                "summary": structured.get("summary", ""),
+                "statistics": structured.get("statistics", {}),
+                "research_topic": result.get("research_topic", request.research_topic),
+                "jurisdiction": result.get("jurisdiction", request.jurisdiction),
+                "colombian_compliance": result.get("colombian_compliance", {}),
+                "legal_framework": result.get("legal_framework", {}),
+                "jurisprudence": result.get("jurisprudence"),
+                "specific_areas": result.get("specific_areas"),
+                "data_processing": result.get("data_processing"),
+                "legal_terms": result.get("legal_terms"),
+                "timestamp": datetime.now()
+            }
+        except Exception:
+            # Fallback: fill new fields with defaults, use old structure for summary
+            response_data = {
+                "cases": [],
+                "legislation": [],
+                "articles": [],
+                "summary": result["research_results"]["analisis_normativo"],
+                "statistics": {},
+                "research_topic": result.get("research_topic", request.research_topic),
+                "jurisdiction": result.get("jurisdiction", request.jurisdiction),
+                "colombian_compliance": result.get("colombian_compliance", {}),
+                "legal_framework": result.get("legal_framework", {}),
+                "jurisprudence": result.get("jurisprudence"),
+                "specific_areas": result.get("specific_areas"),
+                "data_processing": result.get("data_processing"),
+                "legal_terms": result.get("legal_terms"),
+                "timestamp": datetime.now()
+            }
+
+        # If cases, legislation, and articles are empty, try to extract from embedded JSON in summary
+        if not response_data["cases"] and not response_data["legislation"] and not response_data["articles"]:
+            embedded = extract_json_from_markdown(response_data["summary"])
+            if embedded:
+                embedded = sanitize_for_json(embedded)
+                response_data["cases"] = embedded.get("cases", [])
+                response_data["legislation"] = embedded.get("legislation", [])
+                response_data["articles"] = embedded.get("articles", [])
+                response_data["summary"] = embedded.get("summary", response_data["summary"])
+                response_data["statistics"] = embedded.get("statistics", {})
+
+        # Normalize relevance in cases
+        for case in response_data["cases"]:
+            if "relevance" in case:
+                case["relevance"] = normalize_relevance(case["relevance"])
+
+        # Normalize summary
+        response_data["summary"] = normalize_summary(response_data["summary"])
+
+        return LegalResearchResponse(**response_data)
     
     except Exception as e:
         raise HTTPException(

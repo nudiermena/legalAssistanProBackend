@@ -14,6 +14,7 @@ import markdown
 import os
 import shutil
 import tempfile
+from utils.r2_storage import upload_document_to_r2
 
 # Create a single router without prefix - we'll specify full paths
 router = APIRouter(tags=["documents"])
@@ -63,6 +64,7 @@ class DocumentDraftingResponse(BaseModel):
             "requirements": "Requisitos estándar de protección de datos"
         }
     )
+    document_url: Optional[str] = Field(None, description="URL del documento en R2")
     timestamp: datetime = Field(default_factory=datetime.now)
 
     model_config = ConfigDict(
@@ -73,7 +75,8 @@ class DocumentDraftingResponse(BaseModel):
                     "content": "Entre los suscritos...",
                     "sections": ["Partes", "Objeto", "Obligaciones"],
                     "markdown": True
-                }
+                },
+                "document_url": "https://document-generator.r2.dev/contrato_laboral_123.docx"
             }
         }
     )
@@ -158,6 +161,12 @@ async def draft_document_endpoint(
             data_processing=request.data_processing
         )
         
+        # Create Word document
+        doc_io = create_word_document(result["document"]["content"], request.document_type)
+        
+        # Upload to R2
+        document_url = await upload_document_to_r2(doc_io, request.document_type)
+        
         response_data = {
             "document": result["document"],
             "document_type": result["document_type"],
@@ -167,6 +176,7 @@ async def draft_document_endpoint(
             "colombian_compliance": result["colombian_compliance"],
             "legal_terms": result.get("legal_terms"),
             "data_processing": result.get("data_processing"),
+            "document_url": document_url,
             "timestamp": datetime.now()
         }
         

@@ -24,10 +24,14 @@ from endpoints.legal_research import router as legal_research_router
 from fastapi.templating import Jinja2Templates
 import os
 import logging
+from dotenv import load_dotenv
 
 # Set up logging
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
+
+# Load environment variables
+load_dotenv()
 
 app = FastAPI(
     title="Legal AI Assistant API",

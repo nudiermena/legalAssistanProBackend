@@ -21,7 +21,9 @@ class ChatRequest(BaseModel):
                 "client_id": "cliente123",
                 "message": "¿Cuáles son mis derechos laborales?",
                 "practice_area": "derecho_laboral",
-                "legal_terms": ["contrato_trabajo", "prestaciones_sociales"]
+                "legal_terms": ["contrato_trabajo", "prestaciones_sociales"],
+                "instructions": "Instrucciones adicionales",
+                "file_content": "Contenido de archivo adjunto"
             }
         }
     )
@@ -32,6 +34,8 @@ class ChatRequest(BaseModel):
     practice_area: Optional[str] = Field(None, description="Área del derecho")
     legal_terms: Optional[List[str]] = Field(None, description="Términos jurídicos")
     data_processing: Optional[Dict[str, str]] = Field(None, description="Tratamiento de datos")
+    instructions: Optional[str] = Field(None, description="Instrucciones adicionales para el agente")
+    file_content: Optional[str] = Field(None, description="Contenido de archivo adjunto, si existe")
 
 class ChatResponse(BaseModel):
     model_config = ConfigDict(arbitrary_types_allowed=True)
@@ -99,7 +103,9 @@ async def chat_endpoint(
             conversation_id=request.conversation_id,
             practice_area=request.practice_area,
             legal_terms=request.legal_terms,
-            data_processing=request.data_processing
+            data_processing=request.data_processing,
+            instructions=request.instructions,
+            file_content=request.file_content
         )
         
         print(f"Process result: {result}")  # Debug log

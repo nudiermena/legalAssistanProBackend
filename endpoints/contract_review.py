@@ -470,7 +470,7 @@ async def extract_text_from_pdf(pdf_bytes: bytes) -> str:
             page_text = page.extract_text() or ""
             if page_text:
                 text_parts.append(page_text.strip())
-        
+                
         # Join all parts with newlines
         final_text = '\n'.join(text_parts)
         return final_text if final_text else None
@@ -573,67 +573,51 @@ def cleanup_old_files(max_age_hours: int = 24):
     except Exception as e:
         logger.error(f"Error during cleanup: {e}")
 
-@router.post("/analyze")
+@router.post("/contract-review/analyze")
 async def analyze_contract(
     file: Optional[UploadFile] = File(None),
-    request: Optional[ContractReviewRequest] = None
+    content: Optional[str] = Form(None),
+    analysis_options: Optional[str] = Form(None),
+    language: str = Form("es"),
+    jurisdiction: str = Form("Colombia"),
+    contract_type: str = Form("")
 ):
-    """Analyze a contract file and provide legal insights"""
     try:
-        if not file and not request:
-            raise HTTPException(status_code=400, detail="No file or request provided")
-        
-        if file:
-            # Get file type using mimetypes
-            file_type = get_file_type(file.filename)
-            
-            # Read file content
-            content = await file.read()
-            
-            # Validate PDF if it's supposed to be one
-            if file_type == 'application/pdf':
-                is_valid, error_msg = validate_pdf_content(content)
-                if not is_valid:
-                    raise HTTPException(status_code=422, detail=error_msg)
-                
-                # Extract text from PDF using our utility function
-                text_content = extract_text_from_pdf_content(content)
-                if not text_content:
-                    raise HTTPException(
-                        status_code=422,
-                        detail="No se pudo extraer texto del PDF"
-                    )
+        # 1. Use content if provided, else extract from file
+        if content:
+            contract_text = content
+        elif file:
+            file_bytes = await file.read()
+            if file.filename.lower().endswith('.pdf'):
+                contract_text = extract_text_from_pdf(file_bytes)
             else:
-                text_content = content.decode('utf-8')
-            
-            # Create a temporary file
-            temp_file_path = f"temp_{file.filename}"
-            try:
-                with open(temp_file_path, "wb") as temp_file:
-                    temp_file.write(content)
-                
-                # Analyze the contract
-                result = await analyze_contract_file(
-                    file_path=temp_file_path,
-                    file_type=file_type,
-                    instructions=request.instructions if request else None
-                )
-                
-                return format_response(result)
-            finally:
-                # Clean up temporary file
-                if os.path.exists(temp_file_path):
-                    os.remove(temp_file_path)
+                contract_text = file_bytes.decode('utf-8')
         else:
-            # Handle text-based analysis
-            result = await analyze_contract_file(
-                text=request.text,
-                instructions=request.instructions
-            )
-            return format_response(result)
-            
+            raise HTTPException(status_code=400, detail="No contract content or file provided.")
+
+        # 2. Parse analysis_options if provided
+        options = {}
+        if analysis_options:
+            try:
+                options = json.loads(analysis_options)
+            except Exception as e:
+                raise HTTPException(status_code=400, detail=f"Invalid analysis_options: {e}")
+
+        # 3. Call your analysis logic (real, not dummy)
+        result = await analyze_contract_file(
+            text=contract_text,
+            contract_type=contract_type,
+            language=language,
+            jurisdiction=jurisdiction,
+            analysis_options=options
+        )
+        # If the result is already structured for the UI, return it directly
+        if isinstance(result, dict) and all(k in result for k in ("summary", "risk_scores", "clauses", "recommendations")):
+            return result
+        return result  # fallback: return whatever is returned
+
     except Exception as e:
-        return handle_error(e)
+        raise HTTPException(status_code=500, detail=str(e))
 
 @router.get(
     "/contract-types",

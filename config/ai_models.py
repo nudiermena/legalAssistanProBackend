@@ -1,4 +1,4 @@
-#from agno.models.openai import OpenAIChat
+
 from agno.models.mistral import MistralChat
 
 # Initialize AI models with appropriate timeouts
@@ -12,17 +12,6 @@ document_drafting_model = MistralChat(id="mistral-large-latest")
 whistleblower_model = MistralChat(id="mistral-large-latest")
 demand_letter_model = MistralChat(id="mistral-large-latest")
 legal_diagnosis_model = MistralChat(id="mistral-large-latest")
-
-#contract_review_model = OpenAIChat(id="gpt-4", timeout=8000)
-#legal_research_model = OpenAIChat(id="gpt-4", timeout=8000)
-#compliance_model = OpenAIChat(id="claude-3-sonnet-20240229", timeout=8000)
-#chatbot_model = OpenAIChat(id="gpt-4", timeout=5000)
-#case_prediction_model = OpenAIChat(id="gpt-4", timeout=5000)
-#patent_search_model = OpenAIChat(id="claude-3-opus-20240229", timeout=8000)
-#document_drafting_model = OpenAIChat(id="claude-3-opus-20240229", timeout=8000)
-#whistleblower_model = OpenAIChat(id="claude-3-sonnet-20240229", timeout=5000)
-#demand_letter_model = Claude(id="claude-3-7-sonnet-20250219")
-#legal_diagnosis_model = OpenAIChat(id="claude-3-haiku-20240307", timeout=3000)
 
 # Model mapping for easy access
 MODELS = {

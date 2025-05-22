@@ -17,7 +17,9 @@ import logging
 from fastapi import HTTPException
 from models.request_models import ContractReviewRequest
 from models.response_models import format_response, handle_error
+from agno.tools.googlesearch import GoogleSearchTools
 #import openai // not needed
+import re
 
 logger = logging.getLogger(__name__)
 
@@ -27,25 +29,92 @@ def create_contract_agent() -> Agent:
         name="Analista de Contratos",
         role="Especialista en análisis contractual",
         model=get_model("contract_review"),
+        tools=[GoogleSearchTools()],
         knowledge=get_knowledge_base(),
         search_knowledge=True,
-        storage=get_agent_storage("contract_sessions"),
+        #storage=get_agent_storage("contract_sessions"),
         instructions=[
-            "Analizar contratos según normativa colombiana",
-            "Verificar cumplimiento del Código Civil y Comercial",
-            "Evaluar cláusulas según jurisprudencia vigente",
-            "Identificar elementos esenciales del contrato",
-            "Verificar capacidad y consentimiento de las partes",
-            "Evaluar objeto y causa lícita",
-            "Analizar obligaciones y responsabilidades",
-            "Verificar cláusulas de protección de datos",
-            "Evaluar mecanismos de terminación",
-            "Revisar jurisdicción y competencia",
-            "Analizar cláusulas compromisorias",
-            "Verificar requisitos de forma y solemnidades",
-            "Evaluar garantías y seguros requeridos",
-            "Analizar cláusulas de indemnidad",
-            "Verificar cumplimiento regulatorio sectorial"
+            # "Analizar contratos según normativa colombiana",
+            # "Verificar cumplimiento del Código Civil y Comercial",
+            # "Evaluar cláusulas según jurisprudencia vigente",
+            # "Identificar elementos esenciales del contrato",
+            # "Verificar capacidad y consentimiento de las partes",
+            # "Evaluar objeto y causa lícita",
+            # "Analizar obligaciones y responsabilidades",
+            # "Verificar cláusulas de protección de datos",
+            # "Evaluar mecanismos de terminación",
+            # "Revisar jurisdicción y competencia",
+            # "Analizar cláusulas compromisorias",
+            # "Verificar requisitos de forma y solemnidades",
+            # "Evaluar garantías y seguros requeridos",
+            # "Analizar cláusulas de indemnidad",
+            # "Verificar cumplimiento regulatorio sectorial",
+            
+             # === MARCO NORMATIVO Y LEGAL ===
+        "Analizar contratos aplicando la normativa colombiana vigente (Código Civil, Código de Comercio, Código General del Proceso)",
+        "Verificar cumplimiento de la Ley 80 de 1993 (Estatuto General de Contratación Pública) cuando aplique",
+        "Evaluar conformidad con el régimen de protección de datos (Ley 1581 de 2012 - Habeas Data)",
+        "Aplicar jurisprudencia vinculante de la Corte Suprema de Justicia, Consejo de Estado y Corte Constitucional",
+        
+        # === ESTRUCTURA CONTRACTUAL ===
+        "Verificar la presencia y validez de elementos esenciales: consentimiento, objeto, causa y solemnidades",
+        "Evaluar la capacidad jurídica de las partes contratantes y posibles limitaciones",
+        "Analizar la descripción del objeto contractual verificando su determinación, posibilidad y licitud",
+        "Examinar la causa del contrato asegurando su existencia, veracidad y licitud",
+        
+        # === CLÁUSULAS Y CONDICIONES ===
+        "Revisar exhaustivamente obligaciones, derechos y responsabilidades de cada parte",
+        "Evaluar cláusulas de penalización, multas y apremios por incumplimiento",
+        "Analizar términos de duración, renovación, prórroga y terminación del contrato",
+        "Verificar cláusulas de fuerza mayor, caso fortuito y teoría de la imprevisión",
+        "Examinar mecanismos de garantías (pólizas, fiducias, cartas de crédito)",
+        
+        # === ASPECTOS PROCEDIMENTALES ===
+        "Verificar cumplimiento de requisitos de forma según el tipo contractual",
+        "Evaluar cláusulas de competencia, jurisdicción y ley aplicable",
+        "Analizar mecanismos alternativos de solución de conflictos (arbitraje, conciliación, amigable composición)",
+        "Revisar procedimientos de notificación, comunicaciones y entrega de documentos",
+        
+        # === CUMPLIMIENTO REGULATORIO ===
+        "Verificar cumplimiento de normativa sectorial específica (financiera, salud, educación, etc.)",
+        "Evaluar conformidad con regulaciones laborales cuando aplique",
+        "Analizar aspectos tributarios y fiscales del contrato",
+        "Verificar cumplimiento de normas ambientales y de sostenibilidad",
+        
+        # === GESTIÓN DE RIESGOS ===
+        "Identificar y evaluar riesgos legales, operacionales y financieros",
+        "Analizar cláusulas de indemnidad, exoneración y limitación de responsabilidad",
+        "Verificar coherencia entre el clausulado y los anexos del contrato",
+        "Evaluar mecanismos de modificación, adición y cesión contractual",
+        
+        # === REPORTE Y RECOMENDACIONES ===
+        "Generar informes estructurados con hallazgos, observaciones y recomendaciones",
+        "Clasificar observaciones por nivel de riesgo (alto, medio, bajo)",
+        "Proponer redacciones alternativas para cláusulas deficientes",
+        "Incluir referencias normativas y jurisprudenciales específicas",
+        "Sugerir acciones correctivas y medidas de mitigación de riesgos",
+            (
+                "Al final de tu análisis, incluye un bloque de código JSON con la siguiente estructura:\n"
+                "```json\n"
+                "{\n"
+                "  \"summary\": \"...resumen ejecutivo...\",\n"
+                "  \"risk_scores\": {\"overall\": \"Medio\", \"legal\": \"Medio\", \"compliance\": \"Alto\", \"data_protection\": \"Medio\"},\n"
+                "  \"clauses\": [\n"
+                "    {\"type\": \"success\", \"name\": \"Cláusula de confidencialidad\", \"comment\": \"\", \"references\": [\"Ley 1581 de 2012\"]},\n"
+                "    {\"type\": \"warning\", \"name\": \"Términos de pago\", \"comment\": \"Plazo ambiguo...\", \"references\": [\"Art. 882 del Código de Comercio\"]},\n"
+                "    {\"type\": \"danger\", \"name\": \"Cláusula de terminación\", \"comment\": \"Condiciones de terminación unilateral potencialmente abusivas...\", \"references\": [\"Sentencia C-1008/2010 de la Corte Constitucional\"]}\n"
+                "  ],\n"
+                "  \"recommendations\": [\n"
+                "    \"Aclarar los términos de pago especificando fechas concretas según el Art. 882 del Código de Comercio.\",\n"
+                "    \"Revisar y detallar las obligaciones de las partes para evitar ambigüedades en las responsabilidades según la Ley 1480 de 2011.\",\n"
+                "    \"Modificar la cláusula de terminación para asegurar condiciones equitativas para ambas partes según la doctrina de la Corte Constitucional.\"\n"
+                "  ]\n"
+                "}\n"
+                "```\n"
+                "En cada recomendación, incluye la referencia a la ley, decreto o jurisprudencia relevante (por ejemplo: 'Art. 882 del Código de Comercio', 'Ley 1480 de 2011', 'Sentencia C-1008/2010 de la Corte Constitucional').\n"
+                "En cada cláusula identificada en el bloque JSON, agrega un campo 'references' que sea una lista de leyes, decretos o sentencias relevantes para esa cláusula.\n"
+                "Usa los tipos: `success` (verde), `warning` (amarillo), `danger` (rojo) para las cláusulas."
+            )
         ],
         markdown=True
     )
@@ -67,7 +136,7 @@ async def analyze_contract(
 {contract_text}
 
 Por favor proporcionar:
-1. Resumen ejecutivo conciso (máximo 150 palabras)
+1. Resumen ejecutivo conciso (máximo 500 palabras)
 2. Obligaciones principales de cada parte con referencia a cláusulas específicas
 3. Fechas críticas y plazos
 4. Cláusulas inusuales o no estándar según práctica comercial
@@ -111,6 +180,7 @@ ANÁLISIS DE TRATAMIENTO DE DATOS:
     response = agent.run(prompt)
     
     # Structure the response
+    metrics = extract_analysis_metrics(response.content)
     result = {
         "summary": response.content,
         "contract_type": contract_type,
@@ -121,7 +191,11 @@ ANÁLISIS DE TRATAMIENTO DE DATOS:
             "data_protection": bool(data_processing),
             "constitutional_principles": ColombianLegalFramework.CONSTITUTIONAL_PRINCIPLES,
             "analysis_date": datetime.now().isoformat()
-        }
+        },
+        "risk_level": metrics["risk_level"],
+        "num_clauses": metrics["num_clauses"],
+        "num_risks": metrics["num_risks"],
+        "compliance": metrics["compliance"]
     }
     
     # Add data processing details if provided
@@ -135,10 +209,24 @@ ANÁLISIS DE TRATAMIENTO DE DATOS:
     
     return result
 
+def extract_json_from_markdown(text: str):
+    match = re.search(r"```json\s*([\s\S]+?)```", text)
+    if match:
+        json_str = match.group(1)
+        try:
+            return json.loads(json_str)
+        except Exception as e:
+            raise ValueError(f"Error parsing JSON from agent: {e}")
+    return None
+
 async def analyze_contract_file(
     file_path: Optional[str] = None,
     text: Optional[str] = None,
     file_type: Optional[str] = None,
+    contract_type: Optional[str] = None,
+    language: str = "es",
+    jurisdiction: str = "Colombia",
+    analysis_options: Optional[dict] = None,
     instructions: Optional[str] = None
 ) -> Dict[str, Any]:
     """
@@ -148,6 +236,10 @@ async def analyze_contract_file(
         file_path: Path to the contract file
         text: Contract text content
         file_type: MIME type of the file
+        contract_type: Type of the contract
+        language: Language of the contract
+        jurisdiction: Jurisdiction of the contract
+        analysis_options: Additional options for analysis
         instructions: Optional instructions for analysis
         
     Returns:
@@ -156,48 +248,32 @@ async def analyze_contract_file(
     try:
         if not file_path and not text:
             raise ValueError("Either file_path or text must be provided")
-            
-        # Get contract content
         if file_path:
-            if not os.path.exists(file_path):
-                raise FileNotFoundError(f"File not found: {file_path}")
-                
-            # Read file content based on type
             with open(file_path, 'r', encoding='utf-8') as f:
                 content = f.read()
         else:
             content = text
-            
-        # Create analysis result
-        result = {
+
+        # Call the real analysis function
+        analysis_response = await analyze_contract(
+            contract_text=content,
+            contract_type=contract_type,
+            parties=[],  # Add parties if you have them
+            specific_concerns=analysis_options.get("specificConcerns") if analysis_options else None,
+            relevant_regulations=analysis_options.get("relevantRegulations") if analysis_options else None,
+            data_processing=analysis_options.get("dataProcessing") if analysis_options else None
+        )
+
+        # Try to extract structured JSON from the agent's response
+        structured = extract_json_from_markdown(analysis_response["summary"] if isinstance(analysis_response, dict) and "summary" in analysis_response else analysis_response)
+        if structured:
+            return structured
+        # Fallback: return the old structure
+        return {
             "status": "success",
             "message": "Análisis completado exitosamente",
-            "data": {
-                "analysis": {
-                    "summary": "Resumen del contrato...",
-                    "key_points": [
-                        "Punto clave 1",
-                        "Punto clave 2"
-                    ],
-                    "risks": [
-                        "Riesgo 1",
-                        "Riesgo 2"
-                    ],
-                    "recommendations": [
-                        "Recomendación 1",
-                        "Recomendación 2"
-                    ]
-                },
-                "metadata": {
-                    "analysis_time": datetime.now().isoformat(),
-                    "file_type": file_type if file_type else "text",
-                    "instructions": instructions
-                }
-            }
+            "data": analysis_response
         }
-        
-        return result
-        
     except Exception as e:
         logger.error(f"Error analyzing contract: {str(e)}", exc_info=True)
         raise HTTPException(
@@ -365,6 +441,23 @@ def extract_recommendations(analysis: str) -> List[str]:
     """Extract recommendations"""
     # Implementation needed
     return []
+
+def extract_analysis_metrics(summary: str) -> dict:
+    # Extract risk level
+    risk_level_match = re.search(r'(?i)riesgo\s*potencial(?:es)?(?:\s*por\s*cl[aá]usula)?[\s\S]*?\*\*(Bajo|Medio|Alto)\*\*', summary)
+    risk_level = risk_level_match.group(1) if risk_level_match else "Bajo"
+    # Count clauses
+    num_clauses = len(re.findall(r'Cl[aá]usula', summary, re.IGNORECASE))
+    # Count risks
+    num_risks = len(re.findall(r'Riesgo', summary, re.IGNORECASE))
+    # Compliance: 100% if "cumple" or "alineadas" found, else 0
+    compliance = 100 if re.search(r'cumple|alinead[ao]s?', summary, re.IGNORECASE) else 0
+    return {
+        "risk_level": risk_level,
+        "num_clauses": num_clauses,
+        "num_risks": num_risks,
+        "compliance": compliance
+    }
 
 # Add to all agents:
 # Implement decision explanation mechanisms
