@@ -4,6 +4,7 @@ from pydantic import BaseModel, Field, ConfigDict
 from datetime import datetime
 from agents.demand_letter_agent import draft_demand_letter
 from config.colombian_compliance import ColombianLegalFramework
+from endpoints.auth import get_current_user
 
 router = APIRouter(prefix="/demand-letter", tags=["demands"])
 
@@ -70,7 +71,8 @@ async def draft_demand_letter_endpoint(
     request: DemandLetterRequest = Body(
         ...,
         description="Parámetros para la generación de la carta"
-    )
+    ),
+    current_user: Dict[str, Any] = Depends(get_current_user)
 ):
     """Genera carta de reclamación con cumplimiento normativo colombiano"""
     try:
@@ -118,7 +120,7 @@ async def draft_demand_letter_endpoint(
     summary="Plantillas Disponibles",
     description="Obtiene las plantillas de cartas de reclamación disponibles"
 )
-async def get_demand_letter_templates():
+async def get_demand_letter_templates(current_user: Dict[str, Any] = Depends(get_current_user)):
     """Retorna las plantillas de cartas disponibles"""
     return {
         "derecho_civil": [

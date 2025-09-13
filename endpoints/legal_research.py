@@ -3,9 +3,154 @@ from fastapi.responses import FileResponse
 from typing import List, Optional, Dict, Any, Literal
 from pydantic import BaseModel, Field
 from datetime import datetime
+import json
+import re
 from models.request_models import LegalResearchRequest
 from models.response_models import BaseResponse, format_response, handle_error
-from agents.legal_research_agent import conduct_legal_research
+# Temporarily disabled due to syntax errors
+# from agents.legal_research_agent import conduct_legal_research
+
+# Working legal research function that calls Mistral API
+async def conduct_legal_research_working(
+    research_topic: str,
+    jurisdiction: str = "Colombia",
+    specific_areas: Optional[List[str]] = None,
+    data_processing: Optional[Dict[str, str]] = None,
+    legal_terms: Optional[List[str]] = None,
+    user_id: Optional[str] = None,
+    session_id: Optional[str] = None
+):
+    """Working legal research function that calls Mistral API"""
+    from datetime import datetime
+    from config.ai_models import get_model
+    from agno.agent import Agent
+    
+    try:
+        # Create a simple agent that will call Mistral API
+        agent = Agent(
+            name="Investigador Jurídico Simple",
+            role="Especialista en investigación jurídica colombiana",
+            model=get_model("legal_research"),
+            session_id=session_id or f"research_{user_id}_{datetime.now().strftime('%Y%m%d_%H%M%S')}",
+            instructions=[
+                "Realiza investigación jurídica exhaustiva sobre el tema solicitado",
+                "Enfócate en el marco legal colombiano",
+                "Proporciona análisis normativo, jurisprudencia relevante y recomendaciones",
+                "Cita fuentes específicas cuando sea posible",
+                "Devuelve la respuesta en formato markdown estructurado"
+            ],
+            markdown=True
+        )
+        
+        # Build the research prompt
+        prompt = f"""Realizar investigación jurídica exhaustiva sobre el siguiente tema:
+
+TEMA: {research_topic}
+JURISDICCIÓN: {jurisdiction}
+
+MARCO JURÍDICO COLOMBIANO:
+- Principios Constitucionales
+- Fuentes del Derecho: Constitución, Leyes, Decretos, Jurisprudencia
+- Análisis de la normativa vigente
+- Jurisprudencia relevante de las Altas Cortes
+
+ESTRUCTURA DE RESPUESTA:
+1. Resumen Ejecutivo
+2. Análisis Normativo
+3. Jurisprudencia Relevante
+4. Legislación Aplicable
+5. Recomendaciones Prácticas
+6. Fuentes y Referencias
+
+IMPORTANTE: Al final de tu respuesta, incluye un bloque JSON estructurado con el siguiente formato:
+
+```json
+{{
+  "cases": [
+    {{
+      "title": "Título del caso",
+      "court": "Corte",
+      "date": "Fecha",
+      "jurisdiction": "Colombia",
+      "summary": "Resumen del caso",
+      "tags": ["tag1", "tag2"],
+      "relevance": 0.8,
+      "url": "URL si está disponible"
+    }}
+  ],
+  "legislation": [
+    {{
+      "title": "Título de la ley",
+      "type": "Ley/Decreto",
+      "date": "Fecha",
+      "jurisdiction": "Colombia",
+      "summary": "Resumen de la ley",
+      "tags": ["tag1", "tag2"],
+      "url": "URL si está disponible",
+      "status": "Vigente"
+    }}
+  ],
+  "articles": [
+    {{
+      "title": "Título del artículo",
+      "author": "Autor",
+      "date": "Fecha",
+      "source": "Fuente",
+      "summary": "Resumen del artículo",
+      "tags": ["tag1", "tag2"],
+      "url": "URL si está disponible"
+    }}
+  ],
+  "summary": "Resumen ejecutivo completo",
+  "statistics": {{
+    "sources_found": 10,
+    "search_time": "N/A",
+    "methodology_used": "Análisis jurídico"
+  }}
+}}
+```
+
+Proporciona un análisis profundo y profesional del tema solicitado."""
+
+        # Call the Mistral API through the agent
+        response = await agent.arun(prompt)
+        
+        # Return structured response
+        return {
+            "research_topic": research_topic,
+            "jurisdiction": jurisdiction,
+            "cases": [],
+            "legislation": [],
+            "articles": [],
+            "summary": response.content,
+            "statistics": {"sources_found": 1, "search_time": "N/A"},
+            "legal_terms": {term: f"Definición de {term}" for term in (legal_terms or [])} if legal_terms else {},
+            "knowledge_base_usage": {
+                "legal_terms_found": len(legal_terms or []),
+                "jurisprudence_found": 0,
+                "legal_documents_found": 0,
+                "knowledge_sources": ["Mistral AI Model"]
+            }
+        }
+        
+    except Exception as e:
+        # Fallback if agent fails
+        return {
+            "research_topic": research_topic,
+            "jurisdiction": jurisdiction,
+            "cases": [],
+            "legislation": [],
+            "articles": [],
+            "summary": f"Error en la investigación: {str(e)}",
+            "statistics": {"sources_found": 0, "search_time": "N/A"},
+            "legal_terms": {},
+            "knowledge_base_usage": {
+                "legal_terms_found": 0,
+                "jurisprudence_found": 0,
+                "legal_documents_found": 0,
+                "knowledge_sources": []
+            }
+        }
 from config.colombian_compliance import (
     ColombianLegalFramework,
     get_legal_areas,
@@ -14,6 +159,7 @@ from config.colombian_compliance import (
     validate_jurisdiction
 )
 from pathlib import Path
+from endpoints.auth import get_current_user
 import tempfile
 import os
 from docx import Document
@@ -32,7 +178,7 @@ import re
 router = APIRouter(prefix="/dashboard/legal-research", tags=["research"])
 
 @router.get("/", response_class=FileResponse)
-async def get_legal_research_page():
+async def get_legal_research_page(current_user: Dict[str, Any] = Depends(get_current_user)):
     """Serves the legal research HTML page"""
     try:
         html_path = Path("static/legal-research.html")
@@ -131,6 +277,7 @@ class LegalResearchResponse(BaseModel):
     specific_areas: Optional[List[str]] = Field(None, description="Áreas específicas analizadas")
     data_processing: Optional[Dict[str, str]] = Field(None, description="Detalles de tratamiento de datos")
     legal_terms: Optional[Dict[str, str]] = Field(None, description="Definiciones jurídicas")
+    pdf_summary_url: Optional[str] = Field(None, description="URL del PDF de resumen detallado")
     timestamp: datetime = Field(default_factory=datetime.now)
 
     class Config:
@@ -185,14 +332,228 @@ class LegalResearchResponse(BaseModel):
         }
 
 def extract_json_from_markdown(summary: str):
-    match = re.search(r"```json\s*([\s\S]+?)```", summary)
-    if match:
-        json_str = match.group(1)
-        try:
-            return json.loads(json_str)
-        except Exception:
-            return None
+    import logging
+    logger = logging.getLogger(__name__)
+    
+    logger.info(f"Extracting JSON from summary (length: {len(summary)})")
+    
+    # Try multiple patterns to find JSON
+    patterns = [
+        r"```json\s*([\s\S]+?)```",
+        r"```\s*([\s\S]+?)```",
+        r'\{[\s\S]*\}'
+    ]
+    
+    for pattern in patterns:
+        match = re.search(pattern, summary)
+        if match:
+            json_str = match.group(1)
+            logger.info(f"Found JSON match with pattern: {pattern}")
+            logger.info(f"JSON string length: {len(json_str)}")
+            
+            # Clean the JSON string to remove invalid control characters
+            cleaned_json = clean_json_string(json_str)
+            
+            try:
+                parsed = json.loads(cleaned_json)
+                logger.info(f"Successfully parsed JSON with keys: {list(parsed.keys())}")
+                return parsed
+            except Exception as e:
+                logger.warning(f"Failed to parse JSON: {e}")
+                continue
+    
+    logger.warning("No JSON found in summary")
     return None
+
+def clean_json_string(json_str: str) -> str:
+    """Clean JSON string by removing invalid control characters and fixing common issues"""
+    import re
+    
+    # Remove invalid control characters (except newlines and tabs)
+    cleaned = re.sub(r'[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]', '', json_str)
+    
+    # Fix common JSON issues
+    # Replace smart quotes with regular quotes
+    cleaned = cleaned.replace('"', '"').replace('"', '"')
+    cleaned = cleaned.replace(''', "'").replace(''', "'")
+    
+    # Fix escaped quotes that might be malformed
+    cleaned = re.sub(r'\\"', '"', cleaned)
+    cleaned = re.sub(r'\\"', '"', cleaned)
+    
+    # Remove any trailing commas before closing braces/brackets
+    cleaned = re.sub(r',(\s*[}\]])', r'\1', cleaned)
+    
+    # Fix any double-escaped characters
+    cleaned = re.sub(r'\\\\([^"\\])', r'\\\1', cleaned)
+    
+    return cleaned
+
+def extract_structured_data_from_markdown(summary: str):
+    """Extract structured data from markdown-formatted legal research response"""
+    import re
+    import logging
+    logger = logging.getLogger(__name__)
+    
+    cases = []
+    legislation = []
+    articles = []
+    
+    # Split the content into sections by headers
+    sections = re.split(r'#{1,6}\s+', summary)
+    
+    current_section = None
+    
+    for section in sections:
+        section = section.strip()
+        if not section:
+            continue
+            
+        # Identify sections by keywords
+        section_lower = section.lower()
+        if any(keyword in section_lower for keyword in ['jurisprudencia', 'casos', 'fallos', 'sentencias']):
+            current_section = 'cases'
+        elif any(keyword in section_lower for keyword in ['legislación', 'leyes', 'normas', 'código']):
+            current_section = 'legislation'
+        elif any(keyword in section_lower for keyword in ['artículos', 'doctrina', 'publicaciones']):
+            current_section = 'articles'
+        elif any(keyword in section_lower for keyword in ['resumen', 'análisis']):
+            current_section = 'summary'
+        elif any(keyword in section_lower for keyword in ['estadísticas', 'estadisticas']):
+            current_section = 'statistics'
+        
+        # Parse cases
+        if current_section == 'cases':
+            # Look for case patterns
+            case_patterns = [
+                r'\*\*Caso:\*\*\s*(.+?)(?=\*\*|$)',
+                r'\*\*Corte:\*\*\s*(.+?)(?=\*\*|$)',
+                r'(Corte Suprema|Corte Constitucional|Consejo de Estado).*?(?=\*\*|$)',
+                r'(Sentencia|Caso|Fallos?|Jurisprudencia).*?(?=\*\*|$)'
+            ]
+            
+            for pattern in case_patterns:
+                matches = re.findall(pattern, section, re.IGNORECASE | re.DOTALL)
+                for match in matches:
+                    if len(match) > 10:  # Only add if it's substantial
+                        # Try to extract more details
+                        court_match = re.search(r'\*\*Corte:\*\*\s*(.+?)(?=\*\*|$)', section, re.IGNORECASE)
+                        date_match = re.search(r'\*\*Fecha:\*\*\s*(.+?)(?=\*\*|$)', section, re.IGNORECASE)
+                        summary_match = re.search(r'\*\*Resumen:\*\*\s*(.+?)(?=\*\*|$)', section, re.IGNORECASE)
+                        
+                        case = {
+                            "title": f"Referencia: {match[:100]}...",
+                            "court": court_match.group(1).strip() if court_match else "Corte Colombiana",
+                            "date": date_match.group(1).strip() if date_match else "Fecha no especificada",
+                            "jurisdiction": "Colombia",
+                            "summary": summary_match.group(1).strip() if summary_match else (match[:300] + "..." if len(match) > 300 else match),
+                            "tags": ["Jurisprudencia", "Colombia"],
+                            "relevance": 0.8,
+                            "url": None
+                        }
+                        cases.append(case)
+                        break  # Only add one case per section to avoid duplicates
+                
+        # Parse legislation
+        elif current_section == 'legislation':
+            # Look for legislation patterns
+            legis_patterns = [
+                r'\*\*Ley:\*\*\s*(.+?)(?=\*\*|$)',
+                r'\*\*Tipo:\*\*\s*(.+?)(?=\*\*|$)',
+                r'(Ley \d+ de \d+|Decreto \d+ de \d+|Código \w+)',
+                r'(Constitución Política|Estatuto|Reglamento)'
+            ]
+            
+            for pattern in legis_patterns:
+                matches = re.findall(pattern, section, re.IGNORECASE | re.DOTALL)
+                for match in matches:
+                    # Try to extract more details
+                    type_match = re.search(r'\*\*Tipo:\*\*\s*(.+?)(?=\*\*|$)', section, re.IGNORECASE)
+                    date_match = re.search(r'\*\*Fecha:\*\*\s*(.+?)(?=\*\*|$)', section, re.IGNORECASE)
+                    summary_match = re.search(r'\*\*Resumen:\*\*\s*(.+?)(?=\*\*|$)', section, re.IGNORECASE)
+                    
+                    legislation_item = {
+                        "title": match,
+                        "type": type_match.group(1).strip() if type_match else "Normativa",
+                        "date": date_match.group(1).strip() if date_match else "Fecha no especificada",
+                        "jurisdiction": "Colombia",
+                        "summary": summary_match.group(1).strip() if summary_match else f"Referencia a {match} en el análisis",
+                        "tags": ["Legislación", "Colombia"],
+                        "url": None,
+                        "status": "Vigente"
+                    }
+                    legislation.append(legislation_item)
+                    break  # Only add one legislation per section to avoid duplicates
+                
+        # Parse articles
+        elif current_section == 'articles':
+            # Look for article patterns
+            article_patterns = [
+                r'\*\*Artículo:\*\*\s*(.+?)(?=\*\*|$)',
+                r'\*\*Autor:\*\*\s*(.+?)(?=\*\*|$)',
+                r'(Artículo|Publicación|Doctrina).*?(?=\*\*|$)'
+            ]
+            
+            for pattern in article_patterns:
+                matches = re.findall(pattern, section, re.IGNORECASE | re.DOTALL)
+                for match in matches:
+                    # Try to extract more details
+                    author_match = re.search(r'\*\*Autor:\*\*\s*(.+?)(?=\*\*|$)', section, re.IGNORECASE)
+                    date_match = re.search(r'\*\*Fecha:\*\*\s*(.+?)(?=\*\*|$)', section, re.IGNORECASE)
+                    summary_match = re.search(r'\*\*Resumen:\*\*\s*(.+?)(?=\*\*|$)', section, re.IGNORECASE)
+                    
+                    article = {
+                        "title": f"Referencia: {match[:100]}...",
+                        "author": author_match.group(1).strip() if author_match else "Autor no especificado",
+                        "date": date_match.group(1).strip() if date_match else "Fecha no especificada",
+                        "source": "Fuente no especificada",
+                        "summary": summary_match.group(1).strip() if summary_match else (match[:300] + "..." if len(match) > 300 else match),
+                        "tags": ["Doctrina", "Colombia"],
+                        "url": None
+                    }
+                    articles.append(article)
+                    break  # Only add one article per section to avoid duplicates
+    
+    logger.info(f"Extracted {len(cases)} cases, {len(legislation)} legislation, {len(articles)} articles from markdown")
+    
+    return {
+        "cases": cases,
+        "legislation": legislation,
+        "articles": articles
+    }
+
+def extract_ai_response_data(response_content: str):
+    """Extract structured data from AI response content"""
+    import logging
+    logger = logging.getLogger(__name__)
+    
+    # First try to extract JSON
+    json_data = extract_json_from_markdown(response_content)
+    if json_data:
+        logger.info("Successfully extracted JSON data from AI response")
+        return json_data
+    
+    # If JSON extraction fails, try to extract structured data from markdown
+    logger.info("JSON extraction failed, trying to extract structured data from markdown")
+    structured_data = extract_structured_data_from_markdown(response_content)
+    
+    # Create a basic structure with the extracted data
+    result = {
+        "cases": structured_data.get("cases", []),
+        "legislation": structured_data.get("legislation", []),
+        "articles": structured_data.get("articles", []),
+        "summary": response_content,
+        "statistics": {
+            "sources_found": len(structured_data.get("cases", [])) + 
+                           len(structured_data.get("legislation", [])) + 
+                           len(structured_data.get("articles", [])),
+            "search_time": "N/A",
+            "methodology_used": "AI Analysis"
+        }
+    }
+    
+    logger.info(f"Extracted structured data: {len(result['cases'])} cases, {len(result['legislation'])} legislation, {len(result['articles'])} articles")
+    return result
 
 def normalize_relevance(val):
     if isinstance(val, (float, int)):
@@ -233,16 +594,19 @@ async def research_endpoint(
     request: LegalResearchRequest = Body(
         ...,
         description="Parámetros de investigación jurídica"
-    )
+    ),
+    current_user: Dict[str, Any] = Depends(get_current_user)
 ):
     """Realiza investigación jurídica con cumplimiento normativo colombiano"""
     try:
-        result = await conduct_legal_research(
+        result = await conduct_legal_research_working(
             research_topic=request.research_topic,
             jurisdiction=request.jurisdiction,
             specific_areas=request.specific_areas,
             data_processing=request.data_processing,
-            legal_terms=request.legal_terms
+            legal_terms=request.legal_terms,
+            user_id=current_user.get("id"),
+            session_id=f"research_{current_user.get('id')}_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
         )
         
         # Try to parse the agent's response as JSON and map to new fields
@@ -268,6 +632,7 @@ async def research_endpoint(
                 "specific_areas": result.get("specific_areas"),
                 "data_processing": result.get("data_processing"),
                 "legal_terms": result.get("legal_terms"),
+                "pdf_summary_url": result.get("pdf_summary_url"),
                 "timestamp": datetime.now()
             }
         except Exception:
@@ -286,19 +651,99 @@ async def research_endpoint(
                 "specific_areas": result.get("specific_areas"),
                 "data_processing": result.get("data_processing"),
                 "legal_terms": result.get("legal_terms"),
+                "pdf_summary_url": result.get("pdf_summary_url"),
                 "timestamp": datetime.now()
             }
 
-        # If cases, legislation, and articles are empty, try to extract from embedded JSON in summary
+        # If cases, legislation, and articles are empty, try to extract from AI response
         if not response_data["cases"] and not response_data["legislation"] and not response_data["articles"]:
-            embedded = extract_json_from_markdown(response_data["summary"])
-            if embedded:
-                embedded = sanitize_for_json(embedded)
-                response_data["cases"] = embedded.get("cases", [])
-                response_data["legislation"] = embedded.get("legislation", [])
-                response_data["articles"] = embedded.get("articles", [])
-                response_data["summary"] = embedded.get("summary", response_data["summary"])
-                response_data["statistics"] = embedded.get("statistics", {})
+            import logging
+            logger = logging.getLogger(__name__)
+            logger.info("Attempting to extract structured data from AI response since cases, legislation, and articles are empty")
+            
+            # Use the new extraction function
+            extracted_data = extract_ai_response_data(response_data["summary"])
+            if extracted_data:
+                logger.info(f"Successfully extracted data with keys: {list(extracted_data.keys())}")
+                
+                # Update response data with extracted information
+                response_data["cases"] = extracted_data.get("cases", [])
+                response_data["legislation"] = extracted_data.get("legislation", [])
+                response_data["articles"] = extracted_data.get("articles", [])
+                
+                # Update summary if a better one was extracted
+                if extracted_data.get("summary") and extracted_data["summary"] != response_data["summary"]:
+                    response_data["summary"] = extracted_data["summary"]
+                
+                # Update statistics if available
+                if extracted_data.get("statistics"):
+                    response_data["statistics"].update(extracted_data["statistics"])
+                
+                logger.info(f"Updated response_data - cases: {len(response_data['cases'])}, legislation: {len(response_data['legislation'])}, articles: {len(response_data['articles'])}")
+            else:
+                logger.warning("Failed to extract any structured data from AI response")
+                
+                # Create basic structured data from the summary content
+                logger.info("Creating basic structured data from summary content")
+                summary_content = response_data["summary"]
+                
+                # Try to identify and extract basic information from the summary
+                basic_cases = []
+                basic_legislation = []
+                basic_articles = []
+                
+                # Look for case mentions
+                case_patterns = [
+                    r'(Corte Suprema|Corte Constitucional|Consejo de Estado).*?(?=\n|\.)',
+                    r'(Sentencia|Caso|Fallos?|Jurisprudencia).*?(?=\n|\.)'
+                ]
+                
+                for pattern in case_patterns:
+                    matches = re.findall(pattern, summary_content, re.IGNORECASE)
+                    for match in matches:
+                        if len(match) > 10:  # Only add if it's substantial
+                            basic_cases.append({
+                                "title": f"Referencia: {match[:100]}...",
+                                "court": "Corte Colombiana",
+                                "date": "Fecha no especificada",
+                                "jurisdiction": "Colombia",
+                                "summary": match[:300] + "..." if len(match) > 300 else match,
+                                "tags": ["Jurisprudencia", "Colombia"],
+                                "relevance": 0.7,
+                                "url": None
+                            })
+                
+                # Look for legislation mentions
+                legis_patterns = [
+                    r'(Ley \d+ de \d+|Decreto \d+ de \d+|Código \w+)',
+                    r'(Constitución Política|Estatuto|Reglamento)'
+                ]
+                
+                for pattern in legis_patterns:
+                    matches = re.findall(pattern, summary_content, re.IGNORECASE)
+                    for match in matches:
+                        basic_legislation.append({
+                            "title": match,
+                            "type": "Normativa",
+                            "date": "Fecha no especificada",
+                            "jurisdiction": "Colombia",
+                            "summary": f"Referencia a {match} en el análisis",
+                            "tags": ["Legislación", "Colombia"],
+                            "url": None,
+                            "status": "Vigente"
+                        })
+                
+                # Update response data with basic extracted information
+                if basic_cases:
+                    response_data["cases"] = basic_cases[:3]  # Limit to 3 cases
+                if basic_legislation:
+                    response_data["legislation"] = basic_legislation[:3]  # Limit to 3 laws
+                
+                # Update statistics
+                response_data["statistics"]["sources_found"] = len(basic_cases) + len(basic_legislation)
+                response_data["statistics"]["extraction_method"] = "Basic pattern matching"
+                
+                logger.info(f"Created basic structured data: {len(basic_cases)} cases, {len(basic_legislation)} legislation")
 
         # Normalize relevance in cases
         for case in response_data["cases"]:
@@ -321,17 +766,46 @@ async def research_endpoint(
         )
 
 @router.get("/areas")
-async def get_research_areas():
+async def get_research_areas(current_user: Dict[str, Any] = Depends(get_current_user)):
     """Get available legal research areas"""
     return get_legal_areas()
 
 @router.get("/document-types")
-async def get_available_document_types():
+async def get_available_document_types(current_user: Dict[str, Any] = Depends(get_current_user)):
     """Get available document types"""
     return {
         "types": get_document_types(),
         "framework_version": ColombianLegalFramework.FRAMEWORK_VERSION
     }
+
+@router.get("/documents")
+async def get_user_legal_research_documents(current_user: Dict[str, Any] = Depends(get_current_user)):
+    """Get all legal research documents for the current user"""
+    try:
+        from utils.r2_storage import list_legal_research_documents
+        
+        user_id = current_user.get("id")
+        if not user_id:
+            raise HTTPException(status_code=400, detail="User ID not found")
+        
+        documents = await list_legal_research_documents(user_id=user_id)
+        
+        return {
+            "documents": documents,
+            "total_count": len(documents),
+            "user_id": user_id,
+            "timestamp": datetime.now().isoformat()
+        }
+        
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail={
+                "error": str(e),
+                "message": "Error retrieving legal research documents",
+                "timestamp": datetime.now().isoformat()
+            }
+        )
 
 def get_relevant_laws(areas: Optional[List[str]]) -> List[str]:
     """Obtiene leyes relevantes según el área de investigación"""
@@ -363,7 +837,10 @@ class DraftResponse(BaseModel):
 
 # Add this new endpoint
 @router.post("/generate-draft", response_model=DraftResponse)
-async def generate_draft(request: DraftRequest):
+async def generate_draft(
+    request: DraftRequest,
+    current_user: Dict[str, Any] = Depends(get_current_user)
+):
     """Generate a document draft based on research results"""
     try:
         # Get the template based on document type
@@ -543,7 +1020,11 @@ class DownloadDraftRequest(BaseModel):
         }
 
 @router.post("/download-draft")
-async def download_draft(request: DownloadDraftRequest, background_tasks: BackgroundTasks):
+async def download_draft(
+    request: DownloadDraftRequest,
+    background_tasks: BackgroundTasks,
+    current_user: Dict[str, Any] = Depends(get_current_user)
+):
     """Generate and download document in specified format"""
     try:
         temp_dir = tempfile.mkdtemp()

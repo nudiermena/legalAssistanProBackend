@@ -1,7 +1,10 @@
 from agno.agent import Agent
 from config.database import get_agent_storage
 from config.ai_models import get_model
-from config.knowledge_base import get_knowledge_base
+from config.knowledge_base_integration import (
+    create_agent_knowledge_integration,
+    AgentKnowledgeHelper
+)
 from config.colombian_compliance import (
     ColombianLegalFramework,
     get_legal_term,
@@ -13,16 +16,26 @@ from typing import Dict, List, Optional
 from datetime import datetime, timedelta
 
 def create_demand_letter_agent() -> Agent:
+    """Create a specialized agent for demand letter agent with knowledge base integration"""
+    # Create knowledge base integration
+    knowledge_integration = create_agent_knowledge_integration("demand_letter_agent")
     """Create a specialized agent for demand letter drafting"""
     return Agent(
         name="Especialista en Requerimientos Legales",
-        role="Especialista en redacción de requerimientos jurídicos",
+        role="Especialista en redacción de requerimientos jurídicos con acceso a base de conocimiento legal",
         model=get_model("demand"),
-        knowledge=get_knowledge_base(),
+        knowledge=knowledge_integration,
         search_knowledge=True,
         storage=get_agent_storage("demand_sessions"),
         instructions=[
-            "Redactar requerimientos según normatividad colombiana",
+                        # === KNOWLEDGE BASE INTEGRATION ===
+            "Utiliza la base de conocimiento legal para obtener información actualizada y relevante",
+            "Consulta términos legales específicos y sus definiciones de la base de conocimiento",
+            "Busca en jurisprudencia y documentos legales almacenados en el sistema",
+            "Aplica mejores prácticas documentadas en la base de conocimiento",
+            "Cita fuentes específicas y referencias normativas de la base de conocimiento",
+            
+"Redactar requerimientos según normatividad colombiana",
             "Incluir fundamentos constitucionales y legales específicos",
             "Especificar términos perentorios y de caducidad",
             "Incorporar requisitos del CPACA cuando aplique",

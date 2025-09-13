@@ -4,29 +4,56 @@ from agno.agent import Agent
 from agno.tools.googlesearch import GoogleSearchTools
 from config.database import get_agent_storage
 from config.ai_models import get_model
-from config.knowledge_base import get_knowledge_base
+from config.knowledge_base_integration import (
+    create_agent_knowledge_integration,
+    AgentKnowledgeHelper
+)
 from frameworks.colombian_legal_framework import ColombianLegalFramework
 from models.case_prediction import CasePredictionRequest
 
 class CasePredictionAgent(Agent):
     def __init__(self):
+        # Create knowledge base integration
+        knowledge_integration = create_agent_knowledge_integration("case_prediction_agent")
+        
         super().__init__(
             model=get_model("case_prediction"),
             tools=[GoogleSearchTools()],
-            #storage=get_agent_storage(),
-            #knowledge_base=get_knowledge_base()
+            knowledge=knowledge_integration,
+            search_knowledge=True,
+            storage=get_agent_storage("case_prediction_sessions")
         )
         self.framework = ColombianLegalFramework()
         self.get_legal_term = lambda x: ""  # TODO: Implement or import get_legal_term
         self.get_administrative_deadline = lambda x: 15  # TODO: Implement or import get_administrative_deadline
+        self.knowledge_helper = AgentKnowledgeHelper("case_prediction_agent")
 
     async def predict_case(self, request: CasePredictionRequest) -> Dict[str, Any]:
         """
-        Predicts the outcome and provides analysis for a legal case.
+        Predicts the outcome and provides analysis for a legal case with knowledge base integration.
         """
         try:
+            # Get relevant knowledge from knowledge base
+            case_knowledge = await self.knowledge_helper.integration.get_agent_specific_knowledge("cases")
+            
+            # Get relevant jurisprudence
+            jurisprudence = await self.knowledge_helper.integration.get_jurisprudence(
+                topic=request.case_type,
+                limit=5
+            )
+            
+            # Get relevant legal terms
+            legal_terms = self.knowledge_helper._extract_potential_terms(
+                " ".join(request.key_facts + request.legal_issues)
+            )
+            legal_definitions = {}
+            if legal_terms:
+                legal_definitions = await self.knowledge_helper.get_relevant_legal_terms(
+                    " ".join(request.key_facts + request.legal_issues)
+                )
+            
             # Create the analysis prompt
-            prompt = self._create_analysis_prompt(request)
+            prompt = self._create_analysis_prompt(request, case_knowledge, jurisprudence, legal_definitions)
             
             # Get the AI analysis
             response = await self.arun(prompt)
@@ -42,7 +69,17 @@ class CasePredictionAgent(Agent):
                 "risk_factors": self._identify_risk_factors(request),
                 "suggested_strategy": self._suggest_legal_strategy(request),
                 "ai_analysis": ai_analysis,
-                "timestamp": datetime.now().isoformat()
+                "timestamp": datetime.now().isoformat(),
+                "knowledge_base_usage": {
+                    "case_knowledge_found": len(case_knowledge),
+                    "jurisprudence_found": len(jurisprudence),
+                    "legal_terms_found": len(legal_definitions),
+                    "knowledge_sources": [
+                        {"type": "case_knowledge", "count": len(case_knowledge)},
+                        {"type": "jurisprudence", "count": len(jurisprudence)},
+                        {"type": "legal_terms", "count": len(legal_definitions)}
+                    ]
+                }
             }
 
             return prediction
@@ -50,8 +87,8 @@ class CasePredictionAgent(Agent):
         except Exception as e:
             raise Exception(f"Error predicting case: {str(e)}")
 
-    def _create_analysis_prompt(self, request: CasePredictionRequest) -> str:
-        """Creates a detailed prompt for AI analysis"""
+    def _create_analysis_prompt(self, request: CasePredictionRequest, case_knowledge: List[Dict], jurisprudence: List[Dict], legal_definitions: Dict[str, str]) -> str:
+        """Creates a detailed prompt for AI analysis with knowledge base context"""
         prompt = f"""Analizar el siguiente caso legal y proporcionar una evaluación detallada:
 
 TIPO DE CASO: {self.framework.get_case_type_name(request.case_type)}
@@ -69,7 +106,25 @@ PROBLEMAS JURÍDICOS:
 {chr(10).join(f"- {precedent}" for precedent in (request.relevant_precedents or []))}
 
 {f'PROCEDIMIENTO ADMINISTRATIVO: {self.framework.get_administrative_procedure_name(request.administrative_procedure)}' if request.administrative_procedure else ''}
-
+"""
+        
+        # Add knowledge base context
+        if case_knowledge:
+            prompt += "\nCONOCIMIENTO DE CASOS SIMILARES:\n"
+            for knowledge in case_knowledge[:3]:  # Top 3 most relevant
+                prompt += f"- {knowledge.get('content', '')[:200]}...\n"
+        
+        if jurisprudence:
+            prompt += "\nJURISPRUDENCIA RELEVANTE:\n"
+            for jur in jurisprudence[:3]:  # Top 3 most relevant
+                prompt += f"- {jur.get('topic', 'N/A')}: {jur.get('summary', '')[:200]}...\n"
+        
+        if legal_definitions:
+            prompt += "\nTÉRMINOS LEGALES RELEVANTES:\n"
+            for term, definition in legal_definitions.items():
+                prompt += f"- {term}: {definition}\n"
+        
+        prompt += """
 Por favor proporcionar:
 1. Análisis de viabilidad jurídica
 2. Probabilidad de éxito estimada

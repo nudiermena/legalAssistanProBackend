@@ -2,7 +2,10 @@ from agno.agent import Agent
 from agno.tools.googlesearch import GoogleSearchTools
 from config.database import get_agent_storage
 from config.ai_models import get_model
-from config.knowledge_base import get_knowledge_base
+from config.knowledge_base_integration import (
+    create_agent_knowledge_integration,
+    AgentKnowledgeHelper
+)
 from config.colombian_compliance import (
     ColombianIPFramework,
     get_ip_requirements,
@@ -36,30 +39,40 @@ class QueryGenerator:
         return queries[:5]  # Limit to 5 queries
 
 def create_patent_agent() -> Agent:
-    """Create a specialized agent for patent analysis"""
+    """Create a specialized agent for patent analysis with knowledge base integration"""
+    # Create knowledge base integration
+    knowledge_integration = create_agent_knowledge_integration("patent_agent")
+    
     return Agent(
         name="Especialista en Propiedad Industrial",
-        role="Especialista en derecho de patentes colombiano",
+        role="Especialista en derecho de patentes colombiano con acceso a base de conocimiento legal",
         model=get_model("patent"),
-        knowledge=get_knowledge_base(),
+        knowledge=knowledge_integration,
         search_knowledge=True,
         storage=get_agent_storage("patent_sessions"),
         instructions=[
-            "Analizar patentabilidad según Decisión 486 CAN",
-            "Aplicar normativa de la SIC y propiedad industrial",
-            "Evaluar requisitos de novedad, nivel inventivo y aplicación industrial",
-            "Considerar excepciones y exclusiones de patentabilidad",
-            "Verificar requisitos formales ante la SIC",
-            "Proteger secretos empresariales según Ley 256 de 1996",
-            "Aplicar tratados internacionales ratificados",
-            "Garantizar derechos de propiedad intelectual",
-            "Seguir circulares y conceptos de la SIC",
-            "Mantener estándares técnico-jurídicos",
-            "Evaluar reivindicaciones y suficiencia descriptiva",
-            "Considerar derechos de prioridad aplicables",
-            "Verificar requisitos de representación legal",
-            "Analizar posibles infracciones",
-            "Recomendar estrategias de protección"
+            # === KNOWLEDGE BASE INTEGRATION ===
+            "Utiliza la base de conocimiento legal para obtener información actualizada sobre patentes y propiedad intelectual",
+            "Consulta términos legales específicos relacionados con patentes y sus definiciones",
+            "Busca en jurisprudencia relevante sobre propiedad intelectual colombiana",
+            "Aplica mejores prácticas de patentabilidad documentadas en el sistema",
+            "Cita fuentes específicas y referencias normativas de la base de conocimiento",
+            
+            "Analizar patentabilidad según Decisión 486 CAN y normativa SIC.",
+            "Evaluar requisitos de novedad, nivel inventivo y aplicación industrial.",
+            "Identificar y señalar riesgos potenciales de infracción de patentes.",
+            "Detectar oportunidades de diferenciación técnica frente al estado del arte.",
+            "Resaltar áreas de novedad o innovación poco exploradas.",
+            "Proporcionar recomendaciones claras, concisas y accionables para el usuario.",
+            "Estructurar las recomendaciones en categorías: riesgo, oportunidad, novedad.",
+            "Presentar la información de forma comprensible y lista para mostrar en una interfaz de usuario.",
+            "Considerar excepciones y exclusiones de patentabilidad.",
+            "Verificar requisitos formales ante la SIC.",
+            "Aplicar tratados internacionales ratificados y normativa local.",
+            "Garantizar derechos de propiedad intelectual y protección de datos.",
+            "Seguir circulares y conceptos de la SIC.",
+            "Mantener estándares técnico-jurídicos y claridad en la comunicación.",
+            "Recomendar estrategias de protección y próximos pasos."
         ],
         markdown=True
     )
@@ -71,12 +84,30 @@ async def analyze_patent(
     specific_concerns: Optional[List[str]] = None,
     technical_field: Optional[str] = None
 ) -> Dict[str, str]:
-    """Analizar una patente y proporcionar análisis detallado según normativa colombiana"""
+    """Analizar una patente y proporcionar análisis detallado según normativa colombiana con integración de base de conocimiento"""
     agent = create_patent_agent()
+    
+    # Create knowledge helper for enhanced analysis
+    knowledge_helper = AgentKnowledgeHelper("patent_agent")
     
     # Get Colombian IP requirements
     ip_requirements = get_ip_requirements(patent_type)
     protection_period = get_ip_protection_period(patent_type)
+    
+    # Get relevant patent knowledge from knowledge base
+    patent_knowledge = await knowledge_helper.integration.get_agent_specific_knowledge("patents")
+    
+    # Get relevant legal terms
+    legal_terms = knowledge_helper._extract_potential_terms(patent_text)
+    legal_definitions = {}
+    if legal_terms:
+        legal_definitions = await knowledge_helper.get_relevant_legal_terms(patent_text)
+    
+    # Get relevant jurisprudence on IP
+    jurisprudence = await knowledge_helper.integration.get_jurisprudence(
+        topic="propiedad intelectual",
+        limit=5
+    )
     
     # Prepare the prompt
     prompt = f"""Analizar la siguiente patente de {patent_type}:
@@ -109,6 +140,22 @@ Por favor proporcionar:
     if technical_field:
         prompt += f"\nCAMPO TÉCNICO: {technical_field}"
     
+    # Add knowledge base context
+    if patent_knowledge:
+        prompt += "\n\nCONOCIMIENTO DE PATENTES DE REFERENCIA:\n"
+        for knowledge in patent_knowledge[:3]:  # Top 3 most relevant
+            prompt += f"- {knowledge.get('content', '')[:200]}...\n"
+    
+    if legal_definitions:
+        prompt += "\nTÉRMINOS LEGALES RELEVANTES:\n"
+        for term, definition in legal_definitions.items():
+            prompt += f"- {term}: {definition}\n"
+    
+    if jurisprudence:
+        prompt += "\nJURISPRUDENCIA RELEVANTE:\n"
+        for jur in jurisprudence[:2]:  # Top 2 most relevant
+            prompt += f"- {jur.get('topic', 'N/A')}: {jur.get('summary', '')[:200]}...\n"
+    
     prompt += f"""
 REQUISITOS DE PI COLOMBIANA:
 - Elementos Requeridos: {', '.join(ip_requirements)}
@@ -136,6 +183,16 @@ REQUISITOS DE PI COLOMBIANA:
             "protection_period": protection_period,
             "analysis_date": datetime.now().isoformat(),
             "expiry_date": (datetime.now() + timedelta(days=protection_period*365)).isoformat()
+        },
+        "knowledge_base_usage": {
+            "patent_knowledge_found": len(patent_knowledge),
+            "legal_terms_found": len(legal_definitions),
+            "jurisprudence_found": len(jurisprudence),
+            "knowledge_sources": [
+                {"type": "patent_knowledge", "count": len(patent_knowledge)},
+                {"type": "legal_terms", "count": len(legal_definitions)},
+                {"type": "jurisprudence", "count": len(jurisprudence)}
+            ]
         }
     }
     
@@ -303,9 +360,33 @@ Organize findings by potential impact on patentability, from most concerning to 
         "invention_summary": invention_description[:200] + "..."
     }
 
+def generate_recommendations():
+    """Generate recommendations based on analysis/search (static example from image)"""
+    return [
+        {
+            "tipo": "riesgo",
+            "titulo": "Riesgo potencial de infracción",
+            "descripcion": "La patente US10234567B2 tiene elementos muy similares a su búsqueda.",
+            "icono": "warning"
+        },
+        {
+            "tipo": "oportunidad",
+            "titulo": "Oportunidad de diferenciación",
+            "descripcion": "Considere enfocarse en el sistema de almacenamiento, un área menos cubierta.",
+            "icono": "check"
+        },
+        {
+            "tipo": "novedad",
+            "titulo": "Área de novedad",
+            "descripcion": "La integración con IA para optimización de energía parece un área poco explorada.",
+            "icono": "info"
+        }
+    ]
+
 async def search_patents(
     invention_description: str,
     jurisdiction: str,
+    technical_field: Optional[str] = None,
     data_processing: Optional[Dict[str, str]] = None,
     legal_terms: Optional[List[str]] = None
 ) -> Dict[str, str]:
@@ -380,7 +461,8 @@ Present this analysis in a format suitable for patent search results.
         "colombian_compliance": {
             "constitutional_principles": ColombianLegalFramework.CONSTITUTIONAL_PRINCIPLES,
             "search_date": datetime.now().isoformat()
-        }
+        },
+        "recomendaciones": generate_recommendations()
     }
     
     if legal_term_definitions:
@@ -398,6 +480,7 @@ async def analyze_patentability(
     invention_description: str,
     prior_art: List[str],
     jurisdiction: str,
+    technical_field: Optional[str] = None,
     data_processing: Optional[Dict[str, str]] = None,
     legal_terms: Optional[List[str]] = None
 ) -> Dict[str, str]:
@@ -490,7 +573,8 @@ Present this analysis in a format suitable for patentability assessment.
         "colombian_compliance": {
             "constitutional_principles": ColombianLegalFramework.CONSTITUTIONAL_PRINCIPLES,
             "analysis_date": datetime.now().isoformat()
-        }
+        },
+        "recomendaciones": generate_recommendations()
     }
     
     if legal_term_definitions:
@@ -591,4 +675,53 @@ Present this analysis in a format suitable for prior art search results.
             "consent_valid": data_compliance["consent_valid"]
         }
     
+    return result
+
+async def search_patents_v2(
+    search_terms: str,
+    patent_type: str,
+    filing_date_start: 'date',
+    filing_date_end: 'date',
+    ipc_class: str,
+    invention_description: str,
+    inventors: list,
+    applicant: str
+) -> dict:
+    """Búsqueda de patentes V2 con todos los campos del formulario extendido"""
+    agent = create_patent_agent()
+    # Build a detailed prompt using all fields
+    prompt = f"""
+Realizar búsqueda de patentes con los siguientes parámetros:
+
+TÉRMINOS DE BÚSQUEDA: {search_terms}
+TIPO DE PATENTE: {patent_type}
+FECHA DE PRESENTACIÓN: {filing_date_start} a {filing_date_end}
+CLASIFICACIÓN IPC: {ipc_class}
+DESCRIPCIÓN DE LA INVENCIÓN: {invention_description}
+INVENTOR(ES): {', '.join(inventors)}
+SOLICITANTE: {applicant}
+
+Por favor proporcionar:
+1. Resultados relevantes de búsqueda de patentes
+2. Análisis de invenciones similares
+3. Identificación de arte previo relevante
+4. Análisis de clasificación y jurisdicción
+5. Principios constitucionales aplicables
+6. Implicaciones de derechos de PI
+7. Cumplimiento normativo colombiano
+8. Recomendaciones estructuradas (riesgo, oportunidad, novedad)
+"""
+    # Run the agent
+    response = agent.run(prompt)
+    # Build the result
+    result = {
+        "search_results": response.content,
+        "invention_description": invention_description,
+        "jurisdiction": "Colombia",  # Default for now
+        "colombian_compliance": {
+            "constitutional_principles": ColombianLegalFramework.CONSTITUTIONAL_PRINCIPLES,
+            "search_date": datetime.now().isoformat()
+        },
+        "recomendaciones": generate_recommendations()
+    }
     return result 

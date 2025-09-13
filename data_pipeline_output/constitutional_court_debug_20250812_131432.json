@@ -1,0 +1,15 @@
+{
+  "timestamp": "20250812_131432",
+  "url": "https://www.corteconstitucional.gov.co/relatoria/buscador-jurisprudencia",
+  "content_length": 8669,
+  "title": "CORTE CONSTITUCIONAL DE COLOMBIA",
+  "forms_count": 0,
+  "total_links": 0,
+  "case_related_links": [],
+  "case_patterns_found": {
+    "[CT]-\\d+/\\d{4}": 0,
+    "Sentencia\\s+([CT]-\\d+/\\d{4})": 0,
+    "Auto\\s+(\\d+/\\d{4})": 0,
+    "Concepto\\s+(\\d+/\\d{4})": 0
+  }
+}

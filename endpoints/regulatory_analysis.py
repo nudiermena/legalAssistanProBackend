@@ -7,6 +7,7 @@ from models.response_models import BaseResponse, format_response, handle_error
 from agents.compliance_agent import analyze_regulatory_change
 from agents.regulatory_agent import analyze_regulatory_compliance
 from config.colombian_compliance import ColombianLegalFramework
+from endpoints.auth import get_current_user
 
 router = APIRouter(prefix="/regulatory", tags=["regulatory"])
 
@@ -170,7 +171,8 @@ async def regulatory_analysis_endpoint(
                 "Audit logging": "Not implemented"
             }
         }
-    )
+    ),
+    current_user: Dict[str, Any] = Depends(get_current_user)
 ):
     """
     Analyze regulatory changes and their impact on business operations, providing
@@ -201,7 +203,8 @@ async def analyze_regulatory_endpoint(
     request: RegulatoryAnalysisRequest = Body(
         ...,
         description="Parámetros para el análisis regulatorio"
-    )
+    ),
+    current_user: Dict[str, Any] = Depends(get_current_user)
 ):
     """Analiza cumplimiento regulatorio con normativa colombiana"""
     try:
@@ -262,7 +265,7 @@ def identify_pending_actions(analysis_result: Dict[str, Any]) -> List[str]:
     summary="Marcos Regulatorios Disponibles",
     description="Obtiene los marcos regulatorios disponibles por sector"
 )
-async def get_regulatory_frameworks():
+async def get_regulatory_frameworks(current_user: Dict[str, Any] = Depends(get_current_user)):
     """Retorna los marcos regulatorios disponibles por sector"""
     return {
         "financiero": [

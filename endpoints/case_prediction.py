@@ -13,6 +13,7 @@ from agents.case_prediction_agent import (
 )
 from frameworks.colombian_legal_framework import ColombianLegalFramework
 from fastapi.staticfiles import StaticFiles
+from endpoints.auth import get_current_user
 import os
 import json
 from models.case_prediction import CasePredictionRequest
@@ -20,7 +21,7 @@ from models.case_prediction import CasePredictionRequest
 router = APIRouter(prefix="/dashboard/case-prediction", tags=["case_prediction"])
 
 @router.get("/", response_class=FileResponse)
-async def get_case_prediction_page():
+async def get_case_prediction_page(current_user: Dict[str, Any] = Depends(get_current_user)):
     """Serves the case prediction HTML page"""
     try:
         html_path = Path("static/case-prediction.html")
@@ -94,7 +95,10 @@ def _risk_level_to_percentage(risk_level: str) -> int:
     return risk_percentages.get(risk_level.lower(), 50)
 
 @router.post("/analyze")
-async def analyze_case(request: CasePredictionRequest):
+async def analyze_case(
+    request: CasePredictionRequest,
+    current_user: Dict[str, Any] = Depends(get_current_user)
+):
     """Analyze case endpoint"""
     try:
         # Validate case type
@@ -228,7 +232,7 @@ async def analyze_case(request: CasePredictionRequest):
     summary="Tipos de Procesos",
     description="Obtiene los tipos de procesos disponibles para análisis"
 )
-async def get_case_types():
+async def get_case_types(current_user: Dict[str, Any] = Depends(get_current_user)):
     """Retorna los tipos de procesos disponibles"""
     return {
         "procesos_ordinarios": [
@@ -263,7 +267,10 @@ def calculate_success_probability(
     return 0.75
 
 @router.post("/analyze-laws")
-async def analyze_laws(request: CasePredictionRequest):
+async def analyze_laws(
+    request: CasePredictionRequest,
+    current_user: Dict[str, Any] = Depends(get_current_user)
+):
     """Analyze laws endpoint"""
     try:
         agent = create_case_prediction_agent()
@@ -285,7 +292,10 @@ async def analyze_laws(request: CasePredictionRequest):
         )
 
 @router.post("/analyze-similar-cases")
-async def analyze_similar_cases(request: CasePredictionRequest):
+async def analyze_similar_cases(
+    request: CasePredictionRequest,
+    current_user: Dict[str, Any] = Depends(get_current_user)
+):
     """Analyze similar cases endpoint"""
     try:
         agent = create_case_prediction_agent()
@@ -307,7 +317,10 @@ async def analyze_similar_cases(request: CasePredictionRequest):
         )
 
 @router.post("/debug")
-async def debug_request(request: Request):
+async def debug_request(
+    request: Request,
+    current_user: Dict[str, Any] = Depends(get_current_user)
+):
     """Debug endpoint to check incoming request data"""
     body = await request.json()
     return JSONResponse({

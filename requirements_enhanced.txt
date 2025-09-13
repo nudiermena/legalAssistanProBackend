@@ -1,0 +1,56 @@
+# Enhanced Agent Dependencies
+# Core AI and Agent Framework
+agno>=0.1.0
+openai>=1.0.0
+
+# Vector Database Support
+pinecone-client>=2.2.0
+chromadb>=0.4.0
+
+# Database and Storage
+sqlalchemy>=2.0.0
+psycopg2-binary>=2.9.0
+alembic>=1.12.0
+
+# Knowledge Base and RAG
+langchain>=0.1.0
+langchain-community>=0.0.10
+faiss-cpu>=1.7.0
+
+# Web Scraping and Document Processing
+beautifulsoup4>=4.12.0
+requests>=2.31.0
+pypdf2>=3.0.0
+python-docx>=0.8.11
+
+# Search and Research Tools
+google-search-results>=2.4.0
+serpapi>=0.1.0
+
+# Memory and Caching
+redis>=4.6.0
+pymongo>=4.4.0
+
+# Enhanced Logging and Monitoring
+structlog>=23.1.0
+prometheus-client>=0.17.0
+
+# Configuration and Environment
+python-dotenv>=1.0.0
+pydantic>=2.0.0
+pydantic-settings>=2.0.0
+
+# Async and Performance
+aiohttp>=3.8.0
+asyncio-mqtt>=0.13.0
+uvloop>=0.17.0
+
+# Testing and Development
+pytest>=7.4.0
+pytest-asyncio>=0.21.0
+pytest-cov>=4.1.0
+
+# Utilities
+tenacity>=8.2.0
+python-dateutil>=2.8.0
+pytz>=2023.3 
