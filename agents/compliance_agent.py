@@ -1,7 +1,10 @@
 from agno.agent import Agent
 from config.database import get_agent_storage
 from config.ai_models import get_model
-from config.knowledge_base import get_knowledge_base
+from config.knowledge_base_integration import (
+    create_agent_knowledge_integration,
+    AgentKnowledgeHelper
+)
 from config.colombian_compliance import (
     ColombianDataProtection,
     ColombianLegalFramework,
@@ -14,15 +17,25 @@ from typing import Dict, List, Optional
 from datetime import datetime, timedelta
 
 def create_compliance_agent() -> Agent:
-    """Create a specialized agent for compliance analysis"""
+    """Create a specialized agent for compliance analysis with knowledge base integration"""
+    # Create knowledge base integration
+    knowledge_integration = create_agent_knowledge_integration("compliance_agent")
+    
     return Agent(
         name="Analista de Cumplimiento",
-        role="Especialista en cumplimiento regulatorio",
+        role="Especialista en cumplimiento regulatorio con acceso a base de conocimiento legal",
         model=get_model("compliance"),
-        knowledge=get_knowledge_base(),
+        knowledge=knowledge_integration,
         search_knowledge=True,
         storage=get_agent_storage("compliance_sessions"),
         instructions=[
+            # === KNOWLEDGE BASE INTEGRATION ===
+            "Utiliza la base de conocimiento legal para obtener información actualizada sobre cumplimiento regulatorio",
+            "Consulta términos legales específicos relacionados con cumplimiento y sus definiciones",
+            "Busca en marcos regulatorios y jurisprudencia relevante sobre cumplimiento",
+            "Aplica mejores prácticas de cumplimiento documentadas en el sistema",
+            "Cita fuentes específicas y referencias normativas de la base de conocimiento",
+            
             "Analizar cumplimiento normativo colombiano",
             "Evaluar requisitos de protección de datos personales",
             "Verificar conformidad con Ley 1581 de 2012",
@@ -50,8 +63,23 @@ async def analyze_regulatory_change(
     current_compliance_status: dict,
     data_processing: Optional[Dict[str, str]] = None
 ) -> dict:
-    """Analyze regulatory changes and their impact on business operations"""
+    """Analyze regulatory changes and their impact on business operations with knowledge base integration"""
     agent = create_compliance_agent()
+    
+    # Create knowledge helper for enhanced analysis
+    knowledge_helper = AgentKnowledgeHelper("compliance_agent")
+    
+    # Get relevant compliance knowledge from knowledge base
+    compliance_knowledge = await knowledge_helper.integration.get_agent_specific_knowledge("compliance")
+    
+    # Get relevant regulatory frameworks
+    regulatory_frameworks = await knowledge_helper.integration.get_agent_specific_knowledge("frameworks")
+    
+    # Get relevant legal terms
+    legal_terms = knowledge_helper._extract_potential_terms(regulation_text)
+    legal_definitions = {}
+    if legal_terms:
+        legal_definitions = await knowledge_helper.get_relevant_legal_terms(regulation_text)
     
     # Format current compliance status for the prompt
     compliance_status_text = "\n".join([f"- {key}: {value}" for key, value in current_compliance_status.items()])
@@ -98,6 +126,22 @@ Por favor proporcionar:
 15. Medidas de seguridad requeridas
 """
     
+    # Add knowledge base context
+    if compliance_knowledge:
+        prompt += "\n\nCONOCIMIENTO DE CUMPLIMIENTO DE REFERENCIA:\n"
+        for knowledge in compliance_knowledge[:3]:  # Top 3 most relevant
+            prompt += f"- {knowledge.get('content', '')[:200]}...\n"
+    
+    if regulatory_frameworks:
+        prompt += "\nMARCO REGULATORIO RELEVANTE:\n"
+        for framework in regulatory_frameworks[:2]:  # Top 2 most relevant
+            prompt += f"- {framework.get('content', '')[:200]}...\n"
+    
+    if legal_definitions:
+        prompt += "\nTÉRMINOS LEGALES RELEVANTES:\n"
+        for term, definition in legal_definitions.items():
+            prompt += f"- {term}: {definition}\n"
+    
     # Add data processing analysis if provided
     if data_processing:
         prompt += f"""
@@ -120,6 +164,16 @@ ANÁLISIS DE TRATAMIENTO DE DATOS:
         "colombian_compliance": {
             "constitutional_principles": ColombianLegalFramework.CONSTITUTIONAL_PRINCIPLES,
             "analysis_date": datetime.now().isoformat()
+        },
+        "knowledge_base_usage": {
+            "compliance_knowledge_found": len(compliance_knowledge),
+            "regulatory_frameworks_found": len(regulatory_frameworks),
+            "legal_terms_found": len(legal_definitions),
+            "knowledge_sources": [
+                {"type": "compliance_knowledge", "count": len(compliance_knowledge)},
+                {"type": "regulatory_frameworks", "count": len(regulatory_frameworks)},
+                {"type": "legal_terms", "count": len(legal_definitions)}
+            ]
         }
     }
     
@@ -140,8 +194,24 @@ async def assess_compliance_status(
     regulatory_framework: str,
     data_processing: Optional[Dict[str, str]] = None
 ) -> Dict[str, str]:
-    """Assess current compliance status with Colombian requirements"""
+    """Assess current compliance status with Colombian requirements and knowledge base integration"""
     agent = create_compliance_agent()
+    
+    # Create knowledge helper for enhanced analysis
+    knowledge_helper = AgentKnowledgeHelper("compliance_agent")
+    
+    # Get relevant compliance knowledge from knowledge base
+    compliance_knowledge = await knowledge_helper.integration.get_agent_specific_knowledge("compliance")
+    
+    # Get relevant legal terms
+    legal_terms = knowledge_helper._extract_potential_terms(
+        " ".join(business_operations + list(current_policies.values()))
+    )
+    legal_definitions = {}
+    if legal_terms:
+        legal_definitions = await knowledge_helper.get_relevant_legal_terms(
+            " ".join(business_operations + list(current_policies.values()))
+        )
     
     # Format current policies for the prompt
     policies_text = "\n".join([f"- {key}: {value}" for key, value in current_policies.items()])
@@ -188,6 +258,17 @@ Por favor proporcionar:
 15. Gestión de autorizaciones y consentimientos
 """
     
+    # Add knowledge base context
+    if compliance_knowledge:
+        prompt += "\n\nCONOCIMIENTO DE CUMPLIMIENTO DE REFERENCIA:\n"
+        for knowledge in compliance_knowledge[:3]:  # Top 3 most relevant
+            prompt += f"- {knowledge.get('content', '')[:200]}...\n"
+    
+    if legal_definitions:
+        prompt += "\nTÉRMINOS LEGALES RELEVANTES:\n"
+        for term, definition in legal_definitions.items():
+            prompt += f"- {term}: {definition}\n"
+    
     # Add data processing analysis if provided
     if data_processing:
         prompt += f"""
@@ -198,17 +279,25 @@ ANÁLISIS DE TRATAMIENTO DE DATOS:
 - Derechos Constitucionales: {', '.join(ColombianLegalFramework.CONSTITUTIONAL_PRINCIPLES)}
 """
     
-    # Run the assessment
+    # Run the analysis
     response = agent.run(prompt)
     
     # Structure the response
     result = {
-        "assessment": response.content,
+        "analysis": response.content,
         "business_operations": business_operations,
         "regulatory_framework": regulatory_framework,
         "colombian_compliance": {
             "constitutional_principles": ColombianLegalFramework.CONSTITUTIONAL_PRINCIPLES,
-            "assessment_date": datetime.now().isoformat()
+            "analysis_date": datetime.now().isoformat()
+        },
+        "knowledge_base_usage": {
+            "compliance_knowledge_found": len(compliance_knowledge),
+            "legal_terms_found": len(legal_definitions),
+            "knowledge_sources": [
+                {"type": "compliance_knowledge", "count": len(compliance_knowledge)},
+                {"type": "legal_terms", "count": len(legal_definitions)}
+            ]
         }
     }
     

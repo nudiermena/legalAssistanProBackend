@@ -1,14 +1,17 @@
-from fastapi import APIRouter, Request, HTTPException
+from fastapi import APIRouter, Request, HTTPException, Depends
 from fastapi.responses import HTMLResponse, JSONResponse, FileResponse
 from fastapi.templating import Jinja2Templates
 from pathlib import Path
 from datetime import datetime, timedelta
+from endpoints.auth import get_current_user
+from typing import Dict, Any
 import random
+from config.ai_models import health_check, get_model_status
 
 router = APIRouter(prefix="/dashboard", tags=["dashboard"])
 
 @router.get("/", response_class=FileResponse)
-async def get_dashboard_page():
+async def get_dashboard_page(current_user: Dict[str, Any] = Depends(get_current_user)):
     """
     Render the dashboard page
     """
@@ -24,7 +27,7 @@ async def get_dashboard_page():
         )
 
 @router.get("/api/dashboard-stats")
-async def get_dashboard_stats():
+async def get_dashboard_stats(current_user: Dict[str, Any] = Depends(get_current_user)):
     """
     Get real-time dashboard statistics
     """
@@ -36,7 +39,7 @@ async def get_dashboard_stats():
     })
 
 @router.get("/api/recent-activity")
-async def get_recent_activity():
+async def get_recent_activity(current_user: Dict[str, Any] = Depends(get_current_user)):
     """
     Get recent user activity
     """
@@ -77,7 +80,7 @@ async def get_recent_activity():
     return JSONResponse(activities)
 
 @router.get("/api/dashboard/service-usage")
-async def get_service_usage():
+async def get_service_usage(current_user: Dict[str, Any] = Depends(get_current_user)):
     """
     Get service usage statistics
     """
@@ -105,7 +108,7 @@ async def get_service_usage():
     })
 
 @router.get("/api/dashboard/user-metrics")
-async def get_user_metrics():
+async def get_user_metrics(current_user: Dict[str, Any] = Depends(get_current_user)):
     """
     Get user-related metrics
     """
@@ -118,7 +121,7 @@ async def get_user_metrics():
     })
 
 @router.get("/api/dashboard/system-health")
-async def get_system_health():
+async def get_system_health(current_user: Dict[str, Any] = Depends(get_current_user)):
     """
     Get system health metrics
     """
@@ -130,8 +133,31 @@ async def get_system_health():
         "last_updated": datetime.now().isoformat()
     })
 
+@router.get("/dashboard/ai-health")
+async def ai_health_check():
+    """Check the health status of all AI models"""
+    try:
+        health_status = health_check()
+        model_status = get_model_status()
+        
+        return {
+            "status": "success",
+            "data": {
+                "health": health_status,
+                "model_status": model_status,
+                "timestamp": datetime.utcnow().isoformat()
+            }
+        }
+    except Exception as e:
+        # logger.error(f"Error checking AI health: {e}") # Assuming logger is defined elsewhere
+        return {
+            "status": "error",
+            "message": f"Error checking AI health: {str(e)}",
+            "timestamp": datetime.utcnow().isoformat()
+        }
+
 @router.get("/profile", response_class=FileResponse)
-async def get_profile_page():
+async def get_profile_page(current_user: Dict[str, Any] = Depends(get_current_user)):
     """
     Render the profile page
     """
@@ -147,7 +173,7 @@ async def get_profile_page():
         )
 
 @router.get("/settings", response_class=FileResponse)
-async def get_settings_page():
+async def get_settings_page(current_user: Dict[str, Any] = Depends(get_current_user)):
     """
     Render the settings page
     """

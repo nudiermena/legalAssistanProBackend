@@ -1,7 +1,10 @@
 from agno.agent import Agent
 from config.database import get_agent_storage
 from config.ai_models import get_model
-from config.knowledge_base import get_knowledge_base
+from config.knowledge_base_integration import (
+    create_agent_knowledge_integration,
+    AgentKnowledgeHelper
+)
 from config.colombian_compliance import (
     ColombianLegalFramework,
     get_legal_term
@@ -10,16 +13,26 @@ from typing import Dict, List, Optional
 from datetime import datetime
 
 def create_legal_diagnosis_agent() -> Agent:
+    """Create a specialized agent for legal diagnosis agent with knowledge base integration"""
+    # Create knowledge base integration
+    knowledge_integration = create_agent_knowledge_integration("legal_diagnosis_agent")
     """Create a specialized agent for legal diagnosis"""
     return Agent(
         name="Especialista en Diagnóstico Legal",
-        role="Especialista en diagnóstico jurídico colombiano",
+        role="Especialista en diagnóstico jurídico colombiano con acceso a base de conocimiento legal",
         model=get_model("legal"),
-        knowledge=get_knowledge_base(),
+        knowledge=knowledge_integration,
         search_knowledge=True,
         storage=get_agent_storage("legal_sessions"),
         instructions=[
-            "Analizar situaciones jurídicas bajo el marco legal colombiano",
+                        # === KNOWLEDGE BASE INTEGRATION ===
+            "Utiliza la base de conocimiento legal para obtener información actualizada y relevante",
+            "Consulta términos legales específicos y sus definiciones de la base de conocimiento",
+            "Busca en jurisprudencia y documentos legales almacenados en el sistema",
+            "Aplica mejores prácticas documentadas en la base de conocimiento",
+            "Cita fuentes específicas y referencias normativas de la base de conocimiento",
+            
+"Analizar situaciones jurídicas bajo el marco legal colombiano",
             "Aplicar principios constitucionales y jurisprudencia de las Altas Cortes",
             "Identificar normativa aplicable y precedentes judiciales vinculantes",
             "Evaluar implicaciones constitucionales y derechos fundamentales",

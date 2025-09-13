@@ -1,8 +1,9 @@
 from fastapi import APIRouter, HTTPException, Depends
 from pydantic import BaseModel
-from typing import List, Optional, Dict
+from typing import List, Optional, Dict, Any
 from agents.whistleblower_agent import analyze_whistleblower_report, draft_whistleblower_policy
 from config.colombian_compliance import ColombianLegalFramework
+from endpoints.auth import get_current_user
 
 router = APIRouter(prefix="/whistleblower", tags=["whistleblower"])
 
@@ -15,7 +16,7 @@ class WhistleblowerReportRequest(BaseModel):
     legal_terms: Optional[List[str]] = None
 
     class Config:
-        schema_extra = {
+        json_schema_extra = {
             "example": {
                 "report_content": "Se ha identificado un posible caso de corrupción...",
                 "report_type": "Denuncia administrativa",
@@ -43,7 +44,7 @@ class WhistleblowerPolicyRequest(BaseModel):
     data_processing: Optional[Dict[str, str]] = None
 
     class Config:
-        schema_extra = {
+        json_schema_extra = {
             "example": {
                 "organization_type": "Entidad pública",
                 "jurisdiction": "Colombia",
@@ -60,7 +61,10 @@ class WhistleblowerPolicyRequest(BaseModel):
         }
 
 @router.post("/report/analyze")
-async def analyze_report(request: WhistleblowerReportRequest):
+async def analyze_report(
+    request: WhistleblowerReportRequest,
+    current_user: Dict[str, Any] = Depends(get_current_user)
+):
     try:
         result = await analyze_whistleblower_report(
             report_content=request.report_content,
@@ -81,7 +85,10 @@ async def analyze_report(request: WhistleblowerReportRequest):
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.post("/policy/draft")
-async def draft_policy(request: WhistleblowerPolicyRequest):
+async def draft_policy(
+    request: WhistleblowerPolicyRequest,
+    current_user: Dict[str, Any] = Depends(get_current_user)
+):
     try:
         result = await draft_whistleblower_policy(
             organization_type=request.organization_type,

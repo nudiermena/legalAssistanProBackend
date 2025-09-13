@@ -4,6 +4,7 @@ from pydantic import BaseModel, Field, ConfigDict
 from datetime import datetime
 from agents.legal_diagnosis_agent import diagnose_legal_issue
 from config.colombian_compliance import ColombianLegalFramework
+from endpoints.auth import get_current_user
 
 router = APIRouter(prefix="/legal-diagnosis", tags=["diagnosis"])
 
@@ -76,7 +77,8 @@ async def diagnose_endpoint(
     request: LegalDiagnosisRequest = Body(
         ...,
         description="Parámetros para el diagnóstico jurídico"
-    )
+    ),
+    current_user: Dict[str, Any] = Depends(get_current_user)
 ):
     """Realiza diagnóstico jurídico con cumplimiento normativo colombiano"""
     try:
@@ -123,7 +125,7 @@ async def diagnose_endpoint(
     summary="Áreas del Derecho",
     description="Obtiene las áreas del derecho disponibles para diagnóstico"
 )
-async def get_legal_areas():
+async def get_legal_areas(current_user: Dict[str, Any] = Depends(get_current_user)):
     """Retorna las áreas del derecho disponibles"""
     return {
         "derecho_publico": [

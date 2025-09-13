@@ -2,7 +2,10 @@ import datetime
 from agno.agent import Agent
 from config.database import get_agent_storage
 from config.ai_models import get_model
-from config.knowledge_base import get_knowledge_base
+from config.knowledge_base_integration import (
+    create_agent_knowledge_integration,
+    AgentKnowledgeHelper
+)
 from config.colombian_compliance import (
     ColombianDataProtection,
     ColombianLegalFramework,
@@ -14,16 +17,26 @@ from typing import Dict, List, Optional
 from datetime import datetime, timedelta
 
 def create_whistleblower_agent() -> Agent:
+    """Create a specialized agent for whistleblower agent with knowledge base integration"""
+    # Create knowledge base integration
+    knowledge_integration = create_agent_knowledge_integration("whistleblower_agent")
     """Create a specialized agent for whistleblower protection"""
     return Agent(
         name="Especialista en Protección al Denunciante",
-        role="Especialista en protección de denunciantes",
+        role="Especialista en protección de denunciantes con acceso a base de conocimiento legal",
         model=get_model("whistleblower"),
-        knowledge=get_knowledge_base(),
+        knowledge=knowledge_integration,
         search_knowledge=True,
         storage=get_agent_storage("whistleblower_sessions"),
         instructions=[
-            "Analizar denuncias y brindar orientación de protección",
+                        # === KNOWLEDGE BASE INTEGRATION ===
+            "Utiliza la base de conocimiento legal para obtener información actualizada y relevante",
+            "Consulta términos legales específicos y sus definiciones de la base de conocimiento",
+            "Busca en jurisprudencia y documentos legales almacenados en el sistema",
+            "Aplica mejores prácticas documentadas en la base de conocimiento",
+            "Cita fuentes específicas y referencias normativas de la base de conocimiento",
+            
+"Analizar denuncias y brindar orientación de protección",
             "Garantizar cumplimiento de leyes anticorrupción",
             "Proteger derechos y confidencialidad del denunciante",
             "Establecer procedimientos claros de denuncia",
@@ -51,6 +64,22 @@ async def analyze_whistleblower_report(
 ) -> Dict[str, str]:
     """Analizar denuncia con cumplimiento normativo colombiano"""
     agent = create_whistleblower_agent()
+
+    # Create knowledge helper for enhanced analysis
+    knowledge_helper = AgentKnowledgeHelper("whistleblower_agent")
+    
+    # Get relevant knowledge from knowledge base
+    knowledge_results = await knowledge_helper.integration.search_knowledge(
+        query="analyze whistleblower report",
+        limit=5
+    )
+    
+    # Get relevant legal terms
+    legal_terms = knowledge_helper._extract_potential_terms(str(locals()))
+    legal_definitions = {}
+    if legal_terms:
+        legal_definitions = await knowledge_helper.get_relevant_legal_terms(str(locals()))
+
     
     # Get data processing details if provided
     data_compliance = {}
@@ -172,6 +201,22 @@ async def draft_whistleblower_policy(
 ) -> Dict[str, str]:
     """Redactar política de denuncias según normativa colombiana"""
     agent = create_whistleblower_agent()
+
+    # Create knowledge helper for enhanced analysis
+    knowledge_helper = AgentKnowledgeHelper("whistleblower_agent")
+    
+    # Get relevant knowledge from knowledge base
+    knowledge_results = await knowledge_helper.integration.search_knowledge(
+        query="draft whistleblower policy",
+        limit=5
+    )
+    
+    # Get relevant legal terms
+    legal_terms = knowledge_helper._extract_potential_terms(str(locals()))
+    legal_definitions = {}
+    if legal_terms:
+        legal_definitions = await knowledge_helper.get_relevant_legal_terms(str(locals()))
+
     
     # Get data processing details if provided
     data_compliance = {}

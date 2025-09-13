@@ -1,7 +1,10 @@
 from agno.agent import Agent
 from config.database import get_agent_storage
 from config.ai_models import get_model
-from config.knowledge_base import get_knowledge_base
+from config.knowledge_base_integration import (
+    create_agent_knowledge_integration,
+    AgentKnowledgeHelper
+)
 from config.colombian_compliance import (
     ColombianLegalFramework,
     get_legal_term,
@@ -12,16 +15,26 @@ from typing import Dict, List, Optional
 from datetime import datetime
 
 def create_regulatory_agent() -> Agent:
+    """Create a specialized agent for regulatory agent with knowledge base integration"""
+    # Create knowledge base integration
+    knowledge_integration = create_agent_knowledge_integration("regulatory_agent")
     """Create a specialized agent for regulatory analysis"""
     return Agent(
         name="Especialista en Análisis Regulatorio",
-        role="Especialista en cumplimiento normativo colombiano",
+        role="Especialista en cumplimiento normativo colombiano con acceso a base de conocimiento legal",
         model=get_model("regulatory"),
-        knowledge=get_knowledge_base(),
+        knowledge=knowledge_integration,
         search_knowledge=True,
         storage=get_agent_storage("regulatory_sessions"),
         instructions=[
-            "Analizar marco regulatorio sectorial colombiano",
+                        # === KNOWLEDGE BASE INTEGRATION ===
+            "Utiliza la base de conocimiento legal para obtener información actualizada y relevante",
+            "Consulta términos legales específicos y sus definiciones de la base de conocimiento",
+            "Busca en jurisprudencia y documentos legales almacenados en el sistema",
+            "Aplica mejores prácticas documentadas en la base de conocimiento",
+            "Cita fuentes específicas y referencias normativas de la base de conocimiento",
+            
+"Analizar marco regulatorio sectorial colombiano",
             "Evaluar cumplimiento de requisitos específicos",
             "Identificar riesgos regulatorios y de cumplimiento",
             "Verificar licencias y permisos requeridos",
@@ -50,6 +63,22 @@ async def analyze_regulatory_compliance(
 ) -> Dict[str, str]:
     """Analizar cumplimiento regulatorio según marco normativo colombiano"""
     agent = create_regulatory_agent()
+
+    # Create knowledge helper for enhanced analysis
+    knowledge_helper = AgentKnowledgeHelper("regulatory_agent")
+    
+    # Get relevant knowledge from knowledge base
+    knowledge_results = await knowledge_helper.integration.search_knowledge(
+        query="analyze regulatory compliance",
+        limit=5
+    )
+    
+    # Get relevant legal terms
+    legal_terms = knowledge_helper._extract_potential_terms(str(locals()))
+    legal_definitions = {}
+    if legal_terms:
+        legal_definitions = await knowledge_helper.get_relevant_legal_terms(str(locals()))
+
     
     # Get Colombian legal terms if provided
     legal_term_definitions = {}

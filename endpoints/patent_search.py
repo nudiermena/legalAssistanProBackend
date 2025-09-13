@@ -1,9 +1,10 @@
 from fastapi import APIRouter, HTTPException, Body, Depends
 from typing import List, Optional, Dict, Any, Union
 from pydantic import BaseModel, Field, ConfigDict
-from datetime import datetime
+from datetime import datetime, date
 from agents.patent_agent import search_patents, analyze_patentability
 from config.colombian_compliance import ColombianLegalFramework
+from endpoints.auth import get_current_user
 
 router = APIRouter(prefix="/patent", tags=["patents"])
 
@@ -54,6 +55,7 @@ class PatentSearchResponse(BaseModel):
     jurisdiction: str = Field(..., description="Jurisdicción")
     colombian_compliance: Dict[str, Any] = Field(..., description="Cumplimiento normativo")
     sic_requirements: Dict[str, str] = Field(..., description="Requisitos SIC")
+    recomendaciones: List[Dict[str, str]] = Field(..., description="Recomendaciones de patentabilidad")
     data_processing: Optional[Dict[str, str]] = None
     legal_terms: Optional[Dict[str, str]] = None
     timestamp: datetime = Field(default_factory=datetime.now)
@@ -71,7 +73,27 @@ class PatentSearchResponse(BaseModel):
                 "sic_requirements": {
                     "formal_exam": "Requerido",
                     "publication": "Requerido - Art. 40 Decisión 486"
-                }
+                },
+                "recomendaciones": [
+                    {
+                        "tipo": "riesgo",
+                        "titulo": "Riesgo potencial de infracción",
+                        "descripcion": "La patente US10234567B2 tiene elementos muy similares a su búsqueda.",
+                        "icono": "warning"
+                    },
+                    {
+                        "tipo": "oportunidad",
+                        "titulo": "Oportunidad de diferenciación",
+                        "descripcion": "Considere enfocarse en el sistema de almacenamiento, un área menos cubierta.",
+                        "icono": "check"
+                    },
+                    {
+                        "tipo": "novedad",
+                        "titulo": "Área de novedad",
+                        "descripcion": "La integración con IA para optimización de energía parece un área poco explorada.",
+                        "icono": "info"
+                    }
+                ]
             }
         }
     }
@@ -85,7 +107,8 @@ class PatentAnalysisResponse(BaseModel):
     jurisdiction: str = Field(..., description="Jurisdicción")
     colombian_compliance: Dict[str, Any] = Field(..., description="Cumplimiento normativo")
     patentability_criteria: Dict[str, bool] = Field(..., description="Criterios de patentabilidad")
-    recommendations: List[str] = Field(..., description="Recomendaciones")
+    recomendaciones: List[Dict[str, str]] = Field(..., description="Recomendaciones de patentabilidad")
+    recommendations: List[str] = Field(default_factory=list, description="Recomendaciones")
     data_processing: Optional[Dict[str, str]] = None
     legal_terms: Optional[Dict[str, str]] = None
     timestamp: datetime = Field(default_factory=datetime.now)
@@ -102,7 +125,52 @@ class PatentAnalysisResponse(BaseModel):
                     "novedad": True,
                     "nivel_inventivo": True,
                     "aplicacion_industrial": True
-                }
+                },
+                "recomendaciones": [
+                    {
+                        "tipo": "riesgo",
+                        "titulo": "Riesgo potencial de infracción",
+                        "descripcion": "La patente US10234567B2 tiene elementos muy similares a su búsqueda.",
+                        "icono": "warning"
+                    },
+                    {
+                        "tipo": "oportunidad",
+                        "titulo": "Oportunidad de diferenciación",
+                        "descripcion": "Considere enfocarse en el sistema de almacenamiento, un área menos cubierta.",
+                        "icono": "check"
+                    },
+                    {
+                        "tipo": "novedad",
+                        "titulo": "Área de novedad",
+                        "descripcion": "La integración con IA para optimización de energía parece un área poco explorada.",
+                        "icono": "info"
+                    }
+                ]
+            }
+        }
+    }
+
+class PatentSearchV2Request(BaseModel):
+    search_terms: str = Field(..., description="Términos de búsqueda")
+    patent_type: str = Field(..., description="Tipo de patente")
+    filing_date_start: date = Field(..., description="Fecha de presentación (inicio)")
+    filing_date_end: date = Field(..., description="Fecha de presentación (fin)")
+    ipc_class: str = Field(..., description="Clasificación IPC")
+    invention_description: str = Field(..., description="Descripción de la invención")
+    inventors: List[str] = Field(..., description="Inventor(es)")
+    applicant: str = Field(..., description="Solicitante")
+
+    model_config = {
+        "json_schema_extra": {
+            "example": {
+                "search_terms": "Pollo Frisby",
+                "patent_type": "Todos los tipos",
+                "filing_date_start": "2024-01-27",
+                "filing_date_end": "2025-05-23",
+                "ipc_class": "GOFC",
+                "invention_description": "Se iba a robar la marca",
+                "inventors": ["Pedro Perez"],
+                "applicant": "Pollos Frisby Colombia"
             }
         }
     }
@@ -120,7 +188,8 @@ async def search_patents_endpoint(
     request: PatentSearchRequest = Body(
         ...,
         description="Parámetros de búsqueda de patentes"
-    )
+    ),
+    current_user: Dict[str, Any] = Depends(get_current_user)
 ):
     """Búsqueda de patentes con cumplimiento normativo colombiano"""
     try:
@@ -148,6 +217,10 @@ async def search_patents_endpoint(
             "fees": "Según resolución vigente SIC"
         }
         
+        # Ensure recomendaciones is present
+        if "recomendaciones" not in result:
+            result["recomendaciones"] = []
+        
         return PatentSearchResponse(**result)
     
     except Exception as e:
@@ -169,7 +242,10 @@ async def search_patents_endpoint(
     Decisión 486 de la CAN y los lineamientos de la SIC.
     """
 )
-async def analyze_patentability_endpoint(request: PatentAnalysisRequest):
+async def analyze_patentability_endpoint(
+    request: PatentAnalysisRequest,
+    current_user: Dict[str, Any] = Depends(get_current_user)
+):
     """Análisis de patentabilidad según normativa colombiana"""
     try:
         result = await analyze_patentability(
@@ -197,6 +273,14 @@ async def analyze_patentability_endpoint(request: PatentAnalysisRequest):
             "documentacion_prioridad": "Si aplica - Art. 9 Decisión 486"
         }
         
+        # Ensure recomendaciones is present
+        if "recomendaciones" not in result:
+            result["recomendaciones"] = []
+        
+        # Ensure recommendations field for backward compatibility
+        if "recommendations" not in result:
+            result["recommendations"] = []
+        
         return PatentAnalysisResponse(**result)
     
     except Exception as e:
@@ -215,7 +299,7 @@ async def analyze_patentability_endpoint(request: PatentAnalysisRequest):
     summary="Requisitos de Patentabilidad",
     description="Obtiene los requisitos de patentabilidad según la normativa colombiana"
 )
-async def get_patent_requirements():
+async def get_patent_requirements(current_user: Dict[str, Any] = Depends(get_current_user)):
     """Retorna los requisitos de patentabilidad según la SIC"""
     return {
         "requisitos_basicos": {
@@ -239,4 +323,53 @@ async def get_patent_requirements():
             "publicacion": "Art. 40 Decisión 486",
             "examen_fondo": "Art. 45 Decisión 486"
         }
-    } 
+    }
+
+@router.post(
+    "/search/v2",
+    response_model=PatentSearchResponse,
+    summary="Búsqueda de Patentes V2 (campos extendidos)",
+    description="""
+    Realiza una búsqueda de patentes usando todos los campos del formulario extendido.
+    """
+)
+async def search_patents_v2_endpoint(
+    request: PatentSearchV2Request = Body(
+        ...,
+        description="Parámetros de búsqueda de patentes (V2)"
+    ),
+    current_user: Dict[str, Any] = Depends(get_current_user)
+):
+    """Búsqueda de patentes con todos los campos del formulario V2"""
+    try:
+        # TODO: Implement search_patents_v2 in agents.patent_agent
+        from agents.patent_agent import search_patents_v2
+        result = await search_patents_v2(
+            search_terms=request.search_terms,
+            patent_type=request.patent_type,
+            filing_date_start=request.filing_date_start,
+            filing_date_end=request.filing_date_end,
+            ipc_class=request.ipc_class,
+            invention_description=request.invention_description,
+            inventors=request.inventors,
+            applicant=request.applicant
+        )
+        # Add SIC-specific requirements as before
+        result["sic_requirements"] = {
+            "formal_exam": "Requerido",
+            "publication": "Requerido - Art. 40 Decisión 486",
+            "substantive_exam": "Requerido - Art. 45 Decisión 486",
+            "fees": "Según resolución vigente SIC"
+        }
+        if "recomendaciones" not in result:
+            result["recomendaciones"] = []
+        return PatentSearchResponse(**result)
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail={
+                "error": str(e),
+                "message": "Error en la búsqueda de patentes (V2)",
+                "timestamp": datetime.now().isoformat()
+            }
+        ) 
