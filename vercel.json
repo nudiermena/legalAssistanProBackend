@@ -2,12 +2,11 @@
   "version": 2,
   "builds": [
     {
-      "src": "api/index-cors-fixed.py",
+      "src": "api/index-simple.py",
       "use": "@vercel/python",
       "config": {
         "maxLambdaSize": "250mb",
         "runtime": "python3.11",
-        "installCommand": "pip install fastapi uvicorn pydantic --no-cache-dir",
         "maxDuration": 30
       }
     }
@@ -15,7 +14,7 @@
   "routes": [
     {
       "src": "/(.*)",
-      "dest": "api/index-cors-fixed.py"
+      "dest": "api/index-simple.py"
     }
   ],
   "env": {
