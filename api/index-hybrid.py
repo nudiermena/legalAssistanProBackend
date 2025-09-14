@@ -21,14 +21,19 @@ app = FastAPI(
     version="1.0.0"
 )
 
+# Allowed frontend domains
+origins = [
+    "https://miasistentelegalia.com",   # your production frontend
+    "http://localhost:3000",            # for local testing (optional)
+]
+
 # Add CORS middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=origins,
     allow_credentials=True,
-    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    allow_headers=["*"],
-    expose_headers=["*"]
+    allow_methods=["*"],    # allows GET, POST, OPTIONS, etc.
+    allow_headers=["*"],    # allows Content-Type, Authorization, etc.
 )
 
 # Pydantic models
@@ -132,6 +137,7 @@ async def legal_chat_consulta(request: LegalChatRequest):
     """Legal chat consultation with agent support if available"""
     try:
         logger.info(f"Legal chat consultation request received for user: {request.user_id}")
+        logger.info(f"Request message: {request.message[:100]}...")  # Log first 100 chars
         
         if AGENTS_AVAILABLE:
             try:
@@ -142,7 +148,8 @@ async def legal_chat_consulta(request: LegalChatRequest):
                     "response": "Legal chat consultation completed with AI agent support",
                     "message": "AI-powered consultation completed",
                     "timestamp": datetime.now(),
-                    "agent_used": True
+                    "agent_used": True,
+                    "cors_status": "working"
                 }
             except Exception as e:
                 logger.warning(f"Legal chat agent failed, using fallback: {e}")
@@ -153,7 +160,8 @@ async def legal_chat_consulta(request: LegalChatRequest):
             "response": "Legal chat consultation endpoint is available. AI agents are not available in this deployment.",
             "message": "Basic consultation completed",
             "timestamp": datetime.now(),
-            "agent_used": False
+            "agent_used": False,
+            "cors_status": "working"
         }
         
     except Exception as e:
@@ -189,19 +197,12 @@ async def get_contract_status():
 async def login():
     return {"message": "Auth endpoint - hybrid mode", "status": "available"}
 
-# Add OPTIONS handler for CORS preflight
-@app.options("/{path:path}")
-async def options_handler(path: str):
-    """Handle CORS preflight requests"""
-    return JSONResponse(
-        status_code=200,
-        headers={
-            "Access-Control-Allow-Origin": "*",
-            "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
-            "Access-Control-Allow-Headers": "*",
-            "Access-Control-Allow-Credentials": "true"
-        }
-    )
+# CORS test endpoint
+@app.post("/cors-test")
+async def cors_test():
+    return {"message": "CORS working ✅", "timestamp": datetime.now()}
+
+# Note: OPTIONS requests are handled automatically by FastAPI + CORSMiddleware
 
 # Error handlers
 @app.exception_handler(404)
