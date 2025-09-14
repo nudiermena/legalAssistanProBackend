@@ -2,16 +2,12 @@ import os
 from typing import Optional, Any
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-
-# Conditional import for agno
-try:
-    from agno.storage.agent.postgres import PostgresAgentStorage
-    from agno.storage.sqlite import SqliteStorage
-    AGNO_AVAILABLE = True
-except ImportError:
-    AGNO_AVAILABLE = False
-    PostgresAgentStorage = None
-    SqliteStorage = None
+from config.agno_compatibility import (
+    AGNO_AVAILABLE, 
+    get_storage_class, 
+    get_sqlite_storage_class,
+    log_agno_status
+)
 
 def _resolve_database_url() -> str:
     """Resolve the Postgres connection URL.
@@ -50,10 +46,14 @@ def get_agent_storage(table_name: str = "agent_sessions") -> Optional[Any]:
     a session-specific table (e.g., "document_sessions"). Falls back
     gracefully to SQLite if configured or if the database is unavailable.
     """
-    # If agno is not available, return None (in-memory fallback)
+    # Log agno status
+    log_agno_status()
+    
+    # If agno is not available, return fallback storage
     if not AGNO_AVAILABLE:
-        print("Warning: agno not available, using in-memory storage")
-        return None
+        print("Warning: agno not available, using fallback storage")
+        FallbackStorage = get_storage_class()
+        return FallbackStorage(table_name=table_name)
 
     # Allow explicit SQLite fallback via env var
     use_sqlite_fallback = os.getenv("USE_SQLITE_FALLBACK", "false").lower() == "true"
@@ -62,6 +62,7 @@ def get_agent_storage(table_name: str = "agent_sessions") -> Optional[Any]:
     if use_sqlite_fallback:
         try:
             os.makedirs("tmp", exist_ok=True)
+            SqliteStorage = get_sqlite_storage_class()
             return SqliteStorage(table_name=table_name, db_file="tmp/agent_storage.db")
         except Exception as e:
             print(f"Warning: Could not initialize SQLite storage: {str(e)}")
@@ -73,6 +74,7 @@ def get_agent_storage(table_name: str = "agent_sessions") -> Optional[Any]:
         engine = create_engine(pg_url)
         # Initialize a session factory (kept for completeness; not used directly here)
         _ = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+        PostgresAgentStorage = get_storage_class()
         return PostgresAgentStorage(table_name=table_name, db_engine=engine)
     except Exception as e:
         print(f"Warning: Could not initialize Postgres storage: {str(e)}")
@@ -80,6 +82,7 @@ def get_agent_storage(table_name: str = "agent_sessions") -> Optional[Any]:
     # Fallback to SQLite if Postgres failed
     try:
         os.makedirs("tmp", exist_ok=True)
+        SqliteStorage = get_sqlite_storage_class()
         return SqliteStorage(table_name=table_name, db_file="tmp/agent_storage.db")
     except Exception as e:
         print(f"Warning: Could not initialize SQLite storage on fallback: {str(e)}")
