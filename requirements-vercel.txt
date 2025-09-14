@@ -1,26 +1,26 @@
 # Core FastAPI dependencies
-fastapi==0.115.12
-pydantic==2.11.4
-python-multipart==0.0.20
-httpx==0.28.1
-aiohttp==3.11.18
-python-dotenv==1.1.0
-uvicorn==0.34.2
+fastapi
+pydantic
+python-multipart
+httpx
+aiohttp
+python-dotenv
+uvicorn
 
 # Database dependencies
-sqlalchemy==2.0.40
-psycopg2-binary==2.9.10
-alembic==1.15.2
-asyncpg==0.30.0
+sqlalchemy
+psycopg2-binary
+alembic
+asyncpg
 
 # AI and ML dependencies (lightweight versions)
-mistralai==1.7.0
-tiktoken==0.9.0
+mistralai
+tiktoken
 groq
 
 # Document processing (lightweight alternatives)
-pypdf==5.4.0
-python-docx==1.1.0
+pypdf
+python-docx
 markdown
 reportlab
 
@@ -31,22 +31,22 @@ beautifulsoup4
 supabase
 
 # Security dependencies
-slowapi==0.1.9
-python-jose[cryptography]==3.3.0
-passlib[bcrypt]==1.7.4
-redis==5.0.1
-cryptography==41.0.7
-bcrypt==4.1.2
+slowapi
+python-jose[cryptography]
+passlib[bcrypt]
+redis
+cryptography
+bcrypt
 
 # Email dependencies
-resend==2.13.0
+resend
 
 # Cloud storage
-boto3==1.34.0
+boto3
 
 # Search (lightweight)
-googlesearch-python==1.3.0
-pycountry==24.6.1
+googlesearch-python
+pycountry
 
 # Agent framework
-agno>=0.1.0
+agno
