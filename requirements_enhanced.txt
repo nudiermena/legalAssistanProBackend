@@ -16,7 +16,7 @@ alembic>=1.12.0
 langchain>=0.1.0
 langchain-community>=0.0.10
 faiss-cpu>=1.7.0
-
+fastapi
 # Web Scraping and Document Processing
 beautifulsoup4>=4.12.0
 requests>=2.31.0
