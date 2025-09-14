@@ -1,11 +1,9 @@
-# Conditional import for agno
-try:
-    from agno.agent import Agent
-    AGNO_AVAILABLE = True
-except ImportError:
-    AGNO_AVAILABLE = False
-    Agent = None
-
+from config.agno_compatibility import (
+    AGNO_AVAILABLE,
+    get_agent_class,
+    get_google_search_tools_class,
+    log_agno_status
+)
 from config.database import get_agent_storage
 from config.ai_models import get_model
 from config.knowledge_base_integration import (
@@ -27,19 +25,18 @@ import json
 import logging
 import asyncio
 from fastapi import HTTPException
-# Conditional import for agno tools
-try:
-    from agno.tools.googlesearch import GoogleSearchTools
-    GOOGLE_SEARCH_AVAILABLE = True
-except ImportError:
-    GOOGLE_SEARCH_AVAILABLE = False
-    GoogleSearchTools = None
 import re
 
 logger = logging.getLogger(__name__)
 
 def create_contract_agent(user_id: str = None, session_id: str = None):
     """Create a specialized agent for contract review with enhanced memory capabilities"""
+    # Log agno status
+    log_agno_status()
+    
+    # Get the appropriate agent class
+    Agent = get_agent_class()
+    
     # If agno is not available, return a simple fallback object
     if not AGNO_AVAILABLE:
         logger.warning("agno not available, returning fallback contract agent")
@@ -67,7 +64,8 @@ def create_contract_agent(user_id: str = None, session_id: str = None):
     
     # Prepare tools list
     tools = []
-    if GOOGLE_SEARCH_AVAILABLE:
+    if AGNO_AVAILABLE:
+        GoogleSearchTools = get_google_search_tools_class()
         tools.append(GoogleSearchTools())
     
     return Agent(

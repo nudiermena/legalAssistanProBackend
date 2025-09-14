@@ -7,13 +7,17 @@ import os as os_module
 from typing import Dict, Any, Optional, List
 from datetime import datetime, timedelta
 import logging
-from agno.storage.agent.postgres import PostgresAgentStorage
-from agno.knowledge.pdf_url import PDFUrlKnowledgeBase
-from agno.knowledge.website import WebsiteKnowledgeBase
-from agno.knowledge.combined import CombinedKnowledgeBase
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from config.ai_models import get_embedder
+from config.agno_compatibility import (
+    AGNO_AVAILABLE,
+    get_storage_class,
+    get_sqlite_storage_class,
+    get_knowledge_base_class,
+    get_memory_vector_db_class,
+    log_agno_status
+)
 
 logger = logging.getLogger(__name__)
 
@@ -143,26 +147,34 @@ class EnhancedAgentConfig:
                 
                 # Create knowledge bases with Supabase vector database and Mistral embedder
                 # Following the pattern from Agno docs: knowledge_base = AgentKnowledge(vector_db=PgVector(...), embedder=MistralEmbedder())
-                pdf_knowledge = PDFUrlKnowledgeBase(
-                    urls=legal_sources["pdfs"],
-                    vector_db=self.vector_db,
-                    embedder=embedder
-                )
-                
-                website_knowledge = WebsiteKnowledgeBase(
-                    urls=legal_sources["websites"],
-                    vector_db=self.vector_db,
-                    embedder=embedder
-                )
-                
-                # Combine knowledge bases
-                self.knowledge_base = CombinedKnowledgeBase(
-                    sources=[pdf_knowledge, website_knowledge],
-                    vector_db=self.vector_db,
-                    embedder=embedder
-                )
-                
-                logger.info("Knowledge base initialized successfully with Supabase vector database and Mistral embedder following Agno docs pattern")
+                if AGNO_AVAILABLE:
+                    from agno.knowledge.pdf_url import PDFUrlKnowledgeBase
+                    from agno.knowledge.website import WebsiteKnowledgeBase
+                    from agno.knowledge.combined import CombinedKnowledgeBase
+                    
+                    pdf_knowledge = PDFUrlKnowledgeBase(
+                        urls=legal_sources["pdfs"],
+                        vector_db=self.vector_db,
+                        embedder=embedder
+                    )
+                    
+                    website_knowledge = WebsiteKnowledgeBase(
+                        urls=legal_sources["websites"],
+                        vector_db=self.vector_db,
+                        embedder=embedder
+                    )
+                    
+                    # Combine knowledge bases
+                    self.knowledge_base = CombinedKnowledgeBase(
+                        sources=[pdf_knowledge, website_knowledge],
+                        vector_db=self.vector_db,
+                        embedder=embedder
+                    )
+                    
+                    logger.info("Knowledge base initialized successfully with Supabase vector database and Mistral embedder following Agno docs pattern")
+                else:
+                    logger.warning("agno not available, knowledge base disabled")
+                    self.knowledge_base = None
             else:
                 self.knowledge_base = None
                 logger.warning("Vector database not available, knowledge base disabled")
@@ -173,14 +185,22 @@ class EnhancedAgentConfig:
     
     def initialize_storage_system(self, agent_name: str):
         """Initialize storage system for a specific agent"""
+        # Log agno status
+        log_agno_status()
+        
+        # If agno is not available, return fallback storage
+        if not AGNO_AVAILABLE:
+            logger.warning(f"agno not available, using fallback storage for {agent_name}")
+            FallbackStorage = get_storage_class()
+            return FallbackStorage(table_name="agent_sessions")
+            
         try:
             # Check if SQLite fallback is enabled
             if os_module.getenv("USE_SQLITE_FALLBACK", "true").lower() == "true":
-                from agno.storage.sqlite import SqliteStorage
-                
                 # Ensure tmp directory exists
                 os_module.makedirs("tmp", exist_ok=True)
                 
+                SqliteStorage = get_sqlite_storage_class()
                 storage = SqliteStorage(
                     table_name="agent_sessions",
                     db_file="tmp/agent_storage.db"
@@ -205,15 +225,18 @@ class EnhancedAgentConfig:
             if not supabase_url or not supabase_service_role_key:
                 logger.warning("Supabase credentials not found, using SQLite fallback")
                 # Fallback to SQLite for development
-                from agno.storage.sqlite import SqliteStorage
-                
-                storage = SqliteStorage(
-                    table_name="agent_sessions",
-                    db_file="tmp/agent_storage.db"
-                )
-                
-                logger.info(f"Storage system initialized for {agent_name} with SQLite")
-                return storage
+                if AGNO_AVAILABLE:
+                    SqliteStorage = get_sqlite_storage_class()
+                    storage = SqliteStorage(
+                        table_name="agent_sessions",
+                        db_file="tmp/agent_storage.db"
+                    )
+                    logger.info(f"Storage system initialized for {agent_name} with SQLite")
+                    return storage
+                else:
+                    logger.warning("agno not available, using fallback storage")
+                    FallbackStorage = get_storage_class()
+                    return FallbackStorage(table_name="agent_sessions")
             
             # Use the correct POSTGRES_URL from settings
             try:
@@ -238,10 +261,16 @@ class EnhancedAgentConfig:
                     conn.execute(text("SELECT 1"))
                 
                 # Initialize storage for session history
-                storage = PostgresAgentStorage(
-                    table_name="agent_sessions",
-                    db_engine=engine
-                )
+                if AGNO_AVAILABLE:
+                    PostgresAgentStorage = get_storage_class()
+                    storage = PostgresAgentStorage(
+                        table_name="agent_sessions",
+                        db_engine=engine
+                    )
+                else:
+                    logger.warning("agno not available, using fallback storage")
+                    FallbackStorage = get_storage_class()
+                    storage = FallbackStorage(table_name="agent_sessions")
                 
                 logger.info(f"Storage system initialized for {agent_name} with PostgreSQL")
                 return storage
