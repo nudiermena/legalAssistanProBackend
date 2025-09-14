@@ -1,4 +1,11 @@
-from agno.agent import Agent
+# Conditional import for agno
+try:
+    from agno.agent import Agent
+    AGNO_AVAILABLE = True
+except ImportError:
+    AGNO_AVAILABLE = False
+    Agent = None
+
 from config.database import get_agent_storage
 from config.ai_models import get_model
 from config.knowledge_base_integration import (
@@ -20,13 +27,24 @@ import json
 import logging
 import asyncio
 from fastapi import HTTPException
-from agno.tools.googlesearch import GoogleSearchTools
+# Conditional import for agno tools
+try:
+    from agno.tools.googlesearch import GoogleSearchTools
+    GOOGLE_SEARCH_AVAILABLE = True
+except ImportError:
+    GOOGLE_SEARCH_AVAILABLE = False
+    GoogleSearchTools = None
 import re
 
 logger = logging.getLogger(__name__)
 
-def create_contract_agent(user_id: str = None, session_id: str = None) -> Agent:
+def create_contract_agent(user_id: str = None, session_id: str = None):
     """Create a specialized agent for contract review with enhanced memory capabilities"""
+    # If agno is not available, return a simple fallback object
+    if not AGNO_AVAILABLE:
+        logger.warning("agno not available, returning fallback contract agent")
+        return SimpleContractAgent()
+    
     # Create knowledge base integration
     knowledge_integration = create_agent_knowledge_integration("contract_agent")
     
@@ -47,11 +65,16 @@ def create_contract_agent(user_id: str = None, session_id: str = None) -> Agent:
         else:
             logger.warning(f"Memory instance missing required interface, using agno default memory")
     
+    # Prepare tools list
+    tools = []
+    if GOOGLE_SEARCH_AVAILABLE:
+        tools.append(GoogleSearchTools())
+    
     return Agent(
         name="Analista de Contratos Avanzado con IA",
         role="Especialista en análisis contractual inteligente con capacidades avanzadas de memoria, base de conocimiento legal y cumplimiento colombiano",
         model=get_model("contract_review"),
-        tools=[GoogleSearchTools()],
+        tools=tools,
         knowledge=knowledge_integration,
         search_knowledge=True,
         storage=enhanced_config["storage"],
@@ -1305,3 +1328,27 @@ async def list_user_contract_files(
 # Implement decision explanation mechanisms
 # Add transparency in processing
 # Include user consent controls
+
+class SimpleContractAgent:
+    """Simple fallback contract agent when agno is not available"""
+    
+    def __init__(self):
+        self.name = "Analista de Contratos Simple"
+        self.role = "Analista de contratos básico"
+        logger.warning("Using SimpleContractAgent fallback - limited functionality")
+    
+    async def run(self, message: str, **kwargs):
+        """Simple fallback run method"""
+        logger.warning("SimpleContractAgent: Limited contract analysis functionality")
+        return {
+            "response": "Análisis de contrato básico no disponible en este momento. Por favor, contacte al administrador.",
+            "status": "limited_functionality"
+        }
+    
+    def __getattr__(self, name):
+        """Fallback for any missing methods"""
+        logger.warning(f"SimpleContractAgent: Method {name} not available")
+        return lambda *args, **kwargs: {
+            "response": "Funcionalidad no disponible en modo limitado",
+            "status": "limited_functionality"
+        }

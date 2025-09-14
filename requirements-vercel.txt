@@ -48,5 +48,5 @@ boto3==1.34.0
 googlesearch-python==1.3.0
 pycountry==24.6.1
 
-# Agent framework (if needed)
-# agno  # Comment out if not essential for deployment
+# Agent framework
+agno

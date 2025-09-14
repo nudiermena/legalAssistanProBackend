@@ -1,8 +1,17 @@
 import os
 from typing import Optional, Any
-from agno.storage.agent.postgres import PostgresAgentStorage
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
+
+# Conditional import for agno
+try:
+    from agno.storage.agent.postgres import PostgresAgentStorage
+    from agno.storage.sqlite import SqliteStorage
+    AGNO_AVAILABLE = True
+except ImportError:
+    AGNO_AVAILABLE = False
+    PostgresAgentStorage = None
+    SqliteStorage = None
 
 def _resolve_database_url() -> str:
     """Resolve the Postgres connection URL.
@@ -41,13 +50,17 @@ def get_agent_storage(table_name: str = "agent_sessions") -> Optional[Any]:
     a session-specific table (e.g., "document_sessions"). Falls back
     gracefully to SQLite if configured or if the database is unavailable.
     """
+    # If agno is not available, return None (in-memory fallback)
+    if not AGNO_AVAILABLE:
+        print("Warning: agno not available, using in-memory storage")
+        return None
+
     # Allow explicit SQLite fallback via env var
     use_sqlite_fallback = os.getenv("USE_SQLITE_FALLBACK", "false").lower() == "true"
 
     # If explicitly using SQLite fallback, return a SqliteStorage instance
     if use_sqlite_fallback:
         try:
-            from agno.storage.sqlite import SqliteStorage
             os.makedirs("tmp", exist_ok=True)
             return SqliteStorage(table_name=table_name, db_file="tmp/agent_storage.db")
         except Exception as e:
@@ -66,7 +79,6 @@ def get_agent_storage(table_name: str = "agent_sessions") -> Optional[Any]:
 
     # Fallback to SQLite if Postgres failed
     try:
-        from agno.storage.sqlite import SqliteStorage
         os.makedirs("tmp", exist_ok=True)
         return SqliteStorage(table_name=table_name, db_file="tmp/agent_storage.db")
     except Exception as e:
