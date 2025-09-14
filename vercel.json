@@ -2,7 +2,7 @@
   "version": 2,
   "builds": [
     {
-      "src": "api/index-simple.py",
+      "src": "api/index-basic.py",
       "use": "@vercel/python",
       "config": {
         "maxLambdaSize": "250mb",
@@ -14,7 +14,7 @@
   "routes": [
     {
       "src": "/(.*)",
-      "dest": "api/index-simple.py"
+      "dest": "api/index-basic.py"
     }
   ],
   "env": {
