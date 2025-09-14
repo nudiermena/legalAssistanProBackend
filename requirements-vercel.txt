@@ -6,7 +6,6 @@ httpx
 aiohttp
 python-dotenv
 uvicorn
-
 # Database dependencies
 sqlalchemy
 psycopg2-binary
