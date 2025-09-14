@@ -2,12 +2,12 @@
   "version": 2,
   "builds": [
     {
-      "src": "api/index-minimal.py",
+      "src": "api/index-hybrid.py",
       "use": "@vercel/python",
       "config": {
         "maxLambdaSize": "250mb",
         "runtime": "python3.11",
-        "installCommand": "pip install fastapi uvicorn pydantic --no-cache-dir",
+        "installCommand": "pip install -r requirements-hybrid.txt --no-cache-dir",
         "maxDuration": 30
       }
     }
@@ -15,7 +15,7 @@
   "routes": [
     {
       "src": "/(.*)",
-      "dest": "api/index-minimal.py"
+      "dest": "api/index-hybrid.py"
     }
   ],
   "env": {

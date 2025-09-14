@@ -121,6 +121,7 @@ frameworks/
 # Agent files (keep only essential)
 agents/
 !agents/contract_agent.py
+!agents/legal_chat.py
 
 # Config files (keep only essential)
 config/
@@ -130,6 +131,7 @@ config/
 !config/colombian_compliance.py
 !config/security.py
 !config/settings.py
+!config/enhanced_agent_config.py
 
 # Utils (keep only essential)
 utils/

@@ -21,8 +21,9 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
     allow_credentials=True,
-    allow_methods=["*"],
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allow_headers=["*"],
+    expose_headers=["*"]
 )
 
 # Pydantic models
@@ -101,10 +102,46 @@ async def get_contract_status():
         "timestamp": datetime.now()
     }
 
+# Legal chat endpoint
+@app.post("/legal-chat/consulta")
+async def legal_chat_consulta(request: dict):
+    """Legal chat consultation endpoint"""
+    try:
+        logger.info("Legal chat consultation request received")
+        
+        # Basic response for now
+        return {
+            "success": True,
+            "response": "Legal chat consultation endpoint is available in minimal mode. Full AI functionality will be restored soon.",
+            "message": "Basic consultation completed",
+            "timestamp": datetime.now()
+        }
+        
+    except Exception as e:
+        logger.error(f"Error in legal chat consultation: {str(e)}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Legal chat consultation failed: {str(e)}"
+        )
+
 # Auth endpoint
 @app.post("/auth/login")
 async def login():
     return {"message": "Auth endpoint - minimal mode", "status": "available"}
+
+# Add OPTIONS handler for CORS preflight
+@app.options("/{path:path}")
+async def options_handler(path: str):
+    """Handle CORS preflight requests"""
+    return JSONResponse(
+        status_code=200,
+        headers={
+            "Access-Control-Allow-Origin": "*",
+            "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
+            "Access-Control-Allow-Headers": "*",
+            "Access-Control-Allow-Credentials": "true"
+        }
+    )
 
 # Error handlers
 @app.exception_handler(404)
