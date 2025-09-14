@@ -145,6 +145,5 @@ models/
 middleware/
 !middleware/security.py
 
-# Endpoints (keep only essential)
+# Endpoints (exclude all - using inline endpoints)
 endpoints/
-!endpoints/contract_review_minimal.py

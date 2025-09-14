@@ -1,12 +1,13 @@
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
-import sys
-import os
-from pathlib import Path
+from pydantic import BaseModel
+from datetime import datetime
+import logging
 
-# Add the parent directory to the Python path
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 # Create FastAPI app
 app = FastAPI(
@@ -24,17 +25,16 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Import only essential routers
-try:
-    from endpoints import contract_review_minimal
-    app.include_router(contract_review_minimal.router)
-except ImportError as e:
-    print(f"Warning: Could not import contract review endpoint: {e}")
+# Pydantic models
+class ContractReviewRequest(BaseModel):
+    contract_text: str
+    user_id: str = None
 
-# Basic auth endpoint
-@app.post("/auth/login")
-async def login():
-    return {"message": "Auth endpoint - minimal mode", "status": "available"}
+class ContractReviewResponse(BaseModel):
+    success: bool
+    analysis: dict = None
+    message: str
+    timestamp: datetime
 
 # Root route
 @app.get("/")
@@ -45,6 +45,66 @@ async def root():
 @app.get("/health")
 async def health_check():
     return {"status": "healthy", "version": "minimal"}
+
+# Contract review endpoint
+@app.post("/contract/review", response_model=ContractReviewResponse)
+async def review_contract(request: ContractReviewRequest):
+    """Review a contract with basic analysis"""
+    try:
+        logger.info(f"Contract review request received for user: {request.user_id}")
+        
+        # Basic contract analysis
+        analysis = {
+            "contract_length": len(request.contract_text),
+            "word_count": len(request.contract_text.split()),
+            "analysis_status": "basic_analysis_completed",
+            "recommendations": [
+                "This is a basic analysis. For full functionality, please contact support.",
+                f"Contract length: {len(request.contract_text)} characters",
+                f"Word count: {len(request.contract_text.split())} words"
+            ],
+            "risk_level": "medium",
+            "key_clauses": ["Basic analysis only - full analysis not available in minimal mode"]
+        }
+        
+        return ContractReviewResponse(
+            success=True,
+            analysis=analysis,
+            message="Basic contract analysis completed successfully",
+            timestamp=datetime.now()
+        )
+        
+    except Exception as e:
+        logger.error(f"Error in contract review: {str(e)}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Contract review failed: {str(e)}"
+        )
+
+# Contract status endpoint
+@app.get("/contract/status")
+async def get_contract_status():
+    """Get the status of contract analysis service"""
+    return {
+        "status": "minimal_mode",
+        "message": "Contract analysis service is running in minimal mode",
+        "features_available": [
+            "Basic text analysis",
+            "Basic recommendations"
+        ],
+        "features_unavailable": [
+            "Advanced AI analysis",
+            "PDF form field extraction",
+            "Knowledge base integration",
+            "Memory system"
+        ],
+        "timestamp": datetime.now()
+    }
+
+# Auth endpoint
+@app.post("/auth/login")
+async def login():
+    return {"message": "Auth endpoint - minimal mode", "status": "available"}
 
 # Error handlers
 @app.exception_handler(404)
