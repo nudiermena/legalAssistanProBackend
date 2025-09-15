@@ -1,6 +1,6 @@
 import os
 from typing import Optional, Any
-from agno.storage.agent.postgres import PostgresAgentStorage
+from agno.storage.postgres import PostgresStorage
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
@@ -57,10 +57,8 @@ def get_agent_storage(table_name: str = "agent_sessions") -> Optional[Any]:
     # Try Postgres first
     pg_url = _resolve_database_url()
     try:
-        engine = create_engine(pg_url)
-        # Initialize a session factory (kept for completeness; not used directly here)
-        _ = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-        return PostgresAgentStorage(table_name=table_name, db_engine=engine)
+        # Use PostgresStorage from agno.storage.postgres
+        return PostgresStorage(table_name=table_name, db_url=pg_url)
     except Exception as e:
         print(f"Warning: Could not initialize Postgres storage: {str(e)}")
 
@@ -68,7 +66,7 @@ def get_agent_storage(table_name: str = "agent_sessions") -> Optional[Any]:
     try:
         from agno.storage.sqlite import SqliteStorage
         os.makedirs("tmp", exist_ok=True)
-        return SqliteStorage(table_name=table_name, db_file="tmp/agent_storage.db")
+        return SqliteStorage(db_file="tmp/agent_storage.db")
     except Exception as e:
         print(f"Warning: Could not initialize SQLite storage on fallback: {str(e)}")
         print("Falling back to in-memory storage")

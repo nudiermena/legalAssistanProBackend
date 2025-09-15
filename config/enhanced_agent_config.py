@@ -7,7 +7,7 @@ import os as os_module
 from typing import Dict, Any, Optional, List
 from datetime import datetime, timedelta
 import logging
-from agno.storage.agent.postgres import PostgresAgentStorage
+from agno.storage.postgres import PostgresStorage
 from agno.knowledge.pdf_url import PDFUrlKnowledgeBase
 from agno.knowledge.website import WebsiteKnowledgeBase
 from agno.knowledge.combined import CombinedKnowledgeBase
@@ -238,9 +238,9 @@ class EnhancedAgentConfig:
                     conn.execute(text("SELECT 1"))
                 
                 # Initialize storage for session history
-                storage = PostgresAgentStorage(
+                storage = PostgresStorage(
                     table_name="agent_sessions",
-                    db_engine=engine
+                    db_url=db_url
                 )
                 
                 logger.info(f"Storage system initialized for {agent_name} with PostgreSQL")
