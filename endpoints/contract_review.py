@@ -20,13 +20,7 @@ import json
 import io
 import tempfile
 import os
-# Conditional import for PyMuPDF (large dependency)
-try:
-    import fitz  # PyMuPDF
-    PYMUPDF_AVAILABLE = True
-except ImportError:
-    PYMUPDF_AVAILABLE = False
-    fitz = None
+import fitz  # PyMuPDF
 import shutil
 import mimetypes
 import httpx
@@ -695,66 +689,43 @@ async def save_upload_file(upload_file: UploadFile, folder: Path) -> Path:
         raise
 
 async def extract_pdf_data(file_path: Path) -> Dict[str, Any]:
-    """Extract both form fields and text content from PDF using PyMuPDF or fallback to pypdf."""
+    """Extract both form fields and text content from PDF using PyMuPDF."""
     form_data = {}
     text_content = []
     
-    if PYMUPDF_AVAILABLE:
-        try:
-            # Use PyMuPDF for advanced form field extraction
-            doc = fitz.open(file_path)
-            
-            # Extract form fields
-            for page in doc:
-                # Get form fields from page
-                fields = page.widgets()
-                for field in fields:
-                    if field.field_type == fitz.PDF_WIDGET_TYPE_TEXT:
-                        field_name = field.field_name
-                        field_value = field.field_value
-                        if field_value:
-                            form_data[field_name] = field_value
-                
-                # Extract text content
-                text = page.get_text()
-                if text.strip():
-                    text_content.append(text.strip())
-            
-            logger.info(f"Extracted {len(form_data)} form fields from {file_path.name} using PyMuPDF")
-            
-            return {
-                "form_data": form_data,
-                "text_content": "\n".join(text_content)
-            }
-            
-        except Exception as e:
-            logger.error(f"Error extracting PDF data with PyMuPDF from {file_path}: {str(e)}")
-            # Fall back to pypdf
-            pass
-        finally:
-            if 'doc' in locals():
-                doc.close()
-    
-    # Fallback to pypdf for text extraction only
     try:
-        with open(file_path, 'rb') as file:
-            pdf_reader = PdfReader(file)
+        # Open PDF from file
+        doc = fitz.open(file_path)
+        
+        # Extract form fields
+        for page in doc:
+            # Get form fields from page
+            fields = page.widgets()
+            for field in fields:
+                if field.field_type == fitz.PDF_WIDGET_TYPE_TEXT:
+                    field_name = field.field_name
+                    field_value = field.field_value
+                    if field_value:
+                        form_data[field_name] = field_value
             
-            for page in pdf_reader.pages:
-                text = page.extract_text()
-                if text.strip():
-                    text_content.append(text.strip())
-            
-            logger.info(f"Extracted text content from {file_path.name} using pypdf (form fields not available)")
-            
-            return {
-                "form_data": {},  # Form fields not available with pypdf
-                "text_content": "\n".join(text_content)
-            }
-            
+            # Extract text content
+            text = page.get_text()
+            if text.strip():
+                text_content.append(text.strip())
+        
+        logger.info(f"Extracted {len(form_data)} form fields from {file_path.name}")
+        
+        return {
+            "form_data": form_data,
+            "text_content": "\n".join(text_content)
+        }
+        
     except Exception as e:
         logger.error(f"Error extracting PDF data from {file_path}: {str(e)}")
         raise
+    finally:
+        if 'doc' in locals():
+            doc.close()
 
 def cleanup_old_files(max_age_hours: int = 24):
     """Clean up files older than specified hours."""
