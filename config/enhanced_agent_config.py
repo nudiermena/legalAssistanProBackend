@@ -7,13 +7,29 @@ import os as os_module
 from typing import Dict, Any, Optional, List
 from datetime import datetime, timedelta
 import logging
-from agno.storage.postgres import PostgresStorage
 from agno.knowledge.pdf_url import PDFUrlKnowledgeBase
 from agno.knowledge.website import WebsiteKnowledgeBase
 from agno.knowledge.combined import CombinedKnowledgeBase
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from config.ai_models import get_embedder
+
+# Try to import the correct Agno v2.0 API, fallback to older API if needed
+try:
+    from agno.db.postgres import PostgresDb
+    from agno.db.sqlite import SqliteDb
+    AGNO_V2_AVAILABLE = True
+except ImportError:
+    # Fallback to older API
+    try:
+        from agno.storage.postgres import PostgresStorage as PostgresDb
+        from agno.storage.sqlite import SqliteStorage as SqliteDb
+        AGNO_V2_AVAILABLE = False
+    except ImportError:
+        # No Agno database support available
+        PostgresDb = None
+        SqliteDb = None
+        AGNO_V2_AVAILABLE = False
 
 logger = logging.getLogger(__name__)
 
@@ -176,15 +192,17 @@ class EnhancedAgentConfig:
         try:
             # Check if SQLite fallback is enabled
             if os_module.getenv("USE_SQLITE_FALLBACK", "true").lower() == "true":
-                from agno.storage.sqlite import SqliteStorage
-                
+                if SqliteDb is None:
+                    logger.warning("No SQLite database support available")
+                    return None
+                    
                 # Ensure tmp directory exists
                 os_module.makedirs("tmp", exist_ok=True)
                 
-                storage = SqliteStorage(
-                    table_name="agent_sessions",
-                    db_file="tmp/agent_storage.db"
-                )
+                if AGNO_V2_AVAILABLE:
+                    storage = SqliteDb(db_file="tmp/agent_storage.db")
+                else:
+                    storage = SqliteDb(table_name="agent_sessions", db_file="tmp/agent_storage.db")
                 
                 logger.info(f"Storage system initialized for {agent_name} with SQLite")
                 return storage
@@ -205,12 +223,16 @@ class EnhancedAgentConfig:
             if not supabase_url or not supabase_service_role_key:
                 logger.warning("Supabase credentials not found, using SQLite fallback")
                 # Fallback to SQLite for development
-                from agno.storage.sqlite import SqliteStorage
+                if SqliteDb is None:
+                    logger.warning("No SQLite database support available")
+                    return None
+                    
+                os_module.makedirs("tmp", exist_ok=True)
                 
-                storage = SqliteStorage(
-                    table_name="agent_sessions",
-                    db_file="tmp/agent_storage.db"
-                )
+                if AGNO_V2_AVAILABLE:
+                    storage = SqliteDb(db_file="tmp/agent_storage.db")
+                else:
+                    storage = SqliteDb(table_name="agent_sessions", db_file="tmp/agent_storage.db")
                 
                 logger.info(f"Storage system initialized for {agent_name} with SQLite")
                 return storage
@@ -238,10 +260,14 @@ class EnhancedAgentConfig:
                     conn.execute(text("SELECT 1"))
                 
                 # Initialize storage for session history
-                storage = PostgresStorage(
-                    table_name="agent_sessions",
-                    db_url=db_url
-                )
+                if PostgresDb is None:
+                    logger.warning("No PostgreSQL database support available")
+                    return None
+                    
+                if AGNO_V2_AVAILABLE:
+                    storage = PostgresDb(db_url=db_url)
+                else:
+                    storage = PostgresDb(table_name="agent_sessions", db_url=db_url)
                 
                 logger.info(f"Storage system initialized for {agent_name} with PostgreSQL")
                 return storage
@@ -251,15 +277,17 @@ class EnhancedAgentConfig:
                 logger.info(f"Falling back to SQLite for {agent_name}")
                 
                 # Fallback to SQLite
-                from agno.storage.sqlite import SqliteStorage
-                
+                if SqliteDb is None:
+                    logger.warning("No SQLite database support available for fallback")
+                    return None
+                    
                 # Ensure tmp directory exists
                 os_module.makedirs("tmp", exist_ok=True)
                 
-                storage = SqliteStorage(
-                    table_name="agent_sessions",
-                    db_file="tmp/agent_storage.db"
-                )
+                if AGNO_V2_AVAILABLE:
+                    storage = SqliteDb(db_file="tmp/agent_storage.db")
+                else:
+                    storage = SqliteDb(table_name="agent_sessions", db_file="tmp/agent_storage.db")
                 
                 logger.info(f"Storage system initialized for {agent_name} with SQLite")
                 return storage
