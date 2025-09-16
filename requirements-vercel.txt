@@ -1,36 +1,6 @@
-# Core FastAPI dependencies (minimal)
+# Ultra-minimal requirements for Vercel deployment
 fastapi==0.115.6
 pydantic==2.11.4
 python-multipart==0.0.20
 uvicorn==0.34.2
-
-# HTTP client (minimal)
-httpx==0.28.1
-
-# Environment and configuration
 python-dotenv==1.1.0
-
-# AI dependencies (minimal)
-agno==1.1.6
-mistralai==1.7.0
-
-# Database dependencies (minimal)
-sqlalchemy==2.0.40
-psycopg2-binary==2.9.10
-
-# Supabase (minimal)
-supabase
-
-# Security dependencies (minimal)
-python-jose[cryptography]==3.3.0
-passlib[bcrypt]==1.7.4
-cryptography==41.0.7
-
-# Email validation
-email-validator==2.1.1
-
-# Email service
-resend==2.13.0
-
-# Utility libraries (minimal)
-tenacity
