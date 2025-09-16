@@ -11,7 +11,8 @@ agno == 1.1.6
 sqlalchemy==2.0.40
 psycopg2-binary==2.9.10
 # Add psycopg v3 driver required by SQLAlchemy/Agno when using 'postgresql+psycopg'
-psycopg[binary]==3.1.19
+# Use a version available on Render's build image
+psycopg[binary]>=3.2.2,<3.3
 alembic==1.15.2
 asyncpg==0.30.0
 mistralai==1.7.0
