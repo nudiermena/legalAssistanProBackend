@@ -1,0 +1,152 @@
+# Exclude development and testing files
+scripts/
+docs/
+legal_beto/
+tmp/
+agno/storage/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Exclude virtual environments
+venv/
+env/
+ENV/
+.venv/
+
+# Exclude IDE files
+.idea/
+.vscode/
+*.swp
+*.swo
+.DS_Store
+
+# Exclude environment files
+.env
+.env.local
+.env.development
+.env.test
+.env.production
+
+# Exclude logs
+*.log
+scraping_errors.log
+failed_urls.log
+
+# Exclude database files
+*.db
+*.sqlite3
+tmp/agent_storage.db
+tmp/memory.db
+
+# Exclude coverage and testing
+.coverage
+htmlcov/
+.tox/
+.nox/
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
+.hypothesis/
+.pytest_cache/
+
+# Exclude Jupyter notebooks
+.ipynb_checkpoints
+*.ipynb
+
+# Exclude specific agent files (as requested)
+agents/whistleblower_agent.py
+agents/patent_agent.py
+
+# Exclude knowledge base population scripts
+scripts/populate_knowledge_base.py
+scripts/populate_knowledge_base_fixed.py
+
+# Exclude all scripts folder content
+scripts/*.py
+
+# Exclude development and debugging files
+debug_*.py
+test_*.py
+*_test.py
+check_*.py
+setup_*.py
+generate_*.py
+decode_*.py
+get_*.py
+fix_*.py
+collect_*.py
+interactive_*.py
+option2_*.py
+train_*.py
+postgres_*.py
+
+# Exclude Docker files (not needed for Vercel)
+Dockerfile
+docker-compose.yaml
+docker-compose.yml
+
+# Exclude migration files
+migrations/
+*.sql
+
+# Exclude static files that aren't needed for API
+static/
+templates/
+
+# Exclude documentation
+README.md
+*.md
+docs/
+
+# Exclude example files
+env.example
+
+# Exclude local development files
+*.local
+local_settings.py
+Thumbs.db
+
+# Exclude large data files
+*.csv
+*.json
+data_pipeline_output/
+processed_legal_documents*.json
+
+# Exclude framework-specific files
+frameworks/
+
+# Exclude memory and storage
+memory_schema.sql
+knowledge_base_schema.sql
+supabase_setup.sql
+fix_legal_documents_table.sql
+
+# Exclude specific large files
+enhanced_knowledge_populator.py
+crawl_jurisprudence_and_ingest.py
+legal_web_scraper.py
+headless_browser_scraper.py
+data_processing_pipeline.py
+master_data_pipeline.py
+fix_data_processing.py

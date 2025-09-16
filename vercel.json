@@ -6,7 +6,17 @@
       "use": "@vercel/python",
       "config": {
         "maxLambdaSize": "250mb",
-        "runtime": "python3.11"
+        "runtime": "python3.11",
+        "includeFiles": [
+          "endpoints/**",
+          "agents/**",
+          "config/**",
+          "models/**",
+          "utils/**",
+          "middleware/**",
+          "frameworks/**",
+          "requirements-vercel.txt"
+        ]
       }
     }
   ],
@@ -22,5 +32,10 @@
   ],
   "env": {
     "PYTHONPATH": "."
+  },
+  "functions": {
+    "api/index.py": {
+      "maxDuration": 30
+    }
   }
 }

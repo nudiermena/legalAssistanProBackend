@@ -2,7 +2,6 @@ from fastapi import APIRouter, HTTPException, Body, Depends
 from typing import List, Optional, Dict, Any, Union
 from pydantic import BaseModel, Field, ConfigDict
 from datetime import datetime, date
-from agents.patent_agent import search_patents, analyze_patentability
 from config.colombian_compliance import ColombianLegalFramework
 from endpoints.auth import get_current_user
 
@@ -193,13 +192,24 @@ async def search_patents_endpoint(
 ):
     """Búsqueda de patentes con cumplimiento normativo colombiano"""
     try:
-        result = await search_patents(
-            invention_description=request.invention_description,
-            jurisdiction=request.jurisdiction,
-            technical_field=request.technical_field,
-            data_processing=request.data_processing,
-            legal_terms=request.legal_terms
-        )
+        # Simplified search without the excluded agent
+        result = {
+            "search_results": f"Búsqueda de patentes para: {request.invention_description}",
+            "invention_description": request.invention_description,
+            "jurisdiction": request.jurisdiction,
+            "colombian_compliance": {
+                "constitutional_principles": ColombianLegalFramework.CONSTITUTIONAL_PRINCIPLES,
+                "search_date": datetime.now().isoformat()
+            },
+            "recomendaciones": [
+                {
+                    "tipo": "info",
+                    "titulo": "Búsqueda simplificada",
+                    "descripcion": "Esta es una versión simplificada para deployment en Vercel",
+                    "icono": "info"
+                }
+            ]
+        }
         
         # Enhance with Colombian IP law requirements
         result["colombian_compliance"].update({
@@ -248,14 +258,25 @@ async def analyze_patentability_endpoint(
 ):
     """Análisis de patentabilidad según normativa colombiana"""
     try:
-        result = await analyze_patentability(
-            invention_description=request.invention_description,
-            prior_art=request.prior_art,
-            jurisdiction=request.jurisdiction,
-            technical_field=request.technical_field,
-            data_processing=request.data_processing,
-            legal_terms=request.legal_terms
-        )
+        # Simplified analysis without the excluded agent
+        result = {
+            "analysis": f"Análisis de patentabilidad para: {request.invention_description}",
+            "invention_description": request.invention_description,
+            "prior_art": request.prior_art,
+            "jurisdiction": request.jurisdiction,
+            "colombian_compliance": {
+                "constitutional_principles": ColombianLegalFramework.CONSTITUTIONAL_PRINCIPLES,
+                "analysis_date": datetime.now().isoformat()
+            },
+            "recomendaciones": [
+                {
+                    "tipo": "info",
+                    "titulo": "Análisis simplificado",
+                    "descripcion": "Esta es una versión simplificada para deployment en Vercel",
+                    "icono": "info"
+                }
+            ]
+        }
         
         # Add patentability criteria assessment
         result["patentability_criteria"] = {
@@ -342,18 +363,24 @@ async def search_patents_v2_endpoint(
 ):
     """Búsqueda de patentes con todos los campos del formulario V2"""
     try:
-        # TODO: Implement search_patents_v2 in agents.patent_agent
-        from agents.patent_agent import search_patents_v2
-        result = await search_patents_v2(
-            search_terms=request.search_terms,
-            patent_type=request.patent_type,
-            filing_date_start=request.filing_date_start,
-            filing_date_end=request.filing_date_end,
-            ipc_class=request.ipc_class,
-            invention_description=request.invention_description,
-            inventors=request.inventors,
-            applicant=request.applicant
-        )
+        # Simplified V2 search without the excluded agent
+        result = {
+            "search_results": f"Búsqueda V2 de patentes para: {request.invention_description}",
+            "invention_description": request.invention_description,
+            "jurisdiction": "Colombia",
+            "colombian_compliance": {
+                "constitutional_principles": ColombianLegalFramework.CONSTITUTIONAL_PRINCIPLES,
+                "search_date": datetime.now().isoformat()
+            },
+            "recomendaciones": [
+                {
+                    "tipo": "info",
+                    "titulo": "Búsqueda V2 simplificada",
+                    "descripcion": "Esta es una versión simplificada para deployment en Vercel",
+                    "icono": "info"
+                }
+            ]
+        }
         # Add SIC-specific requirements as before
         result["sic_requirements"] = {
             "formal_exam": "Requerido",
