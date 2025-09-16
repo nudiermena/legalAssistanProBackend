@@ -34,6 +34,9 @@ cryptography==41.0.7
 bcrypt==4.1.2
 python-magic==0.4.27
 
+# Email validation for Pydantic EmailStr
+email-validator==2.1.1
+
 # Email dependencies
 resend==2.13.0
 
