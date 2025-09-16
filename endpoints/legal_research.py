@@ -177,20 +177,6 @@ import re
 
 router = APIRouter(prefix="/dashboard/legal-research", tags=["research"])
 
-@router.get("/", response_class=FileResponse)
-async def get_legal_research_page(current_user: Dict[str, Any] = Depends(get_current_user)):
-    """Serves the legal research HTML page"""
-    try:
-        html_path = Path("static/legal-research.html")
-        if not html_path.exists():
-            raise HTTPException(status_code=404, detail="HTML file not found")
-        return FileResponse(html_path)
-    except Exception as e:
-        raise HTTPException(
-            status_code=500,
-            detail=f"Error serving legal research page: {str(e)}"
-        )
-
 class LegalResearchRequest(BaseModel):
     research_topic: str = Field(
         ..., 

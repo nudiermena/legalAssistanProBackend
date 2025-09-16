@@ -1,6 +1,5 @@
 from fastapi import APIRouter, Request, HTTPException, Depends
-from fastapi.responses import HTMLResponse, JSONResponse, FileResponse
-from fastapi.templating import Jinja2Templates
+from fastapi.responses import JSONResponse, FileResponse
 from pathlib import Path
 from datetime import datetime, timedelta
 from endpoints.auth import get_current_user
@@ -10,21 +9,7 @@ from config.ai_models import health_check, get_model_status
 
 router = APIRouter(prefix="/dashboard", tags=["dashboard"])
 
-@router.get("/", response_class=FileResponse)
-async def get_dashboard_page(current_user: Dict[str, Any] = Depends(get_current_user)):
-    """
-    Render the dashboard page
-    """
-    try:
-        html_path = Path("static/dashboard.html")
-        if not html_path.exists():
-            raise HTTPException(status_code=404, detail="HTML file not found")
-        return FileResponse(html_path)
-    except Exception as e:
-        raise HTTPException(
-            status_code=500,
-            detail=f"Error serving legal research page: {str(e)}"
-        )
+# Removed HTML dashboard page route
 
 @router.get("/api/dashboard-stats")
 async def get_dashboard_stats(current_user: Dict[str, Any] = Depends(get_current_user)):
@@ -156,34 +141,6 @@ async def ai_health_check():
             "timestamp": datetime.utcnow().isoformat()
         }
 
-@router.get("/profile", response_class=FileResponse)
-async def get_profile_page(current_user: Dict[str, Any] = Depends(get_current_user)):
-    """
-    Render the profile page
-    """
-    try:
-        html_path = Path("static/profile.html")
-        if not html_path.exists():
-            raise HTTPException(status_code=404, detail="HTML file not found")
-        return FileResponse(html_path)
-    except Exception as e:
-        raise HTTPException(
-            status_code=500,
-            detail=f"Error serving profile page: {str(e)}"
-        )
+# Removed HTML profile page route
 
-@router.get("/settings", response_class=FileResponse)
-async def get_settings_page(current_user: Dict[str, Any] = Depends(get_current_user)):
-    """
-    Render the settings page
-    """
-    try:
-        html_path = Path("static/settings.html")
-        if not html_path.exists():
-            raise HTTPException(status_code=404, detail="HTML file not found")
-        return FileResponse(html_path)
-    except Exception as e:
-        raise HTTPException(
-            status_code=500,
-            detail=f"Error serving settings page: {str(e)}"
-        ) 
+# Removed HTML settings page route

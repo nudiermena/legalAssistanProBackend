@@ -1,5 +1,5 @@
 from fastapi import APIRouter, HTTPException, Body, Depends, Request, BackgroundTasks
-from fastapi.responses import HTMLResponse, FileResponse
+from fastapi.responses import FileResponse
 from typing import List, Optional, Dict, Any, Union, Literal
 from pydantic import BaseModel, Field, ConfigDict, validator
 from datetime import datetime, timezone
@@ -231,33 +231,7 @@ def create_word_document(content: str, document_type: str) -> BytesIO:
     doc_io.seek(0)
     return doc_io
 
-@router.get(
-    "/dashboard/document-drafting/",
-    response_class=HTMLResponse,
-    summary="Interface de Redacción de Documentos",
-    description="Sirve la interfaz web para redacción de documentos"
-)
-async def get_document_drafting_interface(
-    request: Request,
-    current_user: Dict[str, Any] = Depends(get_current_user)
-):
-    """Serve the document drafting interface"""
-    static_dir = Path("static")
-    html_file = static_dir / "document-drafting.html"
-    
-    if not html_file.exists():
-        raise HTTPException(
-            status_code=404,
-            detail="Document drafting interface not found"
-        )
-    
-    try:
-        return HTMLResponse(content=html_file.read_text(encoding="utf-8"))
-    except Exception as e:
-        raise HTTPException(
-            status_code=500,
-            detail=f"Error reading document drafting interface: {str(e)}"
-        )
+# Removed HTML document drafting interface route
 
 @router.post(
     "/api/v1/draft-custom-document",

@@ -1,7 +1,5 @@
 from fastapi import APIRouter, HTTPException, Body, Depends, Request
-from fastapi.responses import HTMLResponse, JSONResponse, FileResponse
-from fastapi.templating import Jinja2Templates
-from pathlib import Path
+from fastapi.responses import JSONResponse
 from typing import List, Optional, Dict, Any, Union
 from pydantic import BaseModel, Field, ConfigDict
 from datetime import datetime
@@ -12,7 +10,6 @@ from agents.case_prediction_agent import (
     create_case_prediction_agent
 )
 from frameworks.colombian_legal_framework import ColombianLegalFramework
-from fastapi.staticfiles import StaticFiles
 from endpoints.auth import get_current_user
 import os
 import json
@@ -20,19 +17,7 @@ from models.case_prediction import CasePredictionRequest
 
 router = APIRouter(prefix="/dashboard/case-prediction", tags=["case_prediction"])
 
-@router.get("/", response_class=FileResponse)
-async def get_case_prediction_page(current_user: Dict[str, Any] = Depends(get_current_user)):
-    """Serves the case prediction HTML page"""
-    try:
-        html_path = Path("static/case-prediction.html")
-        if not html_path.exists():
-            raise HTTPException(status_code=404, detail="HTML file not found")
-        return FileResponse(html_path)
-    except Exception as e:
-        raise HTTPException(
-            status_code=500,
-            detail=f"Error serving legal research page: {str(e)}"
-        )
+# Removed HTML case prediction page route
         
 class CasePredictionResponse(BaseModel):
     model_config = ConfigDict(arbitrary_types_allowed=True)

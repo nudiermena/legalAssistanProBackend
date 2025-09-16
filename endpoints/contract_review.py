@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Body, HTTPException, Depends, Request, File, UploadFile, Form, BackgroundTasks
-from fastapi.responses import HTMLResponse, JSONResponse, FileResponse
+from fastapi.responses import JSONResponse, FileResponse
 from typing import List, Optional, Dict, Any, Tuple
 from pydantic import BaseModel, Field, ValidationError, field_validator
 from datetime import datetime
@@ -1411,60 +1411,7 @@ def assess_contract_risks(
         "impacto_potencial": "por_evaluar"
     } 
 
-@router.get("/dashboard/contract-review", response_class=HTMLResponse)
-async def get_contract_analysis_interface(
-    request: Request,
-    current_user: Dict[str, Any] = Depends(get_current_user)
-):
-    """Serve the contract analysis interface"""
-    static_dir = Path("static")
-    html_file = static_dir / "contract-analysis.html"
-    
-    # Create the HTML file if it doesn't exist
-    if not html_file.exists():
-        html_content = """
-<!DOCTYPE html>
-<html lang="es">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Análisis de Contratos - MiAsistenteLegalIA</title>
-    <!-- Your existing HTML content -->
-  </head>
-  <body>
-    <div class="container mt-4">
-        <div class="card">
-            <div class="card-body">
-                <h5 class="card-title">Análisis de Contrato</h5>
-                <form id="uploadForm" enctype="multipart/form-data">
-                    <div class="form-group">
-                        <input type="file" 
-                               id="fileInput" 
-                               name="file"
-                               accept="application/pdf" 
-                               style="display: none;"
-                               onchange="handleFileSelect(this)">
-                        <button type="button" 
-                                class="btn btn-primary" 
-                                onclick="document.getElementById('fileInput').click()">
-                            Seleccionar PDF
-                        </button>
-                    </div>
-                </form>
-                <div class="loading-container mt-3" style="display: none;"></div>
-                <div class="error-container mt-3" style="display: none;"></div>
-                <div class="results-container mt-3" style="display: none;"></div>
-            </div>
-        </div>
-    </div>
-  </body>
-</html>
-"""
-        # Create static directory if it doesn't exist
-        static_dir.mkdir(parents=True, exist_ok=True)
-        html_file.write_text(html_content, encoding="utf-8")
-    
-    return HTMLResponse(content=html_file.read_text(encoding="utf-8"))
+# Removed HTML contract analysis interface route
 
 @router.post("/contract-review/upload-analyze")
 async def upload_and_analyze_contract(

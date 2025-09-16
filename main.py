@@ -43,7 +43,6 @@ from endpoints.security_dashboard import router as security_router
 from endpoints.auth import router as auth_router
 from endpoints.example_protected_endpoint import router as protected_router
 from endpoints.invitation import router as invitation_router
-from fastapi.templating import Jinja2Templates
 import os
 import logging
 from dotenv import load_dotenv
@@ -96,8 +95,7 @@ BASE_DIR = Path(__file__).resolve().parent
 logger.debug(f"Base directory: {BASE_DIR}")
 logger.debug(f"Static directory: {BASE_DIR / 'static'}")
 
-# Set up templates
-templates = Jinja2Templates(directory=str(BASE_DIR / "static"))
+# Removed Jinja2Templates setup (no server-side HTML rendering)
 
 # Mount static files - make sure the directories exist
 app.mount(

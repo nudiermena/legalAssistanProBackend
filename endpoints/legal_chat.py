@@ -1,5 +1,5 @@
-from fastapi import APIRouter, HTTPException, Body, Depends, Request
-from fastapi.responses import HTMLResponse, StreamingResponse, JSONResponse
+from fastapi import APIRouter, HTTPException, Body, Depends
+from fastapi.responses import JSONResponse
 from typing import Optional, List, Dict, Any, Union
 from pydantic import BaseModel, Field, ConfigDict
 from datetime import datetime
@@ -370,27 +370,7 @@ def get_doctrine_from_database(practice_area: Optional[str]) -> List[str]:
     # Implement database lookup here
     pass
 
-# Add this new endpoint to serve the chat interface
-@router.get("/", response_class=HTMLResponse)
-async def get_chat_interface(
-    request: Request,
-    current_user: Dict[str, Any] = Depends(get_current_user)
-):
-    """Serve the chat interface"""
-    static_dir = Path("static")
-    html_file = static_dir / "index.html"
-    
-    # Create the HTML file if it doesn't exist
-    if not html_file.exists():
-        html_content = """
-<!DOCTYPE html>
-<html lang="es">
-<!-- Your HTML content from the previous response -->
-</html>
-"""
-        html_file.write_text(html_content, encoding="utf-8")
-    
-    return HTMLResponse(content=html_file.read_text(encoding="utf-8"))
+# Removed HTML chat interface route
 
 @router.post(
     "/v2/consulta",
