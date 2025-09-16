@@ -10,12 +10,12 @@
         "maxDuration": 30,
         "includeFiles": [
           "endpoints/**",
-          "agents/**",
-          "config/**",
-          "models/**",
-          "utils/**",
-          "middleware/**",
-          "frameworks/**",
+          "config/ai_models.py",
+          "config/database.py",
+          "config/colombian_compliance.py",
+          "config/security.py",
+          "config/settings.py",
+          "config/supabase.py",
           "requirements-vercel.txt"
         ]
       }

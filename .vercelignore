@@ -78,6 +78,20 @@ coverage.xml
 agents/whistleblower_agent.py
 agents/patent_agent.py
 
+# Exclude additional large agent files
+agents/enhanced_contract_agent.py
+agents/enhanced_legal_agent.py
+agents/enhanced_legal_research_agent.py
+agents/legal_research_agent.py
+agents/case_prediction_agent.py
+agents/compliance_agent.py
+agents/regulatory_agent.py
+agents/document_drafting_agent.py
+agents/demand_letter_agent.py
+agents/legal_diagnosis_agent.py
+agents/chatbot_agent.py
+agents/contract_agent.py
+
 # Exclude knowledge base population scripts
 scripts/populate_knowledge_base.py
 scripts/populate_knowledge_base_fixed.py
@@ -150,3 +164,36 @@ headless_browser_scraper.py
 data_processing_pipeline.py
 master_data_pipeline.py
 fix_data_processing.py
+
+# Exclude large config files
+config/knowledge_base_integration.py
+config/supabase_knowledge_base.py
+config/enhanced_agent_config.py
+config/ai_fallback_config.py
+config/force_mistral_embedder.py
+config/memory_manager.py
+config/agno_embedder_config.py
+
+# Exclude large utility files
+utils/pdf_processor.py
+utils/pdf_generator.py
+utils/security_monitor.py
+utils/security_validators.py
+utils/r2_storage.py
+
+# Exclude models that might be large
+models/case_prediction.py
+models/past_case.py
+
+# Exclude middleware
+middleware/
+
+# Exclude additional large files
+*.png
+*.jpg
+*.jpeg
+*.gif
+*.pdf
+*.docx
+*.xlsx
+*.pptx

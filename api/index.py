@@ -24,32 +24,22 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Import routers after app creation
+# Import only essential routers for minimal deployment
 from endpoints import (
     contract_review,
     legal_research,
-    regulatory_analysis,
     legal_chat,
     patent_search,
-    document_drafting,
     whistleblower_analysis,
-    demand_letter,
-    legal_diagnosis,
-    case_prediction,
     dashboard
 )
 
-# Include routers
+# Include only essential routers
 app.include_router(contract_review.router)
 app.include_router(legal_research.router)
-app.include_router(regulatory_analysis.router)
 app.include_router(legal_chat.router)
 app.include_router(patent_search.router)
-app.include_router(document_drafting.router)
 app.include_router(whistleblower_analysis.router)
-app.include_router(demand_letter.router)
-app.include_router(legal_diagnosis.router)
-app.include_router(case_prediction.router)
 app.include_router(dashboard.router)
 
 # Root route
