@@ -15,11 +15,48 @@ from supabase import create_client, Client
 
 # Use the correct agno imports that are actually available
 from agno.vectordb.pgvector import PgVector, SearchType
-from agno.knowledge.pdf_url import PDFUrlKnowledgeBase
-from agno.knowledge.website import WebsiteKnowledgeBase
-from agno.knowledge.combined import CombinedKnowledgeBase
-from agno.knowledge.text import TextKnowledgeBase
-from agno.knowledge.docx import DocxKnowledgeBase
+
+# Try to import knowledge modules with fallback
+try:
+    from agno.knowledge.pdf_url import PDFUrlKnowledgeBase
+    from agno.knowledge.website import WebsiteKnowledgeBase
+    from agno.knowledge.combined import CombinedKnowledgeBase
+    from agno.knowledge.text import TextKnowledgeBase
+    from agno.knowledge.docx import DocxKnowledgeBase
+    KNOWLEDGE_MODULES_AVAILABLE = True
+except ImportError:
+    # Fallback: try alternative import paths or create dummy classes
+    try:
+        # Try alternative import paths if they exist
+        from agno.knowledge.pdf import PDFKnowledgeBase as PDFUrlKnowledgeBase
+        from agno.knowledge.url import URLKnowledgeBase as WebsiteKnowledgeBase
+        from agno.knowledge.combined import CombinedKnowledgeBase
+        from agno.knowledge.text import TextKnowledgeBase
+        from agno.knowledge.docx import DocxKnowledgeBase
+        KNOWLEDGE_MODULES_AVAILABLE = True
+    except ImportError:
+        # Create dummy classes if knowledge modules are not available
+        class PDFUrlKnowledgeBase:
+            def __init__(self, *args, **kwargs):
+                raise NotImplementedError("PDFUrlKnowledgeBase not available in this Agno version")
+        
+        class WebsiteKnowledgeBase:
+            def __init__(self, *args, **kwargs):
+                raise NotImplementedError("WebsiteKnowledgeBase not available in this Agno version")
+        
+        class CombinedKnowledgeBase:
+            def __init__(self, *args, **kwargs):
+                raise NotImplementedError("CombinedKnowledgeBase not available in this Agno version")
+        
+        class TextKnowledgeBase:
+            def __init__(self, *args, **kwargs):
+                raise NotImplementedError("TextKnowledgeBase not available in this Agno version")
+        
+        class DocxKnowledgeBase:
+            def __init__(self, *args, **kwargs):
+                raise NotImplementedError("DocxKnowledgeBase not available in this Agno version")
+        
+        KNOWLEDGE_MODULES_AVAILABLE = False
 
 # Add Mistral import
 from mistralai import Mistral
@@ -299,50 +336,57 @@ class SupabaseLegalKnowledgeBase:
         
         # Initialize knowledge bases with explicit Mistral embedder
         try:
-            
-            # Create knowledge bases with explicit embedder parameter
-            self.pdf_knowledge = PDFUrlKnowledgeBase(
-                urls=legal_sources["pdfs"],
-                vector_db=self.vector_db,
-                embedder=mistral_embedder  # Explicitly pass embedder
-            )
-            
-            self.website_knowledge = WebsiteKnowledgeBase(
-                urls=legal_sources["websites"],
-                vector_db=self.vector_db,
-                embedder=mistral_embedder  # Explicitly pass embedder
-            )
-            
-            self.combined_knowledge = CombinedKnowledgeBase(
-                sources=[self.pdf_knowledge, self.website_knowledge],
-                vector_db=self.vector_db,
-                embedder=mistral_embedder  # Explicitly pass embedder
-            )
+            if not KNOWLEDGE_MODULES_AVAILABLE:
+                logger.warning("Knowledge modules not available, using mock knowledge bases")
+                self.pdf_knowledge = None
+                self.website_knowledge = None
+                self.combined_knowledge = None
+            else:
+                # Create knowledge bases with explicit embedder parameter
+                self.pdf_knowledge = PDFUrlKnowledgeBase(
+                    urls=legal_sources["pdfs"],
+                    vector_db=self.vector_db,
+                    embedder=mistral_embedder  # Explicitly pass embedder
+                )
+                
+                self.website_knowledge = WebsiteKnowledgeBase(
+                    urls=legal_sources["websites"],
+                    vector_db=self.vector_db,
+                    embedder=mistral_embedder  # Explicitly pass embedder
+                )
+                
+                self.combined_knowledge = CombinedKnowledgeBase(
+                    sources=[self.pdf_knowledge, self.website_knowledge],
+                    vector_db=self.vector_db,
+                    embedder=mistral_embedder  # Explicitly pass embedder
+                )
             
             # Initialize text knowledge base with explicit embedder
-            # Create a temporary file with the text documents for TextKnowledgeBase
-            import tempfile
-            import os
-            
-            # Create a temporary directory for text documents
-            temp_dir = tempfile.mkdtemp()
-            text_file_path = os_module.path.join(temp_dir, "legal_documents.txt")
-            
-            # Write text documents to file
-            with open(text_file_path, 'w', encoding='utf-8') as f:
-                for doc in text_documents:
-                    f.write(doc + "\n\n")
-            
-            self.text_knowledge = TextKnowledgeBase(
-                path=text_file_path,  # Use path instead of texts
-                vector_db=self.vector_db,
-                embedder=mistral_embedder  # Explicitly pass embedder
-            )
+            if KNOWLEDGE_MODULES_AVAILABLE:
+                # Create a temporary file with the text documents for TextKnowledgeBase
+                import tempfile
+                import os
+                
+                # Create a temporary directory for text documents
+                temp_dir = tempfile.mkdtemp()
+                text_file_path = os_module.path.join(temp_dir, "legal_documents.txt")
+                
+                # Write text documents to file
+                with open(text_file_path, 'w', encoding='utf-8') as f:
+                    for doc in text_documents:
+                        f.write(doc + "\n\n")
+                
+                self.text_knowledge = TextKnowledgeBase(
+                    path=text_file_path,  # Use path instead of texts
+                    vector_db=self.vector_db,
+                    embedder=mistral_embedder  # Explicitly pass embedder
+                )
+            else:
+                self.text_knowledge = None
             
             # Initialize DOCX knowledge base with explicit embedder
-            if hasattr(self, 'db_url') and self.db_url:
+            if KNOWLEDGE_MODULES_AVAILABLE and hasattr(self, 'db_url') and self.db_url:
                 try:
-                    from agno.knowledge.docx import DocxKnowledgeBase
                     self.docx_knowledge = DocxKnowledgeBase(
                         folder_path="documents",
                         vector_db=self.vector_db,
