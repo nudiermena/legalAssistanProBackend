@@ -32,6 +32,7 @@ python-multipart==0.0.20
 redis==5.0.1
 cryptography==41.0.7
 bcrypt==4.1.2
+python-magic==0.4.27
 
 # Email dependencies
 resend==2.13.0
