@@ -78,7 +78,7 @@ def force_mistral_embedder():
                 )
                 
                 # Try to patch agno embedder selection
-            if hasattr(agno.embedder, 'get_default_embedder'):
+                if hasattr(agno.embedder, 'get_default_embedder'):
                     original_get_default = agno.embedder.get_default_embedder
                     
                     def force_mistral_default(*args, **kwargs):
@@ -87,7 +87,7 @@ def force_mistral_embedder():
                         return custom_embedder
                     
                     agno.embedder.get_default_embedder = force_mistral_default
-                logger.info("Successfully patched agno.embedder.get_default_embedder")
+                    logger.info("Successfully patched agno.embedder.get_default_embedder")
             
                 # Try to patch the embedder selection logic
                 if hasattr(agno.embedder, 'select_embedder'):
@@ -130,9 +130,12 @@ def force_mistral_embedder():
         except ImportError as e:
             logger.warning(f"Could not patch agno framework: {e}")
             return None
-                
         except Exception as e:
-        logger.error(f"Error forcing Mistral embedder: {e}")
+            logger.error(f"Error forcing Mistral embedder: {e}")
+            return None
+            
+    except Exception as e:
+        logger.error(f"Error in force_mistral_embedder: {e}")
         return None
 
 def get_mistral_embedder():
@@ -191,8 +194,8 @@ def get_mistral_embedder():
             return None
                 
         except Exception as e:
-        logger.error(f"Error creating Mistral embedder: {e}")
-        return None
+            logger.error(f"Error creating Mistral embedder: {e}")
+            return None
 
 # Auto-execute when module is imported
 if __name__ != "__main__":
