@@ -46,3 +46,4 @@ resend==2.13.0
 # Cloudflare R2 dependencies
 boto3==1.34.0
 pgvector
+neo4j
