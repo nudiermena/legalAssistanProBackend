@@ -1,505 +1,292 @@
 """
-Security dashboard endpoint for monitoring and managing security features.
-Provides real-time security status, alerts, and statistics.
+Security Dashboard Endpoint
+Provides security monitoring and statistics for the legal AI system
 """
 
-from fastapi import APIRouter, HTTPException, Depends, Request, Query
-from fastapi.responses import HTMLResponse, JSONResponse
-from typing import Dict, List, Optional, Any
-from pydantic import BaseModel, Field
+from fastapi import APIRouter, HTTPException, Depends, Request
+from fastapi.responses import JSONResponse
+from typing import Dict, Any, List, Optional
 from datetime import datetime, timedelta
+from pydantic import BaseModel, Field
 from endpoints.auth import get_current_user
-import json
+from utils.security_protection import get_security_stats
+from middleware.security_middleware import get_security_dashboard_data
 import logging
 
-from config.security import SECURITY_CONFIG, SecurityLevel
-from utils.security_monitor import (
-    security_monitor,
-    SecurityEvent,
-    SecurityAlert,
-    AlertLevel,
-    EventType
-)
-from middleware.security import get_request_id, get_user_id, get_client_ip
-from utils.security_validators import log_security_event
-
-# Security logger
-security_logger = logging.getLogger("security")
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/security", tags=["security"])
 
-class SecurityStatusResponse(BaseModel):
-    """Security status response model"""
-    overall_status: str = Field(..., description="Overall security status")
-    security_level: str = Field(..., description="Current security level")
-    active_alerts: int = Field(..., description="Number of active alerts")
-    recent_events: int = Field(..., description="Number of recent events")
-    rate_limiting_enabled: bool = Field(..., description="Rate limiting status")
-    authentication_enabled: bool = Field(..., description="Authentication status")
-    last_updated: datetime = Field(..., description="Last update timestamp")
+class SecurityStatsResponse(BaseModel):
+    """Security statistics response model"""
+    total_alerts: int
+    critical_alerts: int
+    blocked_users: int
+    suspicious_sessions: int
+    last_alert: Optional[str]
+    blocked_ips: int
+    suspicious_patterns: int
+    rate_limits: Dict[str, Any]
+    timestamp: str
 
 class SecurityAlertResponse(BaseModel):
     """Security alert response model"""
-    alert_id: str = Field(..., description="Alert ID")
-    alert_type: str = Field(..., description="Alert type")
-    level: str = Field(..., description="Alert level")
-    message: str = Field(..., description="Alert message")
-    timestamp: datetime = Field(..., description="Alert timestamp")
-    event_count: int = Field(..., description="Number of events in alert")
-    metadata: Dict[str, Any] = Field(..., description="Alert metadata")
+    timestamp: str
+    threat_level: str
+    attack_type: str
+    agent_name: str
+    user_id: Optional[str]
+    session_id: Optional[str]
+    input_preview: str
+    details: Dict[str, Any]
 
-class SecurityEventResponse(BaseModel):
-    """Security event response model"""
-    event_type: str = Field(..., description="Event type")
-    timestamp: datetime = Field(..., description="Event timestamp")
-    request_id: str = Field(..., description="Request ID")
-    user_id: str = Field(..., description="User ID")
-    client_ip: str = Field(..., description="Client IP")
-    severity: str = Field(..., description="Event severity")
-    source: str = Field(..., description="Event source")
-
-class UserActivityResponse(BaseModel):
-    """User activity response model"""
-    user_id: str = Field(..., description="User ID")
-    total_events: int = Field(..., description="Total events")
-    event_counts: Dict[str, int] = Field(..., description="Event type counts")
-    last_activity: Optional[datetime] = Field(None, description="Last activity timestamp")
-    time_period_hours: int = Field(..., description="Time period in hours")
-
-class IPActivityResponse(BaseModel):
-    """IP activity response model"""
-    ip: str = Field(..., description="IP address")
-    total_events: int = Field(..., description="Total events")
-    event_counts: Dict[str, int] = Field(..., description="Event type counts")
-    unique_users: int = Field(..., description="Number of unique users")
-    last_activity: Optional[datetime] = Field(None, description="Last activity timestamp")
-    time_period_hours: int = Field(..., description="Time period in hours")
-
-@router.get("/dashboard", response_class=HTMLResponse)
+@router.get("/dashboard", response_model=SecurityStatsResponse)
 async def get_security_dashboard(
-    request: Request,
     current_user: Dict[str, Any] = Depends(get_current_user)
 ):
-    """Serve the security dashboard interface"""
-    html_content = """
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Security Dashboard - Legal AI Assistant</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    <style>
-        .status-card { transition: all 0.3s ease; }
-        .status-card:hover { transform: translateY(-2px); box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
-        .alert-critical { border-left: 4px solid #dc3545; }
-        .alert-high { border-left: 4px solid #fd7e14; }
-        .alert-medium { border-left: 4px solid #ffc107; }
-        .alert-low { border-left: 4px solid #28a745; }
-        .event-log { max-height: 400px; overflow-y: auto; }
-        .refresh-btn { cursor: pointer; }
-    </style>
-</head>
-<body>
-    <div class="container-fluid mt-4">
-        <div class="row">
-            <div class="col-12">
-                <h2><i class="fas fa-shield-alt"></i> Security Dashboard</h2>
-                <p class="text-muted">Real-time security monitoring and alerts</p>
-            </div>
-        </div>
-        
-        <!-- Status Cards -->
-        <div class="row mb-4">
-            <div class="col-md-3">
-                <div class="card status-card">
-                    <div class="card-body text-center">
-                        <i class="fas fa-shield-alt fa-2x text-primary mb-2"></i>
-                        <h5 class="card-title">Overall Status</h5>
-                        <h3 id="overall-status" class="text-success">Healthy</h3>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <div class="card status-card">
-                    <div class="card-body text-center">
-                        <i class="fas fa-exclamation-triangle fa-2x text-warning mb-2"></i>
-                        <h5 class="card-title">Active Alerts</h5>
-                        <h3 id="active-alerts" class="text-warning">0</h3>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <div class="card status-card">
-                    <div class="card-body text-center">
-                        <i class="fas fa-chart-line fa-2x text-info mb-2"></i>
-                        <h5 class="card-title">Recent Events</h5>
-                        <h3 id="recent-events" class="text-info">0</h3>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <div class="card status-card">
-                    <div class="card-body text-center">
-                        <i class="fas fa-sync-alt fa-2x text-secondary mb-2 refresh-btn" onclick="refreshData()"></i>
-                        <h5 class="card-title">Last Updated</h5>
-                        <h6 id="last-updated" class="text-secondary">Just now</h6>
-                    </div>
-                </div>
-            </div>
-        </div>
-        
-        <!-- Alerts and Events -->
-        <div class="row">
-            <div class="col-md-6">
-                <div class="card">
-                    <div class="card-header">
-                        <h5><i class="fas fa-bell"></i> Recent Alerts</h5>
-                    </div>
-                    <div class="card-body">
-                        <div id="alerts-container" class="event-log">
-                            <p class="text-muted">Loading alerts...</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-6">
-                <div class="card">
-                    <div class="card-header">
-                        <h5><i class="fas fa-list"></i> Recent Events</h5>
-                    </div>
-                    <div class="card-body">
-                        <div id="events-container" class="event-log">
-                            <p class="text-muted">Loading events...</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        
-        <!-- Activity Summary -->
-        <div class="row mt-4">
-            <div class="col-md-6">
-                <div class="card">
-                    <div class="card-header">
-                        <h5><i class="fas fa-users"></i> User Activity</h5>
-                    </div>
-                    <div class="card-body">
-                        <div id="user-activity-container">
-                            <p class="text-muted">Loading user activity...</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-6">
-                <div class="card">
-                    <div class="card-header">
-                        <h5><i class="fas fa-network-wired"></i> IP Activity</h5>
-                    </div>
-                    <div class="card-body">
-                        <div id="ip-activity-container">
-                            <p class="text-muted">Loading IP activity...</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
-    <script>
-        function refreshData() {
-            loadSecurityStatus();
-            loadRecentAlerts();
-            loadRecentEvents();
-            loadUserActivity();
-            loadIPActivity();
-        }
-        
-        async function loadSecurityStatus() {
-            try {
-                const response = await fetch('/security/status');
-                const data = await response.json();
-                
-                document.getElementById('overall-status').textContent = data.overall_status;
-                document.getElementById('active-alerts').textContent = data.active_alerts;
-                document.getElementById('recent-events').textContent = data.recent_events;
-                document.getElementById('last-updated').textContent = new Date(data.last_updated).toLocaleTimeString();
-                
-                // Update status color
-                const statusElement = document.getElementById('overall-status');
-                statusElement.className = data.overall_status === 'Healthy' ? 'text-success' : 'text-danger';
-            } catch (error) {
-                console.error('Error loading security status:', error);
-            }
-        }
-        
-        async function loadRecentAlerts() {
-            try {
-                const response = await fetch('/security/alerts?minutes=60');
-                const alerts = await response.json();
-                
-                const container = document.getElementById('alerts-container');
-                if (alerts.length === 0) {
-                    container.innerHTML = '<p class="text-success">No alerts in the last hour</p>';
-                    return;
-                }
-                
-                container.innerHTML = alerts.map(alert => `
-                    <div class="alert alert-${getAlertClass(alert.level)} mb-2">
-                        <strong>${alert.alert_type}</strong><br>
-                        <small>${alert.message}</small><br>
-                        <small class="text-muted">${new Date(alert.timestamp).toLocaleString()}</small>
-                    </div>
-                `).join('');
-            } catch (error) {
-                console.error('Error loading alerts:', error);
-            }
-        }
-        
-        async function loadRecentEvents() {
-            try {
-                const response = await fetch('/security/events?minutes=60');
-                const events = await response.json();
-                
-                const container = document.getElementById('events-container');
-                if (events.length === 0) {
-                    container.innerHTML = '<p class="text-success">No events in the last hour</p>';
-                    return;
-                }
-                
-                container.innerHTML = events.map(event => `
-                    <div class="border-bottom pb-2 mb-2">
-                        <strong>${event.event_type}</strong><br>
-                        <small>User: ${event.user_id || 'Anonymous'}</small><br>
-                        <small>IP: ${event.client_ip}</small><br>
-                        <small class="text-muted">${new Date(event.timestamp).toLocaleString()}</small>
-                    </div>
-                `).join('');
-            } catch (error) {
-                console.error('Error loading events:', error);
-            }
-        }
-        
-        async function loadUserActivity() {
-            try {
-                const response = await fetch('/security/user-activity');
-                const activity = await response.json();
-                
-                const container = document.getElementById('user-activity-container');
-                if (activity.length === 0) {
-                    container.innerHTML = '<p class="text-muted">No user activity data</p>';
-                    return;
-                }
-                
-                container.innerHTML = activity.map(user => `
-                    <div class="border-bottom pb-2 mb-2">
-                        <strong>${user.user_id}</strong><br>
-                        <small>Events: ${user.total_events}</small><br>
-                        <small>Last activity: ${user.last_activity ? new Date(user.last_activity).toLocaleString() : 'Never'}</small>
-                    </div>
-                `).join('');
-            } catch (error) {
-                console.error('Error loading user activity:', error);
-            }
-        }
-        
-        async function loadIPActivity() {
-            try {
-                const response = await fetch('/security/ip-activity');
-                const activity = await response.json();
-                
-                const container = document.getElementById('ip-activity-container');
-                if (activity.length === 0) {
-                    container.innerHTML = '<p class="text-muted">No IP activity data</p>';
-                    return;
-                }
-                
-                container.innerHTML = activity.map(ip => `
-                    <div class="border-bottom pb-2 mb-2">
-                        <strong>${ip.ip}</strong><br>
-                        <small>Events: ${ip.total_events}</small><br>
-                        <small>Users: ${ip.unique_users}</small><br>
-                        <small>Last activity: ${ip.last_activity ? new Date(ip.last_activity).toLocaleString() : 'Never'}</small>
-                    </div>
-                `).join('');
-            } catch (error) {
-                console.error('Error loading IP activity:', error);
-            }
-        }
-        
-        function getAlertClass(level) {
-            switch (level) {
-                case 'critical': return 'danger';
-                case 'high': return 'warning';
-                case 'medium': return 'info';
-                case 'low': return 'success';
-                default: return 'secondary';
-            }
-        }
-        
-        // Load data on page load
-        document.addEventListener('DOMContentLoaded', refreshData);
-        
-        // Auto-refresh every 30 seconds
-        setInterval(refreshData, 30000);
-    </script>
-</body>
-</html>
-"""
-    
-    return HTMLResponse(content=html_content)
-
-@router.get("/status", response_model=SecurityStatusResponse)
-async def get_security_status(current_user: Dict[str, Any] = Depends(get_current_user)):
-    """Get overall security status"""
+    """Get security dashboard statistics"""
     try:
-        # Get recent alerts and events
-        recent_alerts = security_monitor.get_recent_alerts(minutes=60)
-        recent_events = security_monitor.get_recent_events(minutes=60)
+        # Check if user has admin privileges
+        if not current_user.get("is_admin", False):
+            raise HTTPException(
+                status_code=403,
+                detail="Access denied. Admin privileges required."
+            )
         
-        # Determine overall status
-        critical_alerts = [alert for alert in recent_alerts if alert.level == AlertLevel.CRITICAL]
-        high_alerts = [alert for alert in recent_alerts if alert.level == AlertLevel.HIGH]
+        # Get security statistics
+        stats = get_security_stats()
+        dashboard_data = get_security_dashboard_data()
         
-        if critical_alerts:
-            overall_status = "Critical"
-        elif high_alerts:
-            overall_status = "Warning"
-        else:
-            overall_status = "Healthy"
-        
-        return SecurityStatusResponse(
-            overall_status=overall_status,
-            security_level=SECURITY_CONFIG.environment.value,
-            active_alerts=len(recent_alerts),
-            recent_events=len(recent_events),
-            rate_limiting_enabled=True,
-            authentication_enabled=True,
-            last_updated=datetime.utcnow()
+        response = SecurityStatsResponse(
+            total_alerts=stats["total_alerts"],
+            critical_alerts=stats["critical_alerts"],
+            blocked_users=stats["blocked_users"],
+            suspicious_sessions=stats["suspicious_sessions"],
+            last_alert=stats["last_alert"].isoformat() if stats["last_alert"] else None,
+            blocked_ips=dashboard_data["blocked_ips"],
+            suspicious_patterns=dashboard_data["suspicious_patterns"],
+            rate_limits=dashboard_data["rate_limits"],
+            timestamp=datetime.now().isoformat()
         )
+        
+        return response
+        
     except Exception as e:
-        log_security_event("security_status_error", {"error": str(e)}, severity="ERROR")
-        raise HTTPException(status_code=500, detail="Error retrieving security status")
+        logger.error(f"Error getting security dashboard: {str(e)}")
+        raise HTTPException(
+            status_code=500,
+            detail="Error retrieving security statistics"
+        )
 
 @router.get("/alerts", response_model=List[SecurityAlertResponse])
-async def get_recent_alerts(
-    minutes: int = Query(60, description="Minutes to look back"),
+async def get_security_alerts(
+    limit: int = 50,
+    threat_level: Optional[str] = None,
+    agent_name: Optional[str] = None,
     current_user: Dict[str, Any] = Depends(get_current_user)
 ):
-    """Get recent security alerts"""
+    """Get security alerts with filtering"""
     try:
-        alerts = security_monitor.get_recent_alerts(minutes=minutes)
-        
-        return [
-            SecurityAlertResponse(
-                alert_id=alert.alert_id,
-                alert_type=alert.alert_type,
-                level=alert.level.value,
-                message=alert.message,
-                timestamp=alert.timestamp,
-                event_count=len(alert.events),
-                metadata=alert.metadata
+        # Check if user has admin privileges
+        if not current_user.get("is_admin", False):
+            raise HTTPException(
+                status_code=403,
+                detail="Access denied. Admin privileges required."
             )
-            for alert in alerts
-        ]
+        
+        # Get alerts from security monitor
+        from utils.security_protection import security_protector
+        alerts = security_protector.security_monitor.alert_history
+        
+        # Apply filters
+        filtered_alerts = []
+        for alert in alerts[-limit:]:  # Get latest alerts
+            if threat_level and alert.threat_level.value != threat_level:
+                continue
+            if agent_name and alert.agent_name != agent_name:
+                continue
+            
+            filtered_alerts.append(SecurityAlertResponse(
+                timestamp=alert.timestamp.isoformat(),
+                threat_level=alert.threat_level.value,
+                attack_type=alert.attack_type,
+                agent_name=alert.agent_name,
+                user_id=alert.user_id,
+                session_id=alert.session_id,
+                input_preview=alert.user_input[:100] + "..." if len(alert.user_input) > 100 else alert.user_input,
+                details=alert.details
+            ))
+        
+        return filtered_alerts
+        
     except Exception as e:
-        log_security_event("security_alerts_error", {"error": str(e)}, severity="ERROR")
-        raise HTTPException(status_code=500, detail="Error retrieving security alerts")
+        logger.error(f"Error getting security alerts: {str(e)}")
+        raise HTTPException(
+            status_code=500,
+            detail="Error retrieving security alerts"
+        )
 
-@router.get("/events", response_model=List[SecurityEventResponse])
-async def get_recent_events(
-    minutes: int = Query(60, description="Minutes to look back"),
+@router.post("/block-user")
+async def block_user(
+    user_id: str,
+    reason: str,
     current_user: Dict[str, Any] = Depends(get_current_user)
 ):
-    """Get recent security events"""
+    """Block a user for security violations"""
     try:
-        events = security_monitor.get_recent_events(minutes=minutes)
-        
-        return [
-            SecurityEventResponse(
-                event_type=event.event_type,
-                timestamp=event.timestamp,
-                request_id=event.request_id,
-                user_id=event.user_id,
-                client_ip=event.client_ip,
-                severity=event.severity,
-                source=event.source
+        # Check if user has admin privileges
+        if not current_user.get("is_admin", False):
+            raise HTTPException(
+                status_code=403,
+                detail="Access denied. Admin privileges required."
             )
-            for event in events
-        ]
-    except Exception as e:
-        log_security_event("security_events_error", {"error": str(e)}, severity="ERROR")
-        raise HTTPException(status_code=500, detail="Error retrieving security events")
-
-@router.get("/user-activity", response_model=List[UserActivityResponse])
-async def get_user_activity(
-    hours: int = Query(24, description="Hours to look back"),
-    current_user: Dict[str, Any] = Depends(get_current_user)
-):
-    """Get user activity summary"""
-    try:
-        # Get unique users from recent events
-        recent_events = security_monitor.get_recent_events(minutes=hours * 60)
-        user_ids = set(event.user_id for event in recent_events if event.user_id)
         
-        activity_summaries = []
-        for user_id in user_ids:
-            summary = security_monitor.get_user_activity_summary(user_id, hours=hours)
-            activity_summaries.append(UserActivityResponse(**summary))
+        # Block user
+        from utils.security_protection import security_protector
+        security_protector.security_monitor.blocked_users.add(user_id)
         
-        return activity_summaries
-    except Exception as e:
-        log_security_event("user_activity_error", {"error": str(e)}, severity="ERROR")
-        raise HTTPException(status_code=500, detail="Error retrieving user activity")
-
-@router.get("/ip-activity", response_model=List[IPActivityResponse])
-async def get_ip_activity(
-    hours: int = Query(24, description="Hours to look back"),
-    current_user: Dict[str, Any] = Depends(get_current_user)
-):
-    """Get IP activity summary"""
-    try:
-        # Get unique IPs from recent events
-        recent_events = security_monitor.get_recent_events(minutes=hours * 60)
-        ips = set(event.client_ip for event in recent_events if event.client_ip)
+        logger.warning(f"User {user_id} blocked by admin {current_user.get('user_id')} for: {reason}")
         
-        activity_summaries = []
-        for ip in ips:
-            summary = security_monitor.get_ip_activity_summary(ip, hours=hours)
-            activity_summaries.append(IPActivityResponse(**summary))
-        
-        return activity_summaries
-    except Exception as e:
-        log_security_event("ip_activity_error", {"error": str(e)}, severity="ERROR")
-        raise HTTPException(status_code=500, detail="Error retrieving IP activity")
-
-@router.get("/config")
-async def get_security_config(current_user: Dict[str, Any] = Depends(get_current_user)):
-    """Get current security configuration (admin only)"""
-    try:
-        # In production, this should check for admin privileges
         return {
-            "security_level": SECURITY_CONFIG.environment.value,
-            "rate_limits": {
-                "per_minute": SECURITY_CONFIG.rate_limit.requests_per_minute,
-                "per_hour": SECURITY_CONFIG.rate_limit.requests_per_hour,
-                "per_day": SECURITY_CONFIG.rate_limit.requests_per_day
-            },
-            "file_upload": {
-                "max_size": SECURITY_CONFIG.max_file_size,
-                "allowed_types": SECURITY_CONFIG.allowed_file_types,
-                "scan_uploads": SECURITY_CONFIG.scan_uploads
-            },
-            "authentication": {
-                "enabled": True,
-                "api_key_header": SECURITY_CONFIG.api_key_header
-            },
-            "monitoring": {
-                "thresholds": security_monitor.thresholds
-            }
+            "status": "success",
+            "message": f"User {user_id} has been blocked",
+            "reason": reason,
+            "blocked_by": current_user.get("user_id"),
+            "timestamp": datetime.now().isoformat()
         }
+        
     except Exception as e:
-        log_security_event("security_config_error", {"error": str(e)}, severity="ERROR")
-        raise HTTPException(status_code=500, detail="Error retrieving security configuration") 
+        logger.error(f"Error blocking user: {str(e)}")
+        raise HTTPException(
+            status_code=500,
+            detail="Error blocking user"
+        )
+
+@router.post("/unblock-user")
+async def unblock_user(
+    user_id: str,
+    current_user: Dict[str, Any] = Depends(get_current_user)
+):
+    """Unblock a user"""
+    try:
+        # Check if user has admin privileges
+        if not current_user.get("is_admin", False):
+            raise HTTPException(
+                status_code=403,
+                detail="Access denied. Admin privileges required."
+            )
+        
+        # Unblock user
+        from utils.security_protection import security_protector
+        security_protector.security_monitor.blocked_users.discard(user_id)
+        
+        logger.info(f"User {user_id} unblocked by admin {current_user.get('user_id')}")
+        
+        return {
+            "status": "success",
+            "message": f"User {user_id} has been unblocked",
+            "unblocked_by": current_user.get("user_id"),
+            "timestamp": datetime.now().isoformat()
+        }
+        
+    except Exception as e:
+        logger.error(f"Error unblocking user: {str(e)}")
+        raise HTTPException(
+            status_code=500,
+            detail="Error unblocking user"
+        )
+
+@router.get("/threat-patterns")
+async def get_threat_patterns(
+    current_user: Dict[str, Any] = Depends(get_current_user)
+):
+    """Get detected threat patterns"""
+    try:
+        # Check if user has admin privileges
+        if not current_user.get("is_admin", False):
+            raise HTTPException(
+                status_code=403,
+                detail="Access denied. Admin privileges required."
+            )
+        
+        # Get threat patterns from security protector
+        from utils.security_protection import security_protector
+        patterns = security_protector.attack_patterns
+        
+        return {
+            "attack_patterns": patterns,
+            "total_patterns": sum(len(patterns[category]) for category in patterns),
+            "categories": list(patterns.keys()),
+            "timestamp": datetime.now().isoformat()
+        }
+        
+    except Exception as e:
+        logger.error(f"Error getting threat patterns: {str(e)}")
+        raise HTTPException(
+            status_code=500,
+            detail="Error retrieving threat patterns"
+        )
+
+@router.get("/system-health")
+async def get_system_health(
+    current_user: Dict[str, Any] = Depends(get_current_user)
+):
+    """Get system security health status"""
+    try:
+        # Check if user has admin privileges
+        if not current_user.get("is_admin", False):
+            raise HTTPException(
+                status_code=403,
+                detail="Access denied. Admin privileges required."
+            )
+        
+        # Get security statistics
+        stats = get_security_stats()
+        dashboard_data = get_security_dashboard_data()
+        
+        # Calculate health score
+        total_alerts = stats["total_alerts"]
+        critical_alerts = stats["critical_alerts"]
+        blocked_users = stats["blocked_users"]
+        
+        # Health score calculation (0-100)
+        health_score = 100
+        if total_alerts > 0:
+            health_score -= min(30, (total_alerts / 10) * 5)  # Reduce for total alerts
+        if critical_alerts > 0:
+            health_score -= min(50, critical_alerts * 10)  # Reduce for critical alerts
+        if blocked_users > 0:
+            health_score -= min(20, blocked_users * 5)  # Reduce for blocked users
+        
+        health_score = max(0, health_score)
+        
+        # Determine health status
+        if health_score >= 80:
+            status = "healthy"
+        elif health_score >= 60:
+            status = "warning"
+        else:
+            status = "critical"
+        
+        return {
+            "health_score": round(health_score, 1),
+            "status": status,
+            "total_alerts": total_alerts,
+            "critical_alerts": critical_alerts,
+            "blocked_users": blocked_users,
+            "blocked_ips": dashboard_data["blocked_ips"],
+            "suspicious_sessions": dashboard_data["suspicious_sessions"],
+            "recommendations": [
+                "Monitor critical alerts closely" if critical_alerts > 0 else None,
+                "Review blocked users for false positives" if blocked_users > 0 else None,
+                "Investigate suspicious patterns" if dashboard_data["suspicious_patterns"] > 0 else None
+            ],
+            "timestamp": datetime.now().isoformat()
+        }
+        
+    except Exception as e:
+        logger.error(f"Error getting system health: {str(e)}")
+        raise HTTPException(
+            status_code=500,
+            detail="Error retrieving system health"
+        )

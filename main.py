@@ -43,6 +43,8 @@ from endpoints.security_dashboard import router as security_router
 from endpoints.auth import router as auth_router
 from endpoints.example_protected_endpoint import router as protected_router
 from endpoints.invitation import router as invitation_router
+from endpoints.request_demo import router as request_demo_router
+from endpoints.calendar_reminders import router as calendar_reminders_router
 import os
 import logging
 from dotenv import load_dotenv
@@ -190,6 +192,8 @@ app.include_router(security_router)
 app.include_router(auth_router)
 app.include_router(protected_router)
 app.include_router(invitation_router)
+app.include_router(request_demo_router)
+app.include_router(calendar_reminders_router)
 
 # Health check endpoint
 @app.get("/health")

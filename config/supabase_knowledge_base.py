@@ -115,13 +115,34 @@ class MockKnowledgeBase:
                     "content": "La Corte Constitucional ha establecido que el habeas data es un derecho fundamental que protege la intimidad personal y familiar.",
                     "metadata": {"court": "Corte Constitucional", "topic": "habeas data"},
                     "score": 0.95,
-                    "source": "Sentencia C-1008/2010"
+                    "source": "Sentencia C-1008/2010",
+                    "case_number": "C-1008/2010",
+                    "topic": "Habeas Data y Protección de Datos",
+                    "summary": "Establece el habeas data como derecho fundamental de protección de la intimidad",
+                    "decision_date": "2010-07-14",
+                    "url": "https://corteeconstitucional.gov.co/relatoria/2010/c-1008-10.htm"
                 },
                 {
                     "content": "El debido proceso es una garantía fundamental que debe observarse en todo procedimiento judicial o administrativo.",
                     "metadata": {"court": "Corte Constitucional", "topic": "due process"},
                     "score": 0.92,
-                    "source": "Sentencia C-254 de 2012"
+                    "source": "Sentencia C-254 de 2012",
+                    "case_number": "C-254/2012",
+                    "topic": "Debido Proceso",
+                    "summary": "Define los elementos esenciales del debido proceso en procedimientos administrativos",
+                    "decision_date": "2012-04-11",
+                    "url": "https://corteeconstitucional.gov.co/relatoria/2012/c-254-12.htm"
+                },
+                {
+                    "content": "La acción de tutela procede cuando se vulneren derechos fundamentales y no existan otros medios de defensa judicial.",
+                    "metadata": {"court": "Corte Constitucional", "topic": "accion tutela"},
+                    "score": 0.88,
+                    "source": "Sentencia T-006 de 2015",
+                    "case_number": "T-006/2015",
+                    "topic": "Acción de Tutela",
+                    "summary": "Establece los requisitos de procedibilidad para la acción de tutela",
+                    "decision_date": "2015-01-15",
+                    "url": "https://corteeconstitucional.gov.co/relatoria/2015/t-006-15.htm"
                 }
             ],
             "contract_clauses": [
@@ -137,9 +158,10 @@ class MockKnowledgeBase:
     async def search_knowledge(self, query: str, limit: int = 10, knowledge_type: Optional[KnowledgeType] = None) -> Dict[str, Any]:
         """Mock search implementation"""
         results = []
+        query_lower = query.lower()
         
         # Search in legal terms
-        if "habeas data" in query.lower():
+        if "habeas data" in query_lower or "datos personales" in query_lower:
             results.append({
                 "content": self.mock_data["legal_terms"]["habeas data"],
                 "metadata": {"type": "legal_term", "term": "habeas data"},
@@ -148,7 +170,7 @@ class MockKnowledgeBase:
                 "knowledge_type": "legal_terms"
             })
         
-        if "due process" in query.lower():
+        if "due process" in query_lower or "debido proceso" in query_lower or "procedimiento" in query_lower:
             results.append({
                 "content": self.mock_data["legal_terms"]["due process"],
                 "metadata": {"type": "legal_term", "term": "due process"},
@@ -156,6 +178,22 @@ class MockKnowledgeBase:
                 "source": "Constitución Política",
                 "knowledge_type": "legal_terms"
             })
+        
+        # Search in jurisprudence
+        for jur in self.mock_data["jurisprudence"]:
+            if any(keyword in query_lower for keyword in [j.lower() for j in [jur["topic"], jur.get("case_number", "")]]):
+                results.append({
+                    "content": jur["content"],
+                    "metadata": jur["metadata"],
+                    "score": jur["score"],
+                    "source": jur["source"],
+                    "knowledge_type": "jurisprudence",
+                    "case_number": jur["case_number"],
+                    "topic": jur["topic"],
+                    "summary": jur["summary"],
+                    "decision_date": jur["decision_date"],
+                    "url": jur["url"]
+                })
         
         # Search in jurisprudence
         if "jurisprudencia" in query.lower():
@@ -437,11 +475,36 @@ class SupabaseLegalKnowledgeBase:
             # Format results
             formatted_results = []
             for result in results:
+                # Handle different result object types
+                if hasattr(result, 'metadata'):
+                    metadata = result.metadata
+                elif hasattr(result, 'page_content'):
+                    # Handle Document objects from LangChain
+                    metadata = getattr(result, 'metadata', {})
+                    content = getattr(result, 'page_content', str(result))
+                else:
+                    metadata = {}
+                    content = str(result)
+                
+                # Get content safely
+                if hasattr(result, 'content'):
+                    content = result.content
+                elif hasattr(result, 'page_content'):
+                    content = result.page_content
+                else:
+                    content = str(result)
+                
+                # Get score safely
+                score = getattr(result, 'score', 0.0)
+                
+                # Get source safely
+                source = getattr(result, 'source', 'Unknown')
+                
                 formatted_results.append({
-                    "content": result.content,
-                    "metadata": result.metadata,
-                    "score": result.score,
-                    "source": result.source,
+                    "content": content,
+                    "metadata": metadata,
+                    "score": score,
+                    "source": source,
                     "knowledge_type": knowledge_type.value if knowledge_type else "general"
                 })
             
@@ -509,11 +572,27 @@ class SupabaseLegalKnowledgeBase:
         """
         if self.mock_mode:
             return await self.kb.get_jurisprudence(topic, limit)
-        
+
+        # Prefer direct table access to ai.jurisprudence
+        try:
+            resp = (
+                self.supabase
+                .table("ai.jurisprudence")
+                .select("*")
+                .or_(f"topic.ilike.%{topic}%,summary.ilike.%{topic}%")
+                .limit(limit)
+                .execute()
+            )
+            data = resp.data or []
+            if data:
+                return data
+        except Exception as table_err:
+            logger.warning(f"ai.jurisprudence lookup failed, fallback to search: {table_err}")
+
+        # Fallback to hybrid/vector search
         try:
             results = await self.search_knowledge(f"jurisprudencia {topic}", limit=limit)
-            return results["results"]
-            
+            return results.get("results", [])
         except Exception as e:
             logger.error(f"Error getting jurisprudence: {e}")
             return []
@@ -559,6 +638,7 @@ class SupabaseLegalKnowledgeBase:
         
         try:
             # Use direct table access instead of search
+            # Use public schema for document_templates
             query = self.supabase.table("document_templates").select("*")
             
             if document_type:
@@ -567,6 +647,14 @@ class SupabaseLegalKnowledgeBase:
                 query = query.eq("complexity_level", complexity)
             
             response = query.execute()
+            logger.info(f"Found {len(response.data)} document templates for type={document_type}, complexity={complexity}")
+            
+            # Debug: Log the actual columns returned
+            if response.data:
+                sample_record = response.data[0]
+                logger.info(f"Sample record columns: {list(sample_record.keys())}")
+                logger.info(f"Sample record: {sample_record}")
+            
             return response.data
             
         except Exception as e:

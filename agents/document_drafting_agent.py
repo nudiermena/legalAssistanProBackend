@@ -5,6 +5,7 @@ from config.knowledge_base_integration import (
     create_agent_knowledge_integration,
     AgentKnowledgeHelper
 )
+from utils.security_protection import protect_agent_input, protect_agent_response
 from config.colombian_compliance import (
     ColombianDataProtection,
     ColombianLegalFramework,
@@ -33,18 +34,17 @@ logger = logging.getLogger(__name__)
 def create_document_drafting_agent() -> Agent:
     """Create a specialized agent for legal document drafting with retry logic and knowledge base integration"""
     try:
-        # Create knowledge base integration (disabled temporarily to avoid connection issues)
-        # knowledge_integration = create_agent_knowledge_integration("document_drafting_agent")
+        # Create knowledge base integration for document templates
+        knowledge_integration = create_agent_knowledge_integration("document_drafting_agent")
         
         agent = Agent(
             name="Especialista en Redacción Jurídica Colombiana",
             role="Especialista en elaboración de documentos legales completos y compliantes para Colombia",
             model=get_model("document_drafting"),  # Specify model directly
              tools=[GoogleSearchTools()],
-            knowledge=None,  # Disable knowledge base temporarily
-            
-            search_knowledge=False,  # Disable knowledge search
-            storage=None,  # Disable storage to avoid connection issues
+            knowledge=knowledge_integration,
+            search_knowledge=True,  # Enable knowledge search for document templates
+            storage=get_agent_storage("document_drafting_agent"),
             instructions=[
                 # === INSTRUCCIONES PRINCIPALES DE COMPLIANCE ===
                 "ENFOQUE LEGAL: Crear documentos que cumplan TODOS los requisitos legales obligatorios",
@@ -133,24 +133,61 @@ async def draft_custom_document(
     key_points: List[str],
     industry: str,
     jurisdiction: str,
-    complexity: str
+    complexity: str,
+    user_id: Optional[str] = None,
+    session_id: Optional[str] = None
 ) -> Dict[str, Any]:
     """Draft custom legal document with detailed specifications and knowledge base integration"""
     try:
+        # Security protection for document type and description
+        is_safe, sanitized_document_type, security_alert = protect_agent_input(
+            document_type, "document_drafting_agent", user_id, session_id
+        )
+        
+        if not is_safe:
+            logger.warning(f"Security threat detected in document drafting: {security_alert.attack_type if security_alert else 'Unknown'}")
+            return _create_security_response(security_alert)
+        
+        # Sanitize description
+        is_safe_desc, sanitized_description, _ = protect_agent_input(
+            description, "document_drafting_agent", user_id, session_id
+        )
+        
+        if not is_safe_desc:
+            logger.warning(f"Security threat detected in document description: {description}")
+            return _create_security_response(None)
+        
+        # Use sanitized inputs
+        document_type = sanitized_document_type
+        description = sanitized_description
         agent = create_document_drafting_agent()
         
-        # Create knowledge helper for enhanced drafting (disabled temporarily)
-        # knowledge_helper = AgentKnowledgeHelper("document_drafting_agent")
+        # Create knowledge integration for enhanced drafting
+        knowledge_integration = create_agent_knowledge_integration("document_drafting_agent")
         
-        # Get relevant document templates from knowledge base (disabled)
-        document_templates = []  # Disabled temporarily
+        # Get relevant document templates from Supabase knowledge base
+        document_templates = await knowledge_integration.get_document_templates(
+            document_type=document_type,
+            complexity="standard"
+        )
         
-        # Get relevant legal terms (disabled)
-        legal_terms = []
-        legal_definitions = {}  # Disabled temporarily
+        # Get relevant legal terms for the document type
+        # Extract potential terms from description (simple approach)
+        potential_terms = []
+        common_legal_terms = ["contrato", "trabajo", "servicios", "arrendamiento", "compraventa", "jurisdicción", "obligaciones", "derechos", "responsabilidades"]
+        for term in common_legal_terms:
+            if term.lower() in description.lower():
+                potential_terms.append(term)
         
-        # Get relevant legal documents (disabled)
-        legal_documents = {"results": []}  # Disabled temporarily
+        legal_definitions = {}
+        if potential_terms:
+            legal_definitions = await knowledge_integration.get_legal_terms(potential_terms)
+        
+        # Get relevant legal documents from knowledge base
+        legal_documents = await knowledge_integration.get_legal_documents(
+            query=description,
+            limit=3
+        )
         
         # Format the prompt for custom document
         prompt = format_custom_document_prompt(
@@ -166,17 +203,36 @@ async def draft_custom_document(
             legal_documents=legal_documents
         )
 
+        # Log prompt injection details
+        try:
+            injected_count = len(document_templates) if isinstance(document_templates, list) else 0
+            logger.info(f"Document drafting: injecting {injected_count} template(s) into prompt; prompt_length={len(prompt)}")
+            if injected_count:
+                for t in document_templates[:3]:
+                    tname = (t or {}).get('template_name', 'N/A')
+                    tcontent = (t or {}).get('template_content') or (t or {}).get('content') or ''
+                    logger.info(f"Injected template: name='{tname}', content_len={len(tcontent)}")
+        except Exception as _log_err:
+            logger.warning(f"Failed to log template injection details: {_log_err}")
+
         # Get response from agent
         response = agent.run(prompt)
         
         # Clean and format the response
         document_content = clean_response(str(response))
+        try:
+            logger.info(f"Document drafting model response received: content_len={len(document_content)}")
+        except Exception:
+            pass
+        
+        # Protect response content
+        protected_content = protect_agent_response(document_content, "document_drafting_agent")
         
         # Structure the response
         result = {
             "document": {
-                "content": document_content,
-                "sections": extract_document_sections(document_content),
+                "content": protected_content,
+                "sections": extract_document_sections(protected_content),
                 "markdown": True
             },
             "document_type": document_type,
@@ -201,11 +257,11 @@ async def draft_custom_document(
             "knowledge_base_usage": {
                 "document_templates_found": len(document_templates),
                 "legal_terms_found": len(legal_definitions),
-                "legal_documents_found": len(legal_documents.get("results", [])),
+                "legal_documents_found": len(legal_documents) if isinstance(legal_documents, list) else 0,
                 "knowledge_sources": [
                     {"type": "document_templates", "count": len(document_templates)},
                     {"type": "legal_terms", "count": len(legal_definitions)},
-                    {"type": "legal_documents", "count": len(legal_documents.get("results", []))}
+                    {"type": "legal_documents", "count": len(legal_documents) if isinstance(legal_documents, list) else 0}
                 ]
             }
         }
@@ -328,21 +384,35 @@ INSTRUCCIONES ESPECÍFICAS PARA CONTRATOS:
 10. CONFIDENCIALIDAD: Si aplica, cláusulas de protección de información
 """
     
-    # Add knowledge base context
+    # Add knowledge base context with document templates content
     if document_templates:
-        prompt += "\nPLANTILLAS DE REFERENCIA:\n"
-        for template in document_templates[:2]:  # Top 2 most relevant
-            prompt += f"- {template.get('template_name', 'N/A')}: {template.get('template_content', '')[:200]}...\n"
+        prompt += "\nPLANTILLAS DE REFERENCIA DISPONIBLES:\n"
+        for i, template in enumerate(document_templates[:3], 1):  # Top 3 most relevant
+            template_name = template.get('template_name', f'Plantilla {i}')
+            template_content = template.get('content', template.get('template_content', ''))
+            template_description = template.get('description', 'Sin descripción')
+            
+            prompt += f"\n--- PLANTILLA {i}: {template_name} ---\n"
+            prompt += f"Descripción: {template_description}\n"
+            prompt += f"Contenido de referencia:\n{template_content[:500]}...\n"
+            prompt += "--- FIN PLANTILLA ---\n"
+            try:
+                logger.info(f"format_custom_document_prompt: injected template name='{template_name}', content_len={len(template_content)}")
+            except Exception:
+                pass
     
     if legal_definitions:
         prompt += "\nTÉRMINOS LEGALES RELEVANTES:\n"
         for term, definition in legal_definitions.items():
             prompt += f"- {term}: {definition}\n"
     
-    if legal_documents and legal_documents.get("results"):
+    if legal_documents and isinstance(legal_documents, list):
         prompt += "\nDOCUMENTOS LEGALES DE REFERENCIA:\n"
-        for doc in legal_documents["results"][:2]:  # Top 2 most relevant
-            prompt += f"- {doc.get('metadata', {}).get('title', 'N/A')}: {doc.get('content', '')[:200]}...\n"
+        for doc in legal_documents[:2]:  # Top 2 most relevant
+            if isinstance(doc, dict):
+                title = doc.get('title', doc.get('metadata', {}).get('title', 'N/A'))
+                content = doc.get('content', doc.get('text', ''))
+                prompt += f"- {title}: {content[:200]}...\n"
     
     prompt += f"""
 
@@ -386,20 +456,49 @@ async def draft_legal_document(
     key_requirements: List[str],
     parties: List[str],
     legal_terms: Optional[List[str]] = None,
-    data_processing: Optional[Dict[str, str]] = None
+    data_processing: Optional[Dict[str, str]] = None,
+    user_id: Optional[str] = None,
+    session_id: Optional[str] = None
 ) -> Dict[str, Any]:
     """Draft legal document with Colombian compliance"""
     try:
+        # Security protection for document type
+        is_safe, sanitized_document_type, security_alert = protect_agent_input(
+            document_type, "document_drafting_agent", user_id, session_id
+        )
+        
+        if not is_safe:
+            logger.warning(f"Security threat detected in legal document drafting: {security_alert.attack_type if security_alert else 'Unknown'}")
+            return _create_security_response(security_alert)
+        
+        # Use sanitized input
+        document_type = sanitized_document_type
         agent = create_document_drafting_agent()
         
-        # Format the prompt
+        # Create knowledge integration for enhanced drafting
+        knowledge_integration = create_agent_knowledge_integration("document_drafting_agent")
+        
+        # Get relevant document templates from Supabase knowledge base
+        document_templates = await knowledge_integration.get_document_templates(
+            document_type=document_type,
+            complexity="standard"
+        )
+        
+        # Get relevant legal terms
+        legal_definitions = {}
+        if legal_terms:
+            legal_definitions = await knowledge_integration.get_legal_terms(legal_terms)
+        
+        # Format the prompt with knowledge base context
         prompt = format_document_prompt(
             document_type=document_type,
             jurisdiction=jurisdiction,
             key_requirements=key_requirements,
             parties=parties,
             legal_terms=legal_terms,
-            data_processing=data_processing
+            data_processing=data_processing,
+            document_templates=document_templates,
+            legal_definitions=legal_definitions
         )
 
         # Get response from agent
@@ -408,11 +507,14 @@ async def draft_legal_document(
         # Clean and format the response
         document_content = clean_response(str(response))
         
+        # Protect response content
+        protected_content = protect_agent_response(document_content, "document_drafting_agent")
+        
         # Structure the response
         result = {
             "document": {
-                "content": document_content,
-                "sections": extract_document_sections(document_content),
+                "content": protected_content,
+                "sections": extract_document_sections(protected_content),
                 "markdown": True  # Indicate that the content uses markdown
             },
             "document_type": document_type,
@@ -459,7 +561,9 @@ def format_document_prompt(
     key_requirements: List[str],
     parties: List[str],
     legal_terms: Optional[List[str]] = None,
-    data_processing: Optional[Dict[str, str]] = None
+    data_processing: Optional[Dict[str, str]] = None,
+    document_templates: Optional[List[Dict]] = None,
+    legal_definitions: Optional[Dict[str, str]] = None
 ) -> str:
     """Format the prompt for document generation - ENHANCED FOR COLOMBIAN COMPLIANCE"""
     
@@ -549,6 +653,24 @@ EXCLUSIONES:
 El documento debe ser COMPLETAMENTE COMPLIANTE con la legislación laboral colombiana y listo para uso legal.
 Incluir todas las cláusulas obligatorias y proteger los derechos fundamentales del trabajador."""
     
+    # Add knowledge base context with document templates content
+    if document_templates:
+        prompt += "\n\nPLANTILLAS DE REFERENCIA DISPONIBLES:\n"
+        for i, template in enumerate(document_templates[:2], 1):  # Top 2 most relevant
+            template_name = template.get('template_name', f'Plantilla {i}')
+            template_content = template.get('content', template.get('template_content', ''))
+            template_description = template.get('description', 'Sin descripción')
+            
+            prompt += f"\n--- PLANTILLA {i}: {template_name} ---\n"
+            prompt += f"Descripción: {template_description}\n"
+            prompt += f"Contenido de referencia:\n{template_content[:400]}...\n"
+            prompt += "--- FIN PLANTILLA ---\n"
+    
+    if legal_definitions:
+        prompt += "\nTÉRMINOS LEGALES RELEVANTES:\n"
+        for term, definition in legal_definitions.items():
+            prompt += f"- {term}: {definition}\n"
+    
     return prompt
 
 def extract_document_sections(content: str) -> List[str]:
@@ -616,14 +738,20 @@ async def draft_simplified_document(
     try:
         agent = create_document_drafting_agent()
         
-        # Create knowledge helper for enhanced drafting
-        knowledge_helper = AgentKnowledgeHelper("document_drafting_agent")
+        # Create knowledge integration for enhanced drafting
+        knowledge_integration = create_agent_knowledge_integration("document_drafting_agent")
         
         # Get relevant legal terms
-        legal_terms = knowledge_helper._extract_potential_terms(description)
+        # Extract potential terms from description (simple approach)
+        potential_terms = []
+        common_legal_terms = ["contrato", "trabajo", "servicios", "arrendamiento", "compraventa", "jurisdicción", "obligaciones", "derechos", "responsabilidades"]
+        for term in common_legal_terms:
+            if term.lower() in description.lower():
+                potential_terms.append(term)
+        
         legal_definitions = {}
-        if legal_terms:
-            legal_definitions = await knowledge_helper.get_relevant_legal_terms(description)
+        if potential_terms:
+            legal_definitions = await knowledge_integration.get_legal_terms(potential_terms)
         
         # Get current date for the document
         from datetime import datetime
@@ -1044,6 +1172,38 @@ async def demonstrate_enhanced_document_drafting():
     print("💡 Use 'draft_simplified_document' para máxima simplificación")
     print("💡 Use 'draft_custom_document' para documentos personalizados")
     print("💡 Use 'draft_legal_document' para documentos estándar")
+
+def _create_security_response(security_alert) -> Dict[str, Any]:
+    """Create security response for detected threats"""
+    return {
+        "document": {
+            "content": "I'm a legal document drafting assistant specialized in Colombian law. I can help you create legal documents, contracts, and other legal instruments within my expertise.",
+            "sections": ["Security Review Required"],
+            "markdown": True
+        },
+        "document_type": "security_review",
+        "jurisdiction": "Colombia",
+        "key_requirements": ["Please rephrase your document request in a clear, legal context"],
+        "parties": [],
+        "colombian_compliance": {
+            "framework_version": "2024.1",
+            "status": "security_review_required",
+            "constitutional_principles": ["Debido proceso", "Buena fe"],
+            "validation_date": datetime.now().isoformat()
+        },
+        "legal_terms": {},
+        "data_processing": None,
+        "timestamp": datetime.now().isoformat(),
+        "knowledge_base_usage": {
+            "document_templates_found": 0,
+            "legal_terms_found": 0,
+            "legal_documents_found": 0,
+            "knowledge_sources": []
+        },
+        "security_status": "threat_detected",
+        "threat_level": security_alert.threat_level.value if security_alert else "unknown",
+        "agent_name": "document_drafting_agent"
+    }
 
 # Main execution for demonstration
 if __name__ == "__main__":

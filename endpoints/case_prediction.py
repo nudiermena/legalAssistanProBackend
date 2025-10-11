@@ -9,13 +9,24 @@ from agents.case_prediction_agent import (
     analyze_similar_cases_from_altas_cortes,
     create_case_prediction_agent
 )
+from middleware.security_middleware import security_protection
 from frameworks.colombian_legal_framework import ColombianLegalFramework
 from endpoints.auth import get_current_user
 import os
 import json
 from models.case_prediction import CasePredictionRequest
+from config.neo4j_kg import Neo4jKnowledgeGraph
 
 router = APIRouter(prefix="/dashboard/case-prediction", tags=["case_prediction"])
+@router.get("/similar-cases")
+async def similar_cases(q: str, k: int = 10, current_user: Dict[str, Any] = Depends(get_current_user)):
+    kg = Neo4jKnowledgeGraph()
+    try:
+        results = kg.search_similar_cases_hybrid(q, top_k=k)
+        return {"query": q, "count": len(results), "results": results}
+    finally:
+        kg.close()
+
 
 # Removed HTML case prediction page route
         
@@ -80,6 +91,7 @@ def _risk_level_to_percentage(risk_level: str) -> int:
     return risk_percentages.get(risk_level.lower(), 50)
 
 @router.post("/analyze")
+@security_protection("case_prediction_agent", max_requests=50, window_minutes=60)
 async def analyze_case(
     request: CasePredictionRequest,
     current_user: Dict[str, Any] = Depends(get_current_user)
@@ -143,6 +155,7 @@ async def analyze_case(
                 "risk_level": "Medio",
                 "estimated_value": "$50K",
             },
+            "graph": prediction_result.get("graph", {}),
             "key_factors": [
                 {
                     "factor": fact,

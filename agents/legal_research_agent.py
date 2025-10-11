@@ -20,7 +20,12 @@ import asyncio
 import json
 import re
 import logging
+import asyncio
 from enum import Enum
+from utils.url_validator import validate_url
+from config.neo4j_rag_adapter import find_similar_cases, get_precedents_for_concepts
+from utils.link_resolver import resolve_record_url
+from utils.security_protection import protect_agent_input, protect_agent_response
 
 logger = logging.getLogger(__name__)
 
@@ -195,7 +200,9 @@ class LegalResearchAgent:
         case_law_only: bool = False,
         include_comparative: bool = False,
         include_international: bool = False,
-        depth_level: str = "comprehensive"
+        depth_level: str = "comprehensive",
+        user_id: Optional[str] = None,
+        session_id: Optional[str] = None
     ) -> Dict[str, Any]:
         """
         Conduct comprehensive legal research with professional methodology
@@ -211,47 +218,109 @@ class LegalResearchAgent:
             include_comparative: Include comparative law analysis
             include_international: Include international law
             depth_level: Research depth (basic, intermediate, comprehensive)
+            user_id: User ID for memory storage
+            session_id: Session ID for tracking
             
         Returns:
             Comprehensive research results
         """
         try:
+            # Security protection for research topic
+            is_safe, sanitized_topic, security_alert = protect_agent_input(
+                research_topic, "legal_research_agent", user_id, session_id
+            )
+            
+            if not is_safe:
+                logger.warning(f"Security threat detected in legal research: {security_alert.attack_type if security_alert else 'Unknown'}")
+                return self._create_security_response(security_alert)
+            
+            # Use sanitized topic for research
+            research_topic = sanitized_topic
             # Initialize research session
             research_session = {
                 "topic": research_topic,
                 "jurisdiction": jurisdiction,
                 "methodology": methodology.value,
                 "timestamp": datetime.now().isoformat(),
-                "user_id": self.user_id,
-                "session_id": self.session_id
+                "user_id": user_id or self.user_id,
+                "session_id": session_id or self.session_id
             }
             
             # Build enhanced research prompt
-            prompt = self._build_research_prompt(
+            prompt = await self._build_research_prompt(
                 research_topic, jurisdiction, methodology, specific_areas,
                 legal_terms, timeframe, case_law_only, include_comparative,
                 include_international, depth_level
             )
             
-            # Execute research
+            # Execute research (parallel external fetches if needed later)
             response = await self.agent.arun(prompt)
-            
+
             # Process and structure results
             results = self._process_research_results(response, research_session)
             
+            # Protect response content
+            if "executive_summary" in results:
+                results["executive_summary"] = protect_agent_response(results["executive_summary"], "legal_research_agent")
+            
+            # Protect case summaries
+            if "cases" in results:
+                for case in results["cases"]:
+                    if "summary" in case:
+                        case["summary"] = protect_agent_response(case["summary"], "legal_research_agent")
+                    if "key_holdings" in case:
+                        case["key_holdings"] = protect_agent_response(case["key_holdings"], "legal_research_agent")
+
+            # ==== Neo4j graph context (similar cases & precedents) ====
+            candidate_terms = [t.strip() for t in re.split(r"[,;/]", research_topic) if t.strip()]
+            graph_similar = find_similar_cases(legal_concepts=candidate_terms, legal_area=None, procedure_type=None, limit=5)
+            graph_precedents = get_precedents_for_concepts(legal_concepts=candidate_terms, jurisdiction=jurisdiction, limit=5)
+            results["graph_context"] = {
+                "similar_cases": graph_similar,
+                "precedents": graph_precedents,
+            }
+
+            # ==== Standardized outputs (citations + jurisprudence list) ====
+            citations: List[str] = []
+            juris_list: List[Dict[str, Any]] = []
+            try:
+                kb_jurisprudence = await self.knowledge_helper.integration.get_jurisprudence(research_topic, limit=5)
+                for item in (kb_jurisprudence or [])[:3]:
+                    url = resolve_record_url(item) or ""
+                    if url and validate_url(url):
+                        citations.append(url)
+                    juris_list.append({
+                        "case_number": item.get("case_number"),
+                        "topic": item.get("topic"),
+                        "summary": (item.get("summary") or "")[:300],
+                        "decision_date": item.get("decision_date"),
+                        "url": url
+                    })
+            except Exception:
+                pass
+
+            results["standardized"] = {
+                "citations": citations,
+                "jurisprudence": juris_list,
+                "metadata": {
+                    "agent": "legal_research_agent",
+                    "jurisdiction": jurisdiction,
+                }
+            }
+
             # Store research memory in database
             self._store_research_memory(research_session, results)
-            
+
             # Update research history
             self.research_history.append(research_session)
-            
+
             return results
             
         except Exception as e:
             logger.error(f"Error in comprehensive research: {e}")
             return self._create_error_response(str(e), research_topic)
     
-    def _build_research_prompt(
+    async def _build_research_prompt(
         self,
         research_topic: str,
         jurisdiction: str,
@@ -321,22 +390,31 @@ MARCO JURÍDICO {jurisdiction.upper()}:
                 for term, definition in legal_terms_dict.items():
                     prompt += f"- {term}: {definition}\n"
         
-        # Add knowledge base context
+            # Add knowledge base context
         try:
             if self.knowledge_helper:
                 # Get relevant jurisprudence
-                jurisprudence = asyncio.run(self.knowledge_helper.integration.get_jurisprudence(research_topic, limit=5))
+                jurisprudence = await self.knowledge_helper.integration.get_jurisprudence(research_topic, limit=5)
                 if jurisprudence:
                     prompt += "\nJURISPRUDENCIA RELEVANTE DE LA BASE DE CONOCIMIENTO:\n"
                     for jur in jurisprudence[:3]:
                         prompt += f"- {jur.get('topic', 'N/A')}: {jur.get('summary', '')[:200]}...\n"
                 
-                # Get relevant legal documents
-                legal_docs = asyncio.run(self.knowledge_helper.integration.search_knowledge(research_topic, limit=3))
-                if legal_docs.get("results"):
-                    prompt += "\nDOCUMENTOS LEGALES RELEVANTES:\n"
-                    for doc in legal_docs["results"][:3]:
-                        prompt += f"- {doc.get('metadata', {}).get('title', 'N/A')}: {doc.get('content', '')[:200]}...\n"
+                # Get relevant legal documents from ai.legal_documents_rag (direct) with fallback
+                legal_docs_direct = await self.knowledge_helper.integration.get_legal_documents(research_topic, limit=5)
+                if legal_docs_direct:
+                    prompt += "\nDOCUMENTOS LEGALES RELEVANTES (RAG):\n"
+                    for doc in legal_docs_direct[:3]:
+                        title = doc.get('title') or doc.get('metadata', {}).get('title', 'N/A')
+                        content_snippet = (doc.get('content') or doc.get('summary') or "")[:200]
+                        prompt += f"- {title}: {content_snippet}...\n"
+                else:
+                    # Fallback to generic knowledge search
+                    legal_docs = await self.knowledge_helper.integration.search_knowledge(research_topic, limit=3)
+                    if legal_docs.get("results"):
+                        prompt += "\nDOCUMENTOS LEGALES RELEVANTES:\n"
+                        for doc in legal_docs["results"][:3]:
+                            prompt += f"- {doc.get('metadata', {}).get('title', 'N/A')}: {doc.get('content', '')[:200]}...\n"
         except Exception as e:
             logger.warning(f"Could not retrieve knowledge base context: {e}")
         
@@ -345,18 +423,44 @@ ESTRUCTURA DE RESPUESTA REQUERIDA:
 1. RESUMEN EJECUTIVO (al menos 900 palabras)
 2. METODOLOGÍA APLICADA
 3. ANÁLISIS NORMATIVO
-4. JURISPRUDENCIA RELEVANTE
+4. JURISPRUDENCIA RELEVANTE CON ANÁLISIS DETALLADO
 5. DOCTRINA APLICABLE
 6. ANÁLISIS COMPARATIVO (si aplica)
 7. RECOMENDACIONES PROFESIONALES
 8. FUENTES Y CITACIONES
 9. LIMITACIONES Y CONSIDERACIONES
 
-FORMATO JSON ESTRUCTURADO:
+FORMATO JSON ESTRUCTURADO CON ANÁLISIS JURISPRUDENCIAL DETALLADO:
 {
   "executive_summary": "Resumen ejecutivo profesional",
   "methodology": "Metodología aplicada",
-  "cases": [{"title", "court", "date", "jurisdiction", "summary", "tags", "relevance", "url", "key_holdings", "impact"}],
+  "cases": [{
+    "title": "Título del caso",
+    "court": "Tribunal que decidió",
+    "date": "Fecha de la decisión",
+    "jurisdiction": "Jurisdicción",
+    "summary": "Resumen general del caso",
+    "tags": ["etiqueta1", "etiqueta2"],
+    "relevance": 0.8,
+    "url": "URL de la decisión",
+    "key_holdings": "Principios jurídicos establecidos",
+    "impact": "Impacto en el derecho",
+    "supporting_jurisprudence": ["T-161 de 2009", "T-640 de 1996", "T-106 de 1993"],
+    "legal_thesis": "Tesis jurídica que responde al problema jurídico concreto",
+    "extract": "Extracto textual de la providencia que da respuesta al problema jurídico",
+    "dissenting_vote": {
+      "magistrate": "Nombre del magistrado que salvó",
+      "vote_count": "Votación",
+      "thesis": "Tesis jurídica del salvamento",
+      "extract": "Extracto textual del salvamento"
+    },
+    "clarification_vote": {
+      "magistrate": "Nombre del magistrado que aclaró",
+      "vote_count": "Votación",
+      "thesis": "Tesis jurídica de la aclaración",
+      "extract": "Extracto textual de la aclaración"
+    }
+  }],
   "legislation": [{"title", "type", "date", "jurisdiction", "summary", "tags", "url", "status", "amendments"}],
   "doctrine": [{"title", "author", "date", "source", "summary", "tags", "url", "relevance"}],
   "comparative_analysis": [{"jurisdiction", "approach", "similarities", "differences", "lessons"}],
@@ -366,13 +470,23 @@ FORMATO JSON ESTRUCTURADO:
   "future_research": ["área1", "área2"]
 }
 
+INSTRUCCIONES ESPECIALES PARA JURISPRUDENCIA DETALLADA:
+- JURISPRUDENCIA QUE APOYA LA DECISIÓN: Lista específica de sentencias relacionadas (ej: T-161 de 2009, T-640 de 1996, etc.)
+- TESIS JURÍDICA: Resumen del extracto que responda al problema jurídico concreto de manera precisa
+- EXTRACTO: Cita textual exacta de la providencia sin comentarios personales ni pies de página
+- SALVAMENTO DE VOTO: Solo si aplica, con magistrado que salvó, votación, tesis y extracto textual
+- ACLARACIÓN DE VOTO: Solo si aplica, con magistrado que aclaró, votación, tesis y extracto textual
+- Incluir siempre principios jurídicos fundamentales establecidos
+- Identificar impacto precedente en el derecho colombiano
+- Relacionar cada caso con el problema jurídico específico investigado
+
 Asegúrate de:
 - Seguir estándares de citación legal colombianos
-- Validar todas las fuentes
-- Proporcionar análisis crítico
-- Incluir perspectivas alternativas
-- Mantener rigor académico
-- Ofrecer recomendaciones prácticas
+- Validar todas las fuentes desde bases de datos oficiales
+- Proporcionar análisis crítico y fundamentado
+- Incluir perspectivas alternativas cuando existan
+- Mantener rigor académico y neutralidad
+- Ofrecer recomendaciones prácticas aplicables
 """
         
         return prompt
@@ -433,23 +547,36 @@ Asegúrate de:
     
     def _enhance_json_structure(self, json_data: Dict[str, Any]) -> Dict[str, Any]:
         """Enhance and validate JSON structure"""
-        enhanced = {
-            "executive_summary": json_data.get("executive_summary", ""),
-            "methodology": json_data.get("methodology", "doctrinal"),
-            "cases": self._validate_cases(json_data.get("cases", [])),
-            "legislation": self._validate_legislation(json_data.get("legislation", [])),
-            "doctrine": self._validate_doctrine(json_data.get("doctrine", [])),
-            "comparative_analysis": json_data.get("comparative_analysis", []),
-            "recommendations": self._validate_recommendations(json_data.get("recommendations", [])),
-            "statistics": self._validate_statistics(json_data.get("statistics", {})),
-            "limitations": json_data.get("limitations", []),
-            "future_research": json_data.get("future_research", [])
-        }
-        
-        return enhanced
+        try:
+            # Ensure json_data is a dictionary
+            if not isinstance(json_data, dict):
+                logger.warning(f"Expected dict but got {type(json_data)}, converting to dict")
+                if isinstance(json_data, list) and len(json_data) > 0:
+                    json_data = json_data[0] if isinstance(json_data[0], dict) else {}
+                else:
+                    json_data = {}
+            
+            enhanced = {
+                "executive_summary": json_data.get("executive_summary", ""),
+                "methodology": json_data.get("methodology", "doctrinal"),
+                "cases": self._validate_cases(json_data.get("cases", [])),
+                "legislation": self._validate_legislation(json_data.get("legislation", [])),
+                "doctrine": self._validate_doctrine(json_data.get("doctrine", [])),
+                "comparative_analysis": json_data.get("comparative_analysis", []),
+                "recommendations": self._validate_recommendations(json_data.get("recommendations", [])),
+                "statistics": self._validate_statistics(json_data.get("statistics", {})),
+                "limitations": json_data.get("limitations", []),
+                "future_research": json_data.get("future_research", [])
+            }
+            
+            return enhanced
+            
+        except Exception as e:
+            logger.error(f"Error enhancing JSON structure: {e}")
+            return self._parse_text_response(str(json_data))
     
     def _validate_cases(self, cases: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
-        """Validate and enhance case data"""
+        """Validate and enhance case data with detailed legal analysis fields"""
         validated = []
         for case in cases:
             # Safely convert relevance to float
@@ -469,6 +596,63 @@ Asegúrate de:
             except (ValueError, TypeError):
                 relevance = 0.5  # Default value if conversion fails
             
+            # Validate supporting jurisprudence
+            supporting_jurisprudence = case.get("supporting_jurisprudence", [])
+            if not isinstance(supporting_jurisprudence, list):
+                supporting_jurisprudence = []
+            
+            # Validate dissenting vote structure
+            dissenting_vote = case.get("dissenting_vote", {})
+            if not isinstance(dissenting_vote, dict):
+                dissenting_vote = {}
+            
+            validated_dissenting = {
+                "magistrate": dissenting_vote.get("magistrate", ""),
+                "vote_count": dissenting_vote.get("vote_count", ""),
+                "thesis": dissenting_vote.get("thesis", ""),
+                "extract": dissenting_vote.get("extract", "")
+            }
+            
+            # Validate clarification vote structure
+            clarification_vote = case.get("clarification_vote", {})
+            if not isinstance(clarification_vote, dict):
+                clarification_vote = {}
+            
+            validated_clarification = {
+                "magistrate": clarification_vote.get("magistrate", ""),
+                "vote_count": clarification_vote.get("vote_count", ""),
+                "thesis": clarification_vote.get("thesis", ""),
+                "extract": clarification_vote.get("extract", "")
+            }
+            
+            # Safely convert key_holdings to string if it's a list
+            key_holdings = case.get("key_holdings", "")
+            if isinstance(key_holdings, list):
+                key_holdings = "; ".join(str(item) for item in key_holdings)
+            elif not isinstance(key_holdings, str):
+                key_holdings = str(key_holdings) if key_holdings else ""
+            
+            # Safely convert impact to string if it's a list
+            impact = case.get("impact", "")
+            if isinstance(impact, list):
+                impact = "; ".join(str(item) for item in impact)
+            elif not isinstance(impact, str):
+                impact = str(impact) if impact else ""
+            
+            # Safely convert legal_thesis to string if it's a list
+            legal_thesis = case.get("legal_thesis", "")
+            if isinstance(legal_thesis, list):
+                legal_thesis = "; ".join(str(item) for item in legal_thesis)
+            elif not isinstance(legal_thesis, str):
+                legal_thesis = str(legal_thesis) if legal_thesis else ""
+            
+            # Safely convert extract to string if it's a list
+            extract = case.get("extract", "")
+            if isinstance(extract, list):
+                extract = "; ".join(str(item) for item in extract)
+            elif not isinstance(extract, str):
+                extract = str(extract) if extract else ""
+            
             validated_case = {
                 "title": case.get("title", "N/A"),
                 "court": case.get("court", "N/A"),
@@ -478,8 +662,13 @@ Asegúrate de:
                 "tags": case.get("tags", []),
                 "relevance": relevance,
                 "url": case.get("url", ""),
-                "key_holdings": case.get("key_holdings", ""),
-                "impact": case.get("impact", "")
+                "key_holdings": key_holdings,
+                "impact": impact,
+                "supporting_jurisprudence": supporting_jurisprudence,
+                "legal_thesis": legal_thesis,
+                "extract": extract,
+                "dissenting_vote": validated_dissenting,
+                "clarification_vote": validated_clarification
             }
             validated.append(validated_case)
         return validated
@@ -683,6 +872,31 @@ Asegúrate de:
             "citation_style": self.citation_style,
             "agent_version": "2.0_enhanced"
         }
+    
+    def _create_security_response(self, security_alert) -> Dict[str, Any]:
+        """Create security response for detected threats"""
+        return {
+            "executive_summary": "I'm a legal research assistant specialized in Colombian law. I can help you with legal research, case analysis, and legal guidance within my expertise.",
+            "methodology": "security_protection",
+            "cases": [],
+            "legislation": [],
+            "doctrine": [],
+            "comparative_analysis": [],
+            "recommendations": [
+                {
+                    "type": "security",
+                    "description": "Please rephrase your question in a clear, legal context.",
+                    "priority": "high",
+                    "implementation": "Focus on specific legal topics or questions."
+                }
+            ],
+            "statistics": {"sources_found": 0, "search_time": "N/A"},
+            "limitations": ["Security review required"],
+            "future_research": [],
+            "security_status": "threat_detected",
+            "threat_level": security_alert.threat_level.value if security_alert else "unknown",
+            "agent_name": "legal_research_agent"
+        }
 
 # Backward compatibility function
 def create_legal_research_agent(user_id: str = None, session_id: str = None) -> Agent:
@@ -711,13 +925,13 @@ def create_legal_research_agent(user_id: str = None, session_id: str = None) -> 
         model=get_model("legal_research"),
         knowledge=knowledge_integration,
         search_knowledge=True,
-        tools=[GoogleSearchTools()],
+        tools=[],  # Disable tools for Mistral API compatibility
         storage=enhanced_config["storage"],
         memory=memory_config,
         session_id=session_id or f"research_{user_id}_{datetime.now().strftime('%Y%m%d_%H%M%S')}",
-        show_tool_calls=True,
-        debug_mode=True,
-        reasoning=False,  # Disable reasoning mode temporarily to fix Mistral API compatibility
+        show_tool_calls=False,  # Disable tool calls for Mistral
+        debug_mode=False,      # Disable debug mode for Mistral
+        reasoning=False,       # Disable reasoning mode for Mistral API compatibility
        description="""
             Un agente especializado en realizar investigaciones jurídicas exhaustivas dentro del marco legal colombiano e internacional.
             Analiza jurisprudencia, autos, legislación y artículos académicos, proporcionando citas precisas y sintetizando hallazgos en un formato estructurado para profesionales del derecho.
@@ -959,36 +1173,37 @@ MARCO JURÍDICO COLOMBIANO:
         logger.info(f"Articles found: {len(parsed_data.get('articles', []))}")
         
         # Use parsed data to populate structured fields
-    result = {
-            "cases": parsed_data.get("cases", []),
-            "legislation": parsed_data.get("legislation", []),
-            "articles": parsed_data.get("articles", []),
-            "summary": parsed_data.get("summary", response.content),
-            "statistics": parsed_data.get("statistics", {}),
-            "research_topic": research_topic,
-            "jurisdiction": jurisdiction,
-            "colombian_compliance": {
-                "framework_version": ColombianLegalFramework.FRAMEWORK_VERSION,
-                "constitutional_principles": ColombianLegalFramework.CONSTITUTIONAL_PRINCIPLES,
-                "research_date": datetime.now().isoformat()
-            },
-            "legal_framework": {
-                "leyes": [],
-                "decretos": [],
-                "resoluciones": []
-            },
-            "jurisprudence": jurisprudence,
-            "knowledge_base_usage": {
-                "legal_terms_found": len(legal_terms_dict),
-                "jurisprudence_found": len(jurisprudence),
-                "legal_documents_found": len(legal_documents.get("results", [])),
-                "knowledge_sources": [
-                    {"type": "legal_terms", "count": len(legal_terms_dict)},
-                    {"type": "jurisprudence", "count": len(jurisprudence)},
-                    {"type": "legal_documents", "count": len(legal_documents.get("results", []))}
-                ]
+        if parsed_data:
+            result = {
+                "cases": parsed_data.get("cases", []),
+                "legislation": parsed_data.get("legislation", []),
+                "articles": parsed_data.get("articles", []),
+                "summary": parsed_data.get("summary", response.content),
+                "statistics": parsed_data.get("statistics", {}),
+                "research_topic": research_topic,
+                "jurisdiction": jurisdiction,
+                "colombian_compliance": {
+                    "framework_version": ColombianLegalFramework.FRAMEWORK_VERSION,
+                    "constitutional_principles": ColombianLegalFramework.CONSTITUTIONAL_PRINCIPLES,
+                    "research_date": datetime.now().isoformat()
+                },
+                "legal_framework": {
+                    "leyes": [],
+                    "decretos": [],
+                    "resoluciones": []
+                },
+                "jurisprudence": jurisprudence,
+                "knowledge_base_usage": {
+                    "legal_terms_found": len(legal_terms_dict),
+                    "jurisprudence_found": len(jurisprudence),
+                    "legal_documents_found": len(legal_documents.get("results", [])),
+                    "knowledge_sources": [
+                        {"type": "legal_terms", "count": len(legal_terms_dict)},
+                        {"type": "jurisprudence", "count": len(jurisprudence)},
+                        {"type": "legal_documents", "count": len(legal_documents.get("results", []))}
+                    ]
+                }
             }
-        }
     else:
         # Fallback to old structure if parsing fails
         result = {

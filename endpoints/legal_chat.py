@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException, Body, Depends
+from fastapi import APIRouter, HTTPException, Body, Depends, Request
 from fastapi.responses import JSONResponse
 from typing import Optional, List, Dict, Any, Union
 from pydantic import BaseModel, Field, ConfigDict
@@ -6,6 +6,7 @@ from datetime import datetime
 from models.request_models import LegalChatbotRequest
 from models.response_models import BaseResponse, format_response, handle_error
 from agents.chatbot_agent import process_client_message, create_chatbot_agent
+from middleware.security_middleware import security_protection
 from config.colombian_compliance import ColombianLegalFramework
 from pathlib import Path
 from config.ai_models import get_model
@@ -197,6 +198,7 @@ class ChatV2Response(BaseModel):
     colombiano, incluyendo referencias normativas y jurisprudenciales relevantes.
     """
 )
+@security_protection("chatbot_agent", max_requests=100, window_minutes=60)
 async def chat_endpoint(
     request: ChatRequest = Body(
         ...,

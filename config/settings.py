@@ -11,3 +11,20 @@ MISTRAL_API_KEY = "77s29tt6TmDEaVKjcd5OsaQ3sYLLTzCI"
 GROQ_API_KEY = "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"  # Add your Groq API key here
 OPENAI_API_KEY = ""  # Set to empty to force use of Mistral/Groq
 DOCX_KB_PATH = r"C:\Users\nudie\OneDrive\Documentos\Derecho\Formatos"
+
+
+NEO4J_URI="neo4j+s://c8a93607.databases.neo4j.io"
+NEO4J_USERNAME="neo4j"
+NEO4J_PASSWORD="3dGk4Dw7zMvRf_NmEC-9mxFG31NXfz2_xWCFX_naA54"
+NEO4J_DATABASE="neo4j"
+AURA_INSTANCEID="c8a93607"
+AURA_INSTANCENAME="MiasistenteLegal"
+
+NEO4J_URI="neo4j+s://6527f3f7.databases.neo4j.io"
+NEO4J_USERNAME="6527f3f7"
+NEO4J_PASSWORD="_7BmsfQgzf7z5QOptPgC8a0rGa1SLL-NRdVy3azhNds"
+NEO4J_DATABASE="6527f3f7"
+AURA_INSTANCEID="6527f3f7"
+AURA_INSTANCENAME="Instance01"
+
+

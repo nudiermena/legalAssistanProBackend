@@ -17,10 +17,7 @@ from fastapi.responses import JSONResponse
 from starlette.middleware.base import BaseHTTPMiddleware, RequestResponseEndpoint
 from starlette.types import ASGIApp
 
-import redis.asyncio as redis
-from slowapi import Limiter, _rate_limit_exceeded_handler
-from slowapi.util import get_remote_address
-from slowapi.errors import RateLimitExceeded
+# Removed Redis and slowapi dependencies; using simple in-memory rate limiting only
 
 from config.security import (
     SECURITY_CONFIG,
@@ -43,29 +40,12 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
     
     def __init__(self, app: ASGIApp):
         super().__init__(app)
-        self.redis_client: Optional[redis.Redis] = None
         self.in_memory_limits: Dict[str, Dict[str, List[int]]] = {}
         self.rate_limits = {
             "minute": SECURITY_CONFIG.rate_limit.requests_per_minute,
             "hour": SECURITY_CONFIG.rate_limit.requests_per_hour,
             "day": SECURITY_CONFIG.rate_limit.requests_per_day
         }
-    
-    async def connect_redis(self):
-        """Connect to Redis for rate limiting"""
-        if not self.redis_client:
-            try:
-                self.redis_client = redis.from_url(
-                    SECURITY_CONFIG.redis_url,
-                    db=SECURITY_CONFIG.redis_db,
-                    decode_responses=True
-                )
-                await self.redis_client.ping()
-                security_logger.info("Connected to Redis for rate limiting")
-            except Exception as e:
-                security_logger.warning(f"Failed to connect to Redis: {e}")
-                security_logger.warning("Rate limiting will be disabled - all requests will be allowed")
-                self.redis_client = None
     
     def get_client_identifier(self, request: Request) -> str:
         """Get unique identifier for rate limiting"""
@@ -107,29 +87,7 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
         """Check if request is within rate limit for given window"""
         current_time = int(time.time())
         
-        # Try Redis first
-        if self.redis_client:
-            try:
-                key = f"rate_limit:{identifier}:{window}"
-                
-                # Remove old entries
-                await self.redis_client.zremrangebyscore(key, 0, current_time - 60)
-                
-                # Count current requests
-                count = await self.redis_client.zcard(key)
-                
-                if count >= self.rate_limits[window]:
-                    return False
-                
-                # Add current request
-                await self.redis_client.zadd(key, {str(current_time): current_time})
-                await self.redis_client.expire(key, 60)  # Expire after 60 seconds
-                
-                return True
-            except Exception as e:
-                security_logger.warning(f"Redis rate limit check failed, falling back to in-memory: {e}")
-        
-        # Fallback to in-memory storage
+        # In-memory storage
         try:
             if identifier not in self.in_memory_limits:
                 self.in_memory_limits[identifier] = {"minute": [], "hour": [], "day": []}
@@ -162,9 +120,6 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
         # Skip rate limiting for certain endpoints
         if request.url.path in ["/health", "/metrics", "/docs", "/openapi.json"]:
             return await call_next(request)
-        
-        # Connect to Redis if needed
-        await self.connect_redis()
         
         # Get client identifier
         identifier = self.get_client_identifier(request)
@@ -397,7 +352,8 @@ class AuthenticationMiddleware(BaseHTTPMiddleware):
             "/auth/refresh",   # Allow token refresh without auth
             "/auth/health",
             "/api/friend-invite/validate",  # Allow friend invite validation without auth
-            "/api/friend-invite/accept"  # Allow friend invite acceptance without auth
+            "/api/friend-invite/accept",  # Allow friend invite acceptance without auth
+            "/api/request-demo"  # Allow request demo without auth (public)
         ]
         
         return not any(path.startswith(public_path) for public_path in public_paths)

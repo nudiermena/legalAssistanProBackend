@@ -7,150 +7,9 @@ import json
 import re
 from models.request_models import LegalResearchRequest
 from models.response_models import BaseResponse, format_response, handle_error
-# Temporarily disabled due to syntax errors
-# from agents.legal_research_agent import conduct_legal_research
+from agents.legal_research_agent import LegalResearchAgent
+from middleware.security_middleware import security_protection
 
-# Working legal research function that calls Mistral API
-async def conduct_legal_research_working(
-    research_topic: str,
-    jurisdiction: str = "Colombia",
-    specific_areas: Optional[List[str]] = None,
-    data_processing: Optional[Dict[str, str]] = None,
-    legal_terms: Optional[List[str]] = None,
-    user_id: Optional[str] = None,
-    session_id: Optional[str] = None
-):
-    """Working legal research function that calls Mistral API"""
-    from datetime import datetime
-    from config.ai_models import get_model
-    from agno.agent import Agent
-    
-    try:
-        # Create a simple agent that will call Mistral API
-        agent = Agent(
-            name="Investigador Jurídico Simple",
-            role="Especialista en investigación jurídica colombiana",
-            model=get_model("legal_research"),
-            session_id=session_id or f"research_{user_id}_{datetime.now().strftime('%Y%m%d_%H%M%S')}",
-            instructions=[
-                "Realiza investigación jurídica exhaustiva sobre el tema solicitado",
-                "Enfócate en el marco legal colombiano",
-                "Proporciona análisis normativo, jurisprudencia relevante y recomendaciones",
-                "Cita fuentes específicas cuando sea posible",
-                "Devuelve la respuesta en formato markdown estructurado"
-            ],
-            markdown=True
-        )
-        
-        # Build the research prompt
-        prompt = f"""Realizar investigación jurídica exhaustiva sobre el siguiente tema:
-
-TEMA: {research_topic}
-JURISDICCIÓN: {jurisdiction}
-
-MARCO JURÍDICO COLOMBIANO:
-- Principios Constitucionales
-- Fuentes del Derecho: Constitución, Leyes, Decretos, Jurisprudencia
-- Análisis de la normativa vigente
-- Jurisprudencia relevante de las Altas Cortes
-
-ESTRUCTURA DE RESPUESTA:
-1. Resumen Ejecutivo
-2. Análisis Normativo
-3. Jurisprudencia Relevante
-4. Legislación Aplicable
-5. Recomendaciones Prácticas
-6. Fuentes y Referencias
-
-IMPORTANTE: Al final de tu respuesta, incluye un bloque JSON estructurado con el siguiente formato:
-
-```json
-{{
-  "cases": [
-    {{
-      "title": "Título del caso",
-      "court": "Corte",
-      "date": "Fecha",
-      "jurisdiction": "Colombia",
-      "summary": "Resumen del caso",
-      "tags": ["tag1", "tag2"],
-      "relevance": 0.8,
-      "url": "URL si está disponible"
-    }}
-  ],
-  "legislation": [
-    {{
-      "title": "Título de la ley",
-      "type": "Ley/Decreto",
-      "date": "Fecha",
-      "jurisdiction": "Colombia",
-      "summary": "Resumen de la ley",
-      "tags": ["tag1", "tag2"],
-      "url": "URL si está disponible",
-      "status": "Vigente"
-    }}
-  ],
-  "articles": [
-    {{
-      "title": "Título del artículo",
-      "author": "Autor",
-      "date": "Fecha",
-      "source": "Fuente",
-      "summary": "Resumen del artículo",
-      "tags": ["tag1", "tag2"],
-      "url": "URL si está disponible"
-    }}
-  ],
-  "summary": "Resumen ejecutivo completo",
-  "statistics": {{
-    "sources_found": 10,
-    "search_time": "N/A",
-    "methodology_used": "Análisis jurídico"
-  }}
-}}
-```
-
-Proporciona un análisis profundo y profesional del tema solicitado."""
-
-        # Call the Mistral API through the agent
-        response = await agent.arun(prompt)
-        
-        # Return structured response
-        return {
-            "research_topic": research_topic,
-            "jurisdiction": jurisdiction,
-            "cases": [],
-            "legislation": [],
-            "articles": [],
-            "summary": response.content,
-            "statistics": {"sources_found": 1, "search_time": "N/A"},
-            "legal_terms": {term: f"Definición de {term}" for term in (legal_terms or [])} if legal_terms else {},
-            "knowledge_base_usage": {
-                "legal_terms_found": len(legal_terms or []),
-                "jurisprudence_found": 0,
-                "legal_documents_found": 0,
-                "knowledge_sources": ["Mistral AI Model"]
-            }
-        }
-        
-    except Exception as e:
-        # Fallback if agent fails
-        return {
-            "research_topic": research_topic,
-            "jurisdiction": jurisdiction,
-            "cases": [],
-            "legislation": [],
-            "articles": [],
-            "summary": f"Error en la investigación: {str(e)}",
-            "statistics": {"sources_found": 0, "search_time": "N/A"},
-            "legal_terms": {},
-            "knowledge_base_usage": {
-                "legal_terms_found": 0,
-                "jurisprudence_found": 0,
-                "legal_documents_found": 0,
-                "knowledge_sources": []
-            }
-        }
 from config.colombian_compliance import (
     ColombianLegalFramework,
     get_legal_areas,
@@ -221,6 +80,18 @@ class LegalResearchRequest(BaseModel):
             }
         }
 
+class DissentingVote(BaseModel):
+    magistrate: Optional[str] = None
+    vote_count: Optional[str] = None
+    thesis: Optional[str] = None
+    extract: Optional[str] = None
+
+class ClarificationVote(BaseModel):
+    magistrate: Optional[str] = None
+    vote_count: Optional[str] = None
+    thesis: Optional[str] = None
+    extract: Optional[str] = None
+
 class Case(BaseModel):
     title: str
     court: str
@@ -230,6 +101,13 @@ class Case(BaseModel):
     tags: List[str]
     relevance: float
     url: Optional[str] = None
+    key_holdings: Optional[str] = None
+    impact: Optional[str] = None
+    supporting_jurisprudence: Optional[List[str]] = None
+    legal_thesis: Optional[str] = None
+    extract: Optional[str] = None
+    dissenting_vote: Optional[DissentingVote] = None
+    clarification_vote: Optional[ClarificationVote] = None
 
 class Legislation(BaseModel):
     title: str
@@ -278,7 +156,24 @@ class LegalResearchResponse(BaseModel):
                         "summary": "En este caso se estableció un precedente importante...",
                         "tags": ["Despido sin justa causa", "Indemnización", "Código Sustantivo del Trabajo"],
                         "relevance": 0.95,
-                        "url": "https://ejemplo.com/caso1"
+                        "url": "https://ejemplo.com/caso1",
+                        "key_holdings": "Principio de estabilidad laboral reforzada",
+                        "impact": "Establece precedente para casos similares",
+                        "supporting_jurisprudence": ["T-161 de 2009", "T-640 de 1996"],
+                        "legal_thesis": "El despido sin justa causa viola el derecho fundamental al trabajo",
+                        "extract": "La Corte estableció que el despido sin justa causa...",
+                        "dissenting_vote": {
+                            "magistrate": "Dr. Juan Pérez",
+                            "vote_count": "1 voto",
+                            "thesis": "Considera que el despido fue procedente",
+                            "extract": "En mi concepto, el despido se ajusta a derecho..."
+                        },
+                        "clarification_vote": {
+                            "magistrate": "Dra. María García",
+                            "vote_count": "1 voto",
+                            "thesis": "Aclara el alcance de la decisión",
+                            "extract": "La decisión debe entenderse en el sentido de que..."
+                        }
                     }
                 ],
                 "legislation": [
@@ -429,10 +324,10 @@ def extract_structured_data_from_markdown(summary: str):
                         
                         case = {
                             "title": f"Referencia: {match[:100]}...",
-                            "court": court_match.group(1).strip() if court_match else "Corte Colombiana",
-                            "date": date_match.group(1).strip() if date_match else "Fecha no especificada",
+                            "court": court_match.group(1).strip() if court_match and court_match.groups() else "Corte Colombiana",
+                            "date": date_match.group(1).strip() if date_match and date_match.groups() else "Fecha no especificada",
                             "jurisdiction": "Colombia",
-                            "summary": summary_match.group(1).strip() if summary_match else (match[:300] + "..." if len(match) > 300 else match),
+                            "summary": summary_match.group(1).strip() if summary_match and summary_match.groups() else (match[:300] + "..." if len(match) > 300 else match),
                             "tags": ["Jurisprudencia", "Colombia"],
                             "relevance": 0.8,
                             "url": None
@@ -460,10 +355,10 @@ def extract_structured_data_from_markdown(summary: str):
                     
                     legislation_item = {
                         "title": match,
-                        "type": type_match.group(1).strip() if type_match else "Normativa",
-                        "date": date_match.group(1).strip() if date_match else "Fecha no especificada",
+                        "type": type_match.group(1).strip() if type_match and type_match.groups() else "Normativa",
+                        "date": date_match.group(1).strip() if date_match and date_match.groups() else "Fecha no especificada",
                         "jurisdiction": "Colombia",
-                        "summary": summary_match.group(1).strip() if summary_match else f"Referencia a {match} en el análisis",
+                        "summary": summary_match.group(1).strip() if summary_match and summary_match.groups() else f"Referencia a {match} en el análisis",
                         "tags": ["Legislación", "Colombia"],
                         "url": None,
                         "status": "Vigente"
@@ -490,10 +385,10 @@ def extract_structured_data_from_markdown(summary: str):
                     
                     article = {
                         "title": f"Referencia: {match[:100]}...",
-                        "author": author_match.group(1).strip() if author_match else "Autor no especificado",
-                        "date": date_match.group(1).strip() if date_match else "Fecha no especificada",
+                        "author": author_match.group(1).strip() if author_match and author_match.groups() else "Autor no especificado",
+                        "date": date_match.group(1).strip() if date_match and date_match.groups() else "Fecha no especificada",
                         "source": "Fuente no especificada",
-                        "summary": summary_match.group(1).strip() if summary_match else (match[:300] + "..." if len(match) > 300 else match),
+                        "summary": summary_match.group(1).strip() if summary_match and summary_match.groups() else (match[:300] + "..." if len(match) > 300 else match),
                         "tags": ["Doctrina", "Colombia"],
                         "url": None
                     }
@@ -567,6 +462,24 @@ def sanitize_for_json(obj):
         return str(obj)
     return obj
 
+def _sanitize_jurisprudence_item(item: Dict[str, Any]) -> Dict[str, str]:
+    """Sanitize jurisprudence item to ensure all string fields are not None"""
+    if not isinstance(item, dict):
+        return {}
+    
+    sanitized = {}
+    for key, value in item.items():
+        if value is None:
+            sanitized[key] = ""
+        elif isinstance(value, (int, float)):
+            sanitized[key] = str(value)
+        elif isinstance(value, str):
+            sanitized[key] = value
+        else:
+            sanitized[key] = str(value) if value is not None else ""
+    
+    return sanitized
+
 @router.post(
     "/investigate",
     response_model=LegalResearchResponse,
@@ -576,6 +489,7 @@ def sanitize_for_json(obj):
     colombiano, incluyendo análisis de jurisprudencia, doctrina y normativa aplicable.
     """
 )
+@security_protection("legal_research_agent", max_requests=50, window_minutes=60)
 async def research_endpoint(
     request: LegalResearchRequest = Body(
         ...,
@@ -585,61 +499,56 @@ async def research_endpoint(
 ):
     """Realiza investigación jurídica con cumplimiento normativo colombiano"""
     try:
-        result = await conduct_legal_research_working(
+        # Use the enhanced legal research agent
+        research_agent = LegalResearchAgent(
+            user_id=current_user.get("id"),
+            session_id=f"research_{current_user.get('id')}_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+        )
+        
+        result = await research_agent.conduct_comprehensive_research(
             research_topic=request.research_topic,
             jurisdiction=request.jurisdiction,
             specific_areas=request.specific_areas,
-            data_processing=request.data_processing,
             legal_terms=request.legal_terms,
             user_id=current_user.get("id"),
             session_id=f"research_{current_user.get('id')}_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
         )
         
-        # Try to parse the agent's response as JSON and map to new fields
-        try:
-            if isinstance(result, dict) and 'cases' in result and 'legislation' in result and 'articles' in result:
-                # Already structured
-                structured = result
-            else:
-                # Try to parse from string (if agent returns JSON as string)
-                structured = json.loads(result["research_results"]["analisis_normativo"])
+        # The enhanced agent returns structured data directly
+        response_data = {
+            "cases": result.get("cases", []),
+            "legislation": result.get("legislation", []),
+            "articles": result.get("articles", []),
+            "summary": result.get("executive_summary", result.get("summary", "")),
+            "statistics": result.get("statistics", {}),
+            "research_topic": result.get("research_session", {}).get("topic", request.research_topic),
+            "jurisdiction": result.get("research_session", {}).get("jurisdiction", request.jurisdiction),
+            "colombian_compliance": {
+                "framework_version": "2.0_enhanced",
+                "constitutional_principles": ["Dignidad humana", "Trabajo", "Solidaridad", "Prevalencia del interés general"],
+                "research_date": datetime.now().isoformat()
+            },
+            "legal_framework": result.get("legal_framework", {}),
+            "specific_areas": request.specific_areas,
+            "data_processing": request.data_processing,
+            "legal_terms": result.get("legal_terms", {}),
+            "pdf_summary_url": None,
+            "timestamp": datetime.now()
+        }
 
-            response_data = {
-                "cases": structured.get("cases", []),
-                "legislation": structured.get("legislation", []),
-                "articles": structured.get("articles", []),
-                "summary": structured.get("summary", ""),
-                "statistics": structured.get("statistics", {}),
-                "research_topic": result.get("research_topic", request.research_topic),
-                "jurisdiction": result.get("jurisdiction", request.jurisdiction),
-                "colombian_compliance": result.get("colombian_compliance", {}),
-                "legal_framework": result.get("legal_framework", {}),
-                "jurisprudence": result.get("jurisprudence"),
-                "specific_areas": result.get("specific_areas"),
-                "data_processing": result.get("data_processing"),
-                "legal_terms": result.get("legal_terms"),
-                "pdf_summary_url": result.get("pdf_summary_url"),
-                "timestamp": datetime.now()
-            }
-        except Exception:
-            # Fallback: fill new fields with defaults, use old structure for summary
-            response_data = {
-                "cases": [],
-                "legislation": [],
-                "articles": [],
-                "summary": result["research_results"]["analisis_normativo"],
-                "statistics": {},
-                "research_topic": result.get("research_topic", request.research_topic),
-                "jurisdiction": result.get("jurisdiction", request.jurisdiction),
-                "colombian_compliance": result.get("colombian_compliance", {}),
-                "legal_framework": result.get("legal_framework", {}),
-                "jurisprudence": result.get("jurisprudence"),
-                "specific_areas": result.get("specific_areas"),
-                "data_processing": result.get("data_processing"),
-                "legal_terms": result.get("legal_terms"),
-                "pdf_summary_url": result.get("pdf_summary_url"),
-                "timestamp": datetime.now()
-            }
+        # Ensure jurisprudence array uses real case data instead of empty entries
+        jurisprudence_data = []
+        for case in response_data["cases"]:
+            if case.get("case_number") or case.get("title"):
+                jurisprudence_data.append({
+                    "case_number": case.get("title", ""),
+                    "topic": case.get("tags", [""])[0] if case.get("tags") else "",
+                    "summary": case.get("summary", ""),
+                    "decision_date": case.get("date", ""),
+                    "url": case.get("url", "")
+                })
+        
+        response_data["jurisprudence"] = jurisprudence_data
 
         # If cases, legislation, and articles are empty, try to extract from AI response
         if not response_data["cases"] and not response_data["legislation"] and not response_data["articles"]:

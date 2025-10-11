@@ -10,11 +10,16 @@ from config.knowledge_base_integration import (
 )
 from frameworks.colombian_legal_framework import ColombianLegalFramework
 from models.case_prediction import CasePredictionRequest
+from config.neo4j_kg import Neo4jKnowledgeGraph
+from config.knowledge_base_integration import AgentKnowledgeHelper
+from utils.link_resolver import resolve_record_url
+from utils.security_protection import protect_agent_input, protect_agent_response
 
 class CasePredictionAgent(Agent):
     def __init__(self):
         # Create knowledge base integration
         knowledge_integration = create_agent_knowledge_integration("case_prediction_agent")
+        self.graph = Neo4jKnowledgeGraph()
         
         super().__init__(
             model=get_model("case_prediction"),
@@ -36,9 +41,15 @@ class CasePredictionAgent(Agent):
             # Get relevant knowledge from knowledge base
             case_knowledge = await self.knowledge_helper.integration.get_agent_specific_knowledge("cases")
             
-            # Get relevant jurisprudence
+            # Get relevant jurisprudence (ai.jurisprudence direct if available)
             jurisprudence = await self.knowledge_helper.integration.get_jurisprudence(
                 topic=request.case_type,
+                limit=5
+            )
+
+            # Get relevant legal documents from ai.legal_documents_rag
+            legal_docs = await self.knowledge_helper.integration.get_legal_documents(
+                query=request.case_type or "",
                 limit=5
             )
             
@@ -54,8 +65,56 @@ class CasePredictionAgent(Agent):
             
             # Create the analysis prompt
             prompt = self._create_analysis_prompt(request, case_knowledge, jurisprudence, legal_definitions)
+            # Append brief RAG legal document context if found
+            if legal_docs:
+                prompt += "\nDOCUMENTOS LEGALES RELACIONADOS (RAG):\n"
+                for doc in legal_docs[:3]:
+                    title = doc.get("title") or doc.get("metadata", {}).get("title", "N/A")
+                    snippet = (doc.get("content") or doc.get("summary") or "")[:200]
+                    prompt += f"- {title}: {snippet}...\n"
             
-            # Get the AI analysis
+            # Graph-assisted retrieval
+            graph_similar = []
+            graph_precedents = []
+            graph_prediction = None
+            try:
+                graph_similar = self.graph.find_similar_cases(
+                    legal_area=request.case_type if request.case_type else "",
+                    procedure_type=request.administrative_procedure,
+                    legal_concepts=list(legal_definitions.keys()) if legal_definitions else [],
+                    court_id=None,
+                    limit=10,
+                ) or []
+                graph_precedents = self.graph.get_precedents_for_concepts(
+                    legal_concepts=list(legal_definitions.keys()) if legal_definitions else [],
+                    jurisdiction=request.jurisdiction,
+                    limit=10,
+                ) or []
+                graph_prediction = self.graph.predict_outcome_from_graph(
+                    {
+                        "legal_area": request.case_type or "",
+                        "procedure_type": request.administrative_procedure,
+                        "legal_concepts": list(legal_definitions.keys()) if legal_definitions else [],
+                        "court_id": None,
+                    }
+                )
+            except Exception:
+                graph_similar, graph_precedents, graph_prediction = [], [], None
+
+            # Get the AI analysis, injecting brief graph context
+            graph_context_lines = []
+            if graph_prediction:
+                graph_context_lines.append(
+                    f"Predicción del grafo: {graph_prediction.get('predicted_outcome')} (confianza: {graph_prediction.get('confidence'):.2f})"
+                )
+            if graph_similar:
+                graph_context_lines.append(f"Casos similares en grafo: {len(graph_similar)} (top título: {graph_similar[0].get('title','N/A')})")
+            if graph_precedents:
+                graph_context_lines.append(f"Precedentes relevantes en grafo: {len(graph_precedents)}")
+
+            if graph_context_lines:
+                prompt += "\n\nContexto de grafo (Neo4j):\n" + "\n".join(f"- {line}" for line in graph_context_lines)
+
             response = await self.arun(prompt)
             
             # Extract the content from the response
@@ -73,12 +132,19 @@ class CasePredictionAgent(Agent):
                 "knowledge_base_usage": {
                     "case_knowledge_found": len(case_knowledge),
                     "jurisprudence_found": len(jurisprudence),
+                    "legal_documents_found": len(legal_docs),
                     "legal_terms_found": len(legal_definitions),
                     "knowledge_sources": [
                         {"type": "case_knowledge", "count": len(case_knowledge)},
                         {"type": "jurisprudence", "count": len(jurisprudence)},
+                        {"type": "legal_documents", "count": len(legal_docs)},
                         {"type": "legal_terms", "count": len(legal_definitions)}
                     ]
+                },
+                "graph": {
+                    "prediction": graph_prediction or {},
+                    "similar_cases": graph_similar,
+                    "precedents": graph_precedents,
                 }
             }
 
@@ -380,9 +446,39 @@ async def predict_case_outcome(
     opposing_counsel: str = None,
     relevant_precedents: list = None,
     administrative_procedure: Optional[str] = None,
-    legal_terms: Optional[List[str]] = None
+    legal_terms: Optional[List[str]] = None,
+    user_id: Optional[str] = None,
+    session_id: Optional[str] = None
 ) -> Dict[str, str]:
     """Predict case outcomes and provide litigation strategy recommendations"""
+    # Security protection for case type and legal issues
+    is_safe, sanitized_case_type, security_alert = protect_agent_input(
+        case_type, "case_prediction_agent", user_id, session_id
+    )
+    
+    if not is_safe:
+        logger.warning(f"Security threat detected in case prediction: {security_alert.attack_type if security_alert else 'Unknown'}")
+        return _create_security_response(security_alert)
+    
+    # Sanitize legal issues
+    sanitized_legal_issues = []
+    for issue in legal_issues:
+        is_safe_issue, sanitized_issue, _ = protect_agent_input(
+            issue, "case_prediction_agent", user_id, session_id
+        )
+        if is_safe_issue:
+            sanitized_legal_issues.append(sanitized_issue)
+        else:
+            logger.warning(f"Security threat detected in legal issue: {issue}")
+            continue
+    
+    if not sanitized_legal_issues:
+        return _create_security_response(None)
+    
+    # Use sanitized inputs
+    case_type = sanitized_case_type
+    legal_issues = sanitized_legal_issues
+    
     agent = create_case_prediction_agent()
     
     # Get Colombian legal terms if provided
@@ -506,7 +602,51 @@ Presentar este análisis en formato adecuado para asesorar sobre riesgo litigios
             "response_due": (datetime.now() + timedelta(days=deadlines["response"])).isoformat()
         }
     
+    # Protect response content
+    if "prediction" in result:
+        result["prediction"] = protect_agent_response(result["prediction"], "case_prediction_agent")
+    if "strategy" in result:
+        result["strategy"] = protect_agent_response(result["strategy"], "case_prediction_agent")
+    if "recommendations" in result:
+        protected_recommendations = []
+        for rec in result["recommendations"]:
+            protected_recommendations.append(protect_agent_response(rec, "case_prediction_agent"))
+        result["recommendations"] = protected_recommendations
+    
     return result 
+
+def _create_security_response(security_alert) -> Dict[str, str]:
+    """Create security response for detected threats"""
+    return {
+        "prediction": "I'm a legal case prediction assistant specialized in Colombian law. I can help you analyze case outcomes and provide litigation strategy recommendations.",
+        "confidence": "N/A",
+        "strategy": {
+            "primary_strategy": "Security review required",
+            "alternative_strategies": [],
+            "key_actions": ["Please rephrase your case details in a clear, legal context"],
+            "priority_level": "security_review",
+            "timeline": "N/A"
+        },
+        "recommendations": [
+            "Please provide specific legal case details for analysis",
+            "Focus on factual circumstances and legal issues",
+            "Ensure all information is relevant to Colombian law"
+        ],
+        "legal_analysis": {
+            "relevant_laws": [],
+            "jurisprudence": [],
+            "legal_terms": {}
+        },
+        "similar_cases": [],
+        "administrative_procedure": None,
+        "colombian_compliance": {
+            "constitutional_principles": ["Debido proceso", "Buena fe"],
+            "prediction_date": datetime.now().isoformat()
+        },
+        "security_status": "threat_detected",
+        "threat_level": security_alert.threat_level.value if security_alert else "unknown",
+        "agent_name": "case_prediction_agent"
+    }
 
 async def analyze_relevant_laws(agent: Agent, case_details: dict) -> dict:
     """Analyze relevant laws for the case using the agent"""

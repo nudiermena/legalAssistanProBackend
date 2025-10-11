@@ -15,6 +15,12 @@ def force_mistral_embedder():
             logger.info("Unsetting OPENAI_API_KEY to prevent OpenAI embedder fallback")
             del os.environ['OPENAI_API_KEY']
         
+        # Ensure Mistral API key is available
+        mistral_key = os.getenv('MISTRAL_API_KEY')
+        if not mistral_key:
+            logger.warning("MISTRAL_API_KEY not found, vector database will be disabled")
+            return None
+        
         # Set environment variables to force Mistral
         os.environ["AGNO_MISTRAL_EMBEDDER_AVAILABLE"] = "true"
         os.environ["AGNO_DEFAULT_EMBEDDER_TYPE"] = "mistral"
@@ -193,11 +199,11 @@ def get_mistral_embedder():
             logger.warning("MISTRAL_API_KEY not found")
             return None
                 
-        except Exception as e:
-            logger.error(f"Error creating Mistral embedder: {e}")
-            return None
+    except Exception as e:
+        logger.error(f"Error creating Mistral embedder: {e}")
+        return None
 
 # Auto-execute when module is imported
 if __name__ != "__main__":
-force_mistral_embedder()
+    force_mistral_embedder()
 

@@ -335,7 +335,7 @@ async def health_check():
             "timestamp": datetime.now().isoformat()
         }
 
-async def validate_invite_code_supabase(invite_code: str) -> Optional[Dict[str, Any]]:
+async def validate_invite_code_se(invite_code: str) -> Optional[Dict[str, Any]]:
     """
     Validate an invite code against the Supabase database
     """

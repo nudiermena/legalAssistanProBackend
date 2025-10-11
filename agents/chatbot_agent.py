@@ -7,19 +7,253 @@ from typing import Dict, List, Optional, Any
 from agno.tools.googlesearch import GoogleSearchTools
 import re
 import logging
+import asyncio
+import hashlib
+from dataclasses import dataclass
+from enum import Enum
+from utils.url_validator import validate_url
+from config.neo4j_rag_adapter import find_similar_cases
+from utils.link_resolver import resolve_record_url
+from utils.security_protection import protect_agent_input, protect_agent_response
 
 logger = logging.getLogger(__name__)
 
-def is_legal_query(message: str) -> Dict[str, Any]:
+# === ACE (AGENTIC CONTEXT ENGINEERING) FRAMEWORK ===
+
+class ContextType(Enum):
+    """Types of context that can be managed by the ACE framework"""
+    LEGAL_KNOWLEDGE = "legal_knowledge"
+    USER_PREFERENCES = "user_preferences"
+    CONVERSATION_HISTORY = "conversation_history"
+    JURISPRUDENCE = "jurisprudence"
+    DOCUMENT_TEMPLATES = "document_templates"
+    SESSION_SUMMARY = "session_summary"
+    PERFORMANCE_METRICS = "performance_metrics"
+
+class ContextPriority(Enum):
+    """Priority levels for context management"""
+    CRITICAL = "critical"
+    HIGH = "high"
+    MEDIUM = "medium"
+    LOW = "low"
+
+@dataclass
+class ContextModule:
+    """Represents a modular context component in the ACE framework"""
+    id: str
+    context_type: ContextType
+    content: str
+    priority: ContextPriority
+    created_at: datetime.datetime
+    last_updated: datetime.datetime
+    relevance_score: float
+    usage_count: int
+    metadata: Dict[str, Any]
+    
+    def to_dict(self) -> Dict[str, Any]:
+        """Convert to dictionary for storage"""
+        return {
+            "id": self.id,
+            "context_type": self.context_type.value,
+            "content": self.content,
+            "priority": self.priority.value,
+            "created_at": self.created_at.isoformat(),
+            "last_updated": self.last_updated.isoformat(),
+            "relevance_score": self.relevance_score,
+            "usage_count": self.usage_count,
+            "metadata": self.metadata
+        }
+
+class ACEContextManager:
     """
+    Agentic Context Engineering (ACE) Manager
+    Implements the core ACE framework for evolving contexts in the legal chatbot
+    """
+    
+    def __init__(self, user_id: str, session_id: str):
+        self.user_id = user_id
+        self.session_id = session_id
+        self.context_modules: Dict[str, ContextModule] = {}
+        self.context_history: List[Dict[str, Any]] = []
+        self.performance_metrics: Dict[str, Any] = {}
+        
+    def generate_context_id(self, content: str, context_type: ContextType) -> str:
+        """Generate unique ID for context module"""
+        content_hash = hashlib.md5(content.encode()).hexdigest()[:8]
+        return f"{context_type.value}_{content_hash}_{int(datetime.datetime.now().timestamp())}"
+    
+    def add_context_module(self, 
+                          content: str, 
+                          context_type: ContextType, 
+                          priority: ContextPriority = ContextPriority.MEDIUM,
+                          metadata: Dict[str, Any] = None) -> str:
+        """Add a new context module with automatic ID generation"""
+        context_id = self.generate_context_id(content, context_type)
+        
+        module = ContextModule(
+            id=context_id,
+            context_type=context_type,
+            content=content,
+            priority=priority,
+            created_at=datetime.datetime.now(),
+            last_updated=datetime.datetime.now(),
+            relevance_score=0.5,  # Initial relevance score
+            usage_count=0,
+            metadata=metadata or {}
+        )
+        
+        self.context_modules[context_id] = module
+        self._log_context_change("ADD", context_id, context_type)
+        return context_id
+    
+    def update_context_module(self, 
+                             context_id: str, 
+                             new_content: str = None,
+                             relevance_score: float = None,
+                             metadata: Dict[str, Any] = None) -> bool:
+        """Update an existing context module"""
+        if context_id not in self.context_modules:
+            return False
+        
+        module = self.context_modules[context_id]
+        
+        if new_content:
+            module.content = new_content
+        if relevance_score is not None:
+            module.relevance_score = relevance_score
+        if metadata:
+            module.metadata.update(metadata)
+        
+        module.last_updated = datetime.datetime.now()
+        module.usage_count += 1
+        
+        self._log_context_change("UPDATE", context_id, module.context_type)
+        return True
+    
+    def get_relevant_context(self, 
+                           query: str, 
+                           context_types: List[ContextType] = None,
+                           max_modules: int = 10) -> List[ContextModule]:
+        """Get relevant context modules for a query"""
+        relevant_modules = []
+        
+        for module in self.context_modules.values():
+            # Filter by context type if specified
+            if context_types and module.context_type not in context_types:
+                continue
+            
+            # Calculate relevance based on content similarity and usage
+            relevance = self._calculate_relevance(module, query)
+            
+            if relevance > 0.3:  # Threshold for relevance
+                module.relevance_score = relevance
+                relevant_modules.append(module)
+        
+        # Sort by relevance score and priority
+        relevant_modules.sort(key=lambda x: (x.relevance_score, x.priority.value), reverse=True)
+        
+        return relevant_modules[:max_modules]
+    
+    def _calculate_relevance(self, module: ContextModule, query: str) -> float:
+        """Calculate relevance score for a context module"""
+        # Simple keyword-based relevance calculation
+        query_words = set(query.lower().split())
+        content_words = set(module.content.lower().split())
+        
+        # Calculate word overlap
+        overlap = len(query_words.intersection(content_words))
+        total_words = len(query_words.union(content_words))
+        
+        if total_words == 0:
+            return 0.0
+        
+        # Base relevance from word overlap
+        base_relevance = overlap / total_words
+        
+        # Boost based on usage count and recency
+        usage_boost = min(module.usage_count * 0.1, 0.3)
+        recency_boost = self._calculate_recency_boost(module.last_updated)
+        
+        # Priority boost
+        priority_boost = {
+            ContextPriority.CRITICAL: 0.3,
+            ContextPriority.HIGH: 0.2,
+            ContextPriority.MEDIUM: 0.1,
+            ContextPriority.LOW: 0.0
+        }[module.priority]
+        
+        final_relevance = min(base_relevance + usage_boost + recency_boost + priority_boost, 1.0)
+        return final_relevance
+    
+    def _calculate_recency_boost(self, last_updated: datetime.datetime) -> float:
+        """Calculate recency boost based on how recently the module was updated"""
+        time_diff = datetime.datetime.now() - last_updated
+        hours_ago = time_diff.total_seconds() / 3600
+        
+        if hours_ago < 1:
+            return 0.2
+        elif hours_ago < 24:
+            return 0.1
+        elif hours_ago < 168:  # 1 week
+            return 0.05
+        else:
+            return 0.0
+    
+    def _log_context_change(self, action: str, context_id: str, context_type: ContextType):
+        """Log context changes for monitoring"""
+        log_entry = {
+            "timestamp": datetime.datetime.now().isoformat(),
+            "action": action,
+            "context_id": context_id,
+            "context_type": context_type.value,
+            "user_id": self.user_id,
+            "session_id": self.session_id
+        }
+        self.context_history.append(log_entry)
+    
+    def reflect_on_context(self) -> Dict[str, Any]:
+        """Reflect on context usage and performance"""
+        reflection = {
+            "total_modules": len(self.context_modules),
+            "context_types": {},
+            "average_relevance": 0.0,
+            "most_used_modules": [],
+            "underutilized_modules": [],
+            "recommendations": []
+        }
+        
+        if not self.context_modules:
+            return reflection
+        
+        # Analyze by context type
+        for module in self.context_modules.values():
+            context_type = module.context_type.value
+            if context_type not in reflection["context_types"]:
+                reflection["context_types"][context_type] = 0
+            reflection["context_types"][context_type] += 1
+        
+        # Calculate average relevance
+        total_relevance = sum(module.relevance_score for module in self.context_modules.values())
+        reflection["average_relevance"] = total_relevance / len(self.context_modules)
+        
+        # Find most and least used modules
+        sorted_modules = sorted(self.context_modules.values(), key=lambda x: x.usage_count, reverse=True)
+        reflection["most_used_modules"] = [m.id for m in sorted_modules[:5]]
+        reflection["underutilized_modules"] = [m.id for m in sorted_modules[-5:] if m.usage_count == 0]
+        
+        return reflection
+
+# def is_legal_query(message: str) -> Dict[str, Any]:
+"""
     Validates if a query is related to legal matters in Colombia.
     Returns validation result with confidence score and reasoning.
-    """
+    
+    # Note: Function disabled. The following content is intentionally commented out.
     # Convert to lowercase for case-insensitive matching
-    message_lower = message.lower()
+    # message_lower = message.lower()
     
     # Legal keywords and terms in Spanish
-    legal_keywords = [
+    # legal_keywords = [
         # General legal terms
         'derecho', 'ley', 'código', 'norma', 'jurídico', 'legal', 'legislación',
         'constitución', 'corte', 'tribunal', 'juez', 'juzgado', 'proceso',
@@ -128,7 +362,7 @@ def is_legal_query(message: str) -> Dict[str, Any]:
     ]
     
     # Non-legal keywords that should be rejected (but exclude legal terms)
-    non_legal_keywords = [
+    # non_legal_keywords = [
         # Historical figures
         'tutancamon', 'tutankamon', 'faraón', 'egipto', 'pirámide',
         'cleopatra', 'nefertiti', 'ramses', 'momia',
@@ -172,8 +406,8 @@ def is_legal_query(message: str) -> Dict[str, Any]:
     
     # Check for non-legal keywords first (higher priority)
     # But only if they don't appear in a legal context
-    for keyword in non_legal_keywords:
-        if keyword in message_lower:
+    # for keyword in non_legal_keywords:
+    #     if keyword in message_lower:
             # Check if the keyword appears in a legal context
             legal_context_found = False
             for legal_term in legal_keywords:
@@ -191,23 +425,23 @@ def is_legal_query(message: str) -> Dict[str, Any]:
                 }
     
     # Check for legal keywords
-    legal_matches = []
-    for keyword in legal_keywords:
-        if keyword in message_lower:
-            legal_matches.append(keyword)
+    # legal_matches = []
+    # for keyword in legal_keywords:
+    #     if keyword in message_lower:
+    #         legal_matches.append(keyword)
     
     # Calculate confidence based on matches
-    if len(legal_matches) >= 3:
-        confidence = 0.9
-    elif len(legal_matches) >= 2:
-        confidence = 0.7
-    elif len(legal_matches) >= 1:
-        confidence = 0.5
-    else:
-        confidence = 0.1
+    # if len(legal_matches) >= 3:
+    #     confidence = 0.9
+    # elif len(legal_matches) >= 2:
+    #     confidence = 0.7
+    # elif len(legal_matches) >= 1:
+    #     confidence = 0.5
+    # else:
+    #     confidence = 0.1
     
     # Additional checks for legal context
-    legal_context_indicators = [
+    # legal_context_indicators = [
         '¿qué', '¿cómo', '¿cuándo', '¿dónde', '¿por qué', '¿cuál',
         'necesito', 'quiero', 'debo', 'puedo', 'tengo derecho',
         'es legal', 'es ilegal', 'está permitido', 'está prohibido',
@@ -216,31 +450,32 @@ def is_legal_query(message: str) -> Dict[str, Any]:
         'plazo', 'término', 'vigencia', 'vencimiento'
     ]
     
-    context_matches = sum(1 for indicator in legal_context_indicators if indicator in message_lower)
-    if context_matches > 0:
-        confidence = min(confidence + 0.2, 1.0)
+    # context_matches = sum(1 for indicator in legal_context_indicators if indicator in message_lower)
+    # if context_matches > 0:
+    #     confidence = min(confidence + 0.2, 1.0)
     
     # Determine if query is legal
-    is_legal = confidence >= 0.5
+    # is_legal = confidence >= 0.5
     
-    if is_legal:
-        reasoning = f"Consulta legal detectada. Términos legales encontrados: {', '.join(legal_matches[:5])}"
-        if len(legal_matches) > 5:
-            reasoning += f" y {len(legal_matches) - 5} más"
-    else:
-        reasoning = "La consulta no parece estar relacionada con asuntos legales colombianos"
-        if legal_matches:
-            reasoning += f". Aunque se encontraron algunos términos legales: {', '.join(legal_matches)}"
-        else:
-            reasoning += ". No se detectaron términos legales específicos"
+    # if is_legal:
+    #     reasoning = f"Consulta legal detectada. Términos legales encontrados: {', '.join(legal_matches[:5])}"
+    #     if len(legal_matches) > 5:
+    #         reasoning += f" y {len(legal_matches) - 5} más"
+    # else:
+    #     reasoning = "La consulta no parece estar relacionada con asuntos legales colombianos"
+    #     if legal_matches:
+    #         reasoning += f". Aunque se encontraron algunos términos legales: {', '.join(legal_matches)}"
+    #     else:
+    #         reasoning += ". No se detectaron términos legales específicos"
     
-    return {
-        "is_legal": is_legal,
-        "confidence": confidence,
-        "reasoning": reasoning,
-        "legal_terms_found": legal_matches,
-        "suggestion": "Por favor, formule una consulta específica sobre asuntos legales colombianos." if not is_legal else None
-    }
+    # return {
+    #     "is_legal": is_legal,
+    #     "confidence": confidence,
+    #     "reasoning": reasoning,
+    #     "legal_terms_found": legal_matches,
+    #     "suggestion": "Por favor, formule una consulta específica sobre asuntos legales colombianos." if not is_legal else None
+    # }
+"""
 
 def create_chatbot_agent(
     practice_area: str = None,
@@ -303,6 +538,12 @@ def create_chatbot_agent(
         "Mantén neutralidad en temas legales controvertidos, presentando los argumentos de manera equilibrada",
         "Realiza búsquedas en Google y bases de datos legales (e.g., Corte Constitucional, Consejo de Estado, vLex, Legis) para encontrar información relevante y actualizada.",
         "Prioriza fuentes oficiales (gobierno, cortes, diarios oficiales) y fuentes académicas confiables.",
+        "CITA SOLO ENLACES QUE FUNCIONEN: Antes de citar una URL, verifica que responde 200/OK (HEAD o GET). Evita enlazar recursos con 404/500/401.",
+        "Si un enlace falla, busca una versión alternativa oficial o usa una copia estable (por ejemplo, 'web.archive.org') e indícalo.",
+        "Incluye siempre la URL exacta y fecha de consulta al final de cada cita.",
+        "Para cada consulta, RECOPILA AL MENOS 16 ENLACES VÁLIDOS (HTTP 200) utilizando GoogleSearchTools, eliminando duplicados y enlaces rotos.",
+        "Valida cada enlace con una verificación rápida (HEAD y si es necesario GET) y DESCARTA cualquier resultado que no sea 200/OK.",
+        "Ordena los resultados priorizando dominios .gov.co, cortes oficiales y fuentes académicas; limita cada resumen de fuente a 100 palabras.",
         "Filtra información no confiable o desactualizada, verificando la fecha de publicación.",
         "Proporciona un resumen breve (máximo 100 palabras por fuente) y el enlace correspondiente.",
         "Incluye metadatos básicos (fecha, autor, fuente) para cada resultado.",
@@ -362,7 +603,7 @@ def create_chatbot_agent(
         "name": "Asistente Legal Virtual Colombiano Avanzado",
         "role": "Asistente de información jurídica colombiana con capacidades de búsqueda de jurisprudencia y redacción de documentos",
         "model": get_model("chatbot"),
-        "tools": [GoogleSearchTools()],
+        "tools": [],  # Temporarily disable tools to avoid the list.keys() error
         "knowledge": knowledge_integration,
         "search_knowledge": True,
         "storage": enhanced_config.get("storage") if isinstance(enhanced_config, dict) else None,
@@ -507,24 +748,12 @@ def get_legal_references(practice_area: Optional[str] = None) -> Dict[str, List[
 async def search_jurisprudence_for_user_query(query: str, practice_area: str = None) -> Dict[str, Any]:
     """Search jurisprudence database for user query using hybrid search"""
     try:
-        # Import the jurisprudence API
-        from scripts.ai_agent_jurisprudence_api import AIAgentJurisprudenceAPI
-        
-        # Create jurisprudence search instance
-        jurisprudence_api = AIAgentJurisprudenceAPI()
-        
-        # Perform hybrid search - properly await the async method
-        search_results = await jurisprudence_api.search_jurisprudence(
-            query=query,
-            search_type="hybrid",
-            limit=5,
-            vector_weight=0.6,
-            keyword_weight=0.4,
-            filters={
-                "decision_type": practice_area if practice_area else None,
-                "relevance_threshold": 0.6
-            }
-        )
+        # Prefer direct Supabase RAG access via integration
+        from config.knowledge_base_integration import AgentKnowledgeHelper
+        kb_helper = AgentKnowledgeHelper("chatbot_agent")
+        # Try direct jurisprudence
+        results_list = await kb_helper.integration.get_jurisprudence(query, limit=5)
+        search_results = {"results": results_list}
         
         if search_results and search_results.get("results"):
             # Limit to top 5 results
@@ -535,8 +764,8 @@ async def search_jurisprudence_for_user_query(query: str, practice_area: str = N
                 "relevant_cases": limited_results[:3],  # Top 3 most relevant
                 "search_metadata": {
                     "query": query,
-                    "search_type": "hybrid",
-                    "total_results": len(search_results["results"])
+                    "search_type": "supabase_direct",
+                    "total_results": len(search_results.get("results", []))
                 }
             }
         else:
@@ -573,7 +802,13 @@ async def generate_legal_document_for_user(
             kb = SupabaseLegalKnowledgeBase(mock_mode=False)
             
             # Search for relevant templates
-            templates = await kb.get_document_templates("contract", "simple")
+            templates = await kb.get_document_templates("contract", "standard")
+            try:
+                logger.info(f"chatbot.generate_legal_document_for_user: fetched {len(templates) if templates else 0} templates from KB")
+                for t in (templates or [])[:3]:
+                    logger.info(f"template candidate: name='{t.get('template_name','N/A')}', content_len={len(t.get('template_content') or t.get('content') or '')}")
+            except Exception:
+                pass
             if templates:
                 # Filter templates that match the document type or practice area
                 for template in templates:
@@ -647,8 +882,12 @@ async def enhance_response_with_jurisprudence(
 ) -> str:
     """Enhance response with relevant jurisprudence cases"""
     try:
-        # Search for relevant jurisprudence
-        jurisprudence_results = await search_jurisprudence_for_user_query(user_query, practice_area)
+        # Parallel: jurisprudence RAG and optional Neo4j graph context
+        tasks = [
+            search_jurisprudence_for_user_query(user_query, practice_area),
+        ]
+        results = await asyncio.gather(*tasks, return_exceptions=True)
+        jurisprudence_results = results[0] if results and not isinstance(results[0], Exception) else {"success": False}
         
         if jurisprudence_results.get("success") and jurisprudence_results.get("relevant_cases"):
             enhanced_response = response_content + "\n\n"
@@ -664,6 +903,17 @@ async def enhance_response_with_jurisprudence(
             
             enhanced_response += "> 💡 **Nota:** Estos casos proporcionan precedentes legales relevantes. Para un análisis completo de tu situación específica, consulta con un abogado especializado.\n"
             
+            # Append standardized citations
+            try:
+                citations = []
+                for case in jurisprudence_results.get("relevant_cases", [])[:3]:
+                    url = resolve_record_url(case) or ""
+                    if url and validate_url(url):
+                        citations.append(url)
+                if citations:
+                    enhanced_response += "\n**Citas verificadas:**\n" + "\n".join(f"- {u}" for u in citations)
+            except Exception:
+                pass
             return enhanced_response
         else:
             # Add note about jurisprudence availability
@@ -693,21 +943,25 @@ async def enhance_response_with_document_suggestions(
             enhanced_response += "## 📄 ASISTENCIA EN REDACCION DE DOCUMENTOS\n\n"
             enhanced_response += "Puedo ayudarte a redactar documentos legales simplificados para trámites y procedimientos. He encontrado las siguientes plantillas disponibles:\n\n"
             
-            # Get document templates from RAG system
+            # Get document templates from RAG system (Supabase direct)
             try:
-                from config.supabase_knowledge_base import SupabaseLegalKnowledgeBase
-                kb = SupabaseLegalKnowledgeBase(mock_mode=False)
+                from config.knowledge_base_integration import AgentKnowledgeHelper
+                kb_helper = AgentKnowledgeHelper("chatbot_agent")
                 
                 # Search for relevant templates based on practice area
                 if practice_area == "arrendamiento":
-                    templates = await kb.get_document_templates("contract", "simple")
+                    templates = await kb_helper.integration.get_document_templates("contract", "standard")
                     enhanced_response += "### 🏠 **Plantillas de Arrendamiento:**\n"
                 elif practice_area == "derecho_laboral":
-                    templates = await kb.get_document_templates("contract", "simple")
+                    templates = await kb_helper.integration.get_document_templates("contract", "standard")
                     enhanced_response += "### 💼 **Plantillas Laborales:**\n"
                 else:
-                    templates = await kb.get_document_templates(None, "simple")
+                    templates = await kb_helper.integration.get_document_templates(None, "standard")
                     enhanced_response += "### 📋 **Plantillas Disponibles:**\n"
+                try:
+                    logger.info(f"chatbot.enhance_response_with_document_suggestions: fetched {len(templates) if templates else 0} templates from KB")
+                except Exception:
+                    pass
                 
                 if templates and len(templates) > 0:
                     # Show up to 5 relevant templates
@@ -764,45 +1018,65 @@ async def process_client_message(
 ) -> Dict[str, Any]:
     """Process a client message with enhanced memory capabilities"""
     try:
+        # Security protection for client message
+        is_safe, sanitized_message, security_alert = protect_agent_input(
+            message, "chatbot_agent", user_id, session_id
+        )
+        
+        if not is_safe:
+            logger.warning(f"Security threat detected in chatbot: {security_alert.attack_type if security_alert else 'Unknown'}")
+            return _create_security_response(security_alert)
+        
+        # Use sanitized message
+        message = sanitized_message
+        
         logger.info(f"Processing message for client {client_id} with memory support")
         
         # Validate if the query is legal-related
-        validation_result = is_legal_query(message)
-        logger.info(f"Query validation result: {validation_result}")
+        # validation_result = is_legal_query(message)
+        # logger.info(f"Query validation result: {validation_result}")
+        # Use default validation result (non-legal handling disabled)
+        validation_result = {
+            "is_legal": True,
+            "confidence": 1.0,
+            "reasoning": "Query validation disabled - treating all queries as legal",
+            "legal_terms_found": [],
+            "suggestion": None
+        }
         
-        # If query is not legal, return appropriate response
-        if not validation_result["is_legal"]:
-            logger.warning(f"Non-legal query detected: {message}")
-            return {
-                "response": {
-                    "content": f"# ⚠️ Consulta No Relacionada con Asuntos Legales\n\n{validation_result['reasoning']}\n\n## 📋 Sugerencia\n\n{validation_result['suggestion']}\n\n## 🏛️ Áreas de Consulta Legal Disponibles\n\nPuedo ayudarte con consultas sobre:\n\n- **Derecho Civil**: Contratos, propiedad, familia, sucesiones\n- **Derecho Laboral**: Contratos de trabajo, prestaciones, despidos\n- **Derecho Comercial**: Sociedades, comercio, contratos mercantiles\n- **Derecho Administrativo**: Trámites, licencias, recursos\n- **Derecho Penal**: Delitos, faltas, procedimientos\n- **Derecho Constitucional**: Derechos fundamentales, tutelas\n- **Derecho de Familia**: Matrimonio, divorcio, custodia\n- **Derecho Tributario**: Impuestos, declaraciones, DIAN\n- **Propiedad Intelectual**: Patentes, marcas, derechos de autor\n- **Protección al Consumidor**: Garantías, reclamos, devoluciones\n\nPor favor, formula una consulta específica sobre alguno de estos temas legales.",
-                    "relevant_laws": [],
-                    "recommendations": ["Formular una consulta legal específica"],
-                    "clarifying_questions": [
-                        "¿En qué área del derecho necesitas orientación?",
-                        "¿Cuál es tu situación legal específica?",
-                        "¿Qué tipo de asesoría legal requieres?"
-                    ]
-                },
-                "conversation_id": conversation_id or f"conv_{client_id}_{datetime.datetime.now().timestamp()}",
-                "session_id": session_id or conversation_id,
-                "user_id": user_id or client_id,
-                "memory_enabled": False,
-                "disclaimer": "Esta información es de carácter general y no constituye asesoría jurídica.",
-                "colombian_compliance": {
-                    "version": "1.0",
-                    "constitutional_principles": ["Debido proceso", "Buena fe"],
-                    "data_protection": {
-                        "law": "Ley 1581 de 2012",
-                        "status": "Cumple"
-                    }
-                },
-                "practice_area": None,
-                "legal_terms": {},
-                "references": {"normativa": [], "jurisprudencia": [], "doctrina": []},
-                "query_validation": validation_result,
-                "is_legal_query": False
-            }
+        # # If query is not legal, return appropriate response
+        # if not validation_result["is_legal"]:
+        #     logger.warning(f"Non-legal query detected: {message}")
+        #     return {
+        #         "response": {
+        #             "content": f"# ⚠️ Consulta No Relacionada con Asuntos Legales\n\n{validation_result['reasoning']}\n\n## 📋 Sugerencia\n\n{validation_result['suggestion']}\n\n## 🏛️ Áreas de Consulta Legal Disponibles\n\nPuedo ayudarte con consultas sobre:\n\n- **Derecho Civil**: Contratos, propiedad, familia, sucesiones\n- **Derecho Laboral**: Contratos de trabajo, prestaciones, despidos\n- **Derecho Comercial**: Sociedades, comercio, contratos mercantiles\n- **Derecho Administrativo**: Trámites, licencias, recursos\n- **Derecho Penal**: Delitos, faltas, procedimientos\n- **Derecho Constitucional**: Derechos fundamentales, tutelas\n- **Derecho de Familia**: Matrimonio, divorcio, custodia\n- **Derecho Tributario**: Impuestos, declaraciones, DIAN\n- **Propiedad Intelectual**: Patentes, marcas, derechos de autor\n- **Protección al Consumidor**: Garantías, reclamos, devoluciones\n\nPor favor, formula una consulta específica sobre alguno de estos temas legales.",
+        #             "relevant_laws": [],
+        #             "recommendations": ["Formular una consulta legal específica"],
+        #             "clarifying_questions": [
+        #                 "¿En qué área del derecho necesitas orientación?",
+        #                 "¿Cuál es tu situación legal específica?",
+        #                 "¿Qué tipo de asesoría legal requieres?"
+        #             ]
+        #         },
+        #         "conversation_id": conversation_id or f"conv_{client_id}_{datetime.datetime.now().timestamp()}",
+        #         "session_id": session_id or conversation_id,
+        #         "user_id": user_id or client_id,
+        #         "memory_enabled": False,
+        #         "disclaimer": "Esta información es de carácter general y no constituye asesoría jurídica.",
+        #         "colombian_compliance": {
+        #             "version": "1.0",
+        #             "constitutional_principles": ["Debido proceso", "Buena fe"],
+        #             "data_protection": {
+        #                 "law": "Ley 1581 de 2012",
+        #                 "status": "Cumple"
+        #             }
+        #         },
+        #         "practice_area": None,
+        #         "legal_terms": {},
+        #         "references": {"normativa": [], "jurisprudencia": [], "doctrina": []},
+        #         "query_validation": validation_result,
+        #         "is_legal_query": False
+        #     }
         
         # Initialize memory system
         try:
@@ -812,6 +1086,29 @@ async def process_client_message(
         except Exception as e:
             logger.warning(f"Failed to initialize memory system: {e}")
             memory_instance = None
+        
+        # Initialize ACE Context Manager
+        ace_context_manager = ACEContextManager(
+            user_id=user_id or client_id,
+            session_id=session_id or conversation_id
+        )
+        logger.info(f"ACE Context Manager initialized for user {user_id or client_id}")
+        
+        # === ACE CONTEXT GENERATION ===
+        # Generate context modules from the current message
+        from agents.ace_helpers import generate_ace_context_from_message
+        await generate_ace_context_from_message(
+            ace_context_manager, 
+            message, 
+            practice_area, 
+            file_content
+        )
+        
+        # Get relevant context for the query
+        relevant_context = ace_context_manager.get_relevant_context(
+            message, 
+            max_modules=10
+        )
         
         # Build dynamic context from stored user memories and prior session
         combined_instructions = instructions
@@ -861,6 +1158,16 @@ async def process_client_message(
                     combined_instructions = (f"{instructions}\n\n{dynamic_context}" if instructions else dynamic_context)
             except Exception as ctx_err:
                 logger.warning(f"No se pudo preparar el contexto dinámico: {ctx_err}")
+        
+        # === ACE CONTEXT ENHANCEMENT ===
+        # Add ACE context modules to instructions
+        if relevant_context:
+            from agents.ace_helpers import build_ace_context_instructions
+            ace_context_section = build_ace_context_instructions(relevant_context)
+            combined_instructions = (
+                f"{combined_instructions}\n\n{ace_context_section}" 
+                if combined_instructions else ace_context_section
+            )
 
         # Create agent with dynamic context injected as additional instructions
         agent = create_chatbot_agent(
@@ -1043,6 +1350,16 @@ async def process_client_message(
             logger.warning(f"Failed to enhance response with jurisprudence/document capabilities: {enhancement_error}")
             # Continue with original response if enhancement fails
             pass
+        
+        # === ACE CONTEXT UPDATE ===
+        # Update context based on the response
+        from agents.ace_helpers import update_ace_context_from_response
+        await update_ace_context_from_response(
+            ace_context_manager, 
+            message, 
+            response_content, 
+            practice_area
+        )
 
         # Store session data if memory system is available
         if memory_instance and user_id and session_id:
@@ -1076,10 +1393,16 @@ async def process_client_message(
         # Get references with guaranteed lists
         references = get_legal_references(practice_area)
 
+        # Get ACE context reflection
+        ace_reflection = ace_context_manager.reflect_on_context()
+
+        # Protect response content
+        protected_content = protect_agent_response(response_content, "chatbot_agent")
+        
         # Ensure references are properly structured
         response_data = {
             "response": {
-                "content": response_content,  # This will be the markdown content
+                "content": protected_content,  # This will be the markdown content
                 "relevant_laws": references["normativa"],
                 "recommendations": get_recommendations_for_practice_area(practice_area),
                 "clarifying_questions": clarifying_questions # Add clarifying questions here
@@ -1105,7 +1428,18 @@ async def process_client_message(
                 "jurisprudence_search": True,
                 "document_drafting": True,
                 "hybrid_search": True,
-                "constitutional_court_cases": True
+                "constitutional_court_cases": True,
+                "ace_context_engineering": True,
+                "adaptive_context_management": True,
+                "performance_monitoring": True
+            },
+            # === ACE ENHANCEMENT INFORMATION ===
+            "ace_enhancement": {
+                "context_modules_active": len(ace_context_manager.context_modules),
+                "context_reflection": ace_reflection,
+                "relevant_context_used": len(relevant_context),
+                "context_types_used": list(set(module.context_type.value for module in relevant_context)),
+                "adaptation_strategies": ["context_curation", "relevance_optimization", "user_preference_learning"]
             },
             # === QUERY VALIDATION INFORMATION ===
             "query_validation": validation_result,
@@ -1119,6 +1453,60 @@ async def process_client_message(
         # Raise the exception instead of returning an error response
         # This allows the endpoint to properly handle it and return appropriate HTTP status code
         raise e 
+
+def _create_security_response(security_alert) -> Dict[str, Any]:
+    """Create security response for detected threats"""
+    return {
+        "response": {
+            "content": "I'm a legal assistant specialized in Colombian law. I can help you with legal questions, research, and guidance within my expertise.",
+            "relevant_laws": [],
+            "recommendations": [
+                {
+                    "type": "security",
+                    "description": "Please rephrase your question in a clear, legal context.",
+                    "priority": "high",
+                    "implementation": "Focus on specific legal topics or questions."
+                }
+            ],
+            "clarifying_questions": [
+                "What specific legal matter can I help you with?",
+                "Are you looking for information about a particular area of Colombian law?"
+            ]
+        },
+        "conversation_id": None,
+        "session_id": None,
+        "user_id": None,
+        "memory_enabled": False,
+        "disclaimer": "Security review required for this request.",
+        "colombian_compliance": {
+            "version": "1.0",
+            "constitutional_principles": ["Debido proceso", "Buena fe"],
+            "data_protection": {
+                "law": "Ley 1581 de 2012",
+                "status": "Security Review Required"
+            }
+        },
+        "practice_area": "security_review",
+        "legal_terms": [],
+        "references": {"normativa": [], "jurisprudencia": [], "doctrina": []},
+        "enhanced_capabilities": {
+            "jurisprudence_search": False,
+            "document_drafting": False,
+            "hybrid_search": False,
+            "constitutional_court_cases": False
+        },
+        "query_validation": {
+            "is_legal": False,
+            "confidence": 0.0,
+            "reasoning": "Security threat detected",
+            "legal_terms_found": [],
+            "suggestion": "Please rephrase your question"
+        },
+        "is_legal_query": False,
+        "security_status": "threat_detected",
+        "threat_level": security_alert.threat_level.value if security_alert else "unknown",
+        "agent_name": "chatbot_agent"
+    }
 
 async def demonstrate_enhanced_chatbot_capabilities():
     """Demonstrate the enhanced chatbot agent capabilities"""
@@ -1220,6 +1608,24 @@ async def demonstrate_enhanced_chatbot_capabilities():
     print("✅ Generación de documentos legales simplificados")
     print("✅ Mejora automática de respuestas con casos relevantes")
     print("✅ Sugerencias inteligentes de documentos según consulta")
+    print("✅ Integración con base de conocimiento legal")
+    print("✅ Cumplimiento legal colombiano")
+    print("✅ Memoria de usuario y sesión")
+    
+    print("\n🚀 El chatbot está listo para proporcionar asistencia legal avanzada!")
+    print("💡 Integra jurisprudencia, documentos y conocimiento legal en cada respuesta")
+
+# Main execution for demonstration
+if __name__ == "__main__":
+    import asyncio
+    
+    print("🔧 Iniciando demostración del chatbot agente mejorado...")
+    
+    try:
+        asyncio.run(demonstrate_enhanced_chatbot_capabilities())
+    except Exception as e:
+        print(f"❌ Error en demostración: {str(e)}")
+        print("💡 Asegúrese de que todas las dependencias estén configuradas correctamente") 
     print("✅ Integración con base de conocimiento legal")
     print("✅ Cumplimiento legal colombiano")
     print("✅ Memoria de usuario y sesión")

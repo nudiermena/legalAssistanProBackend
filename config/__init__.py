@@ -5,16 +5,16 @@ Ensures embedder configuration is loaded before any agno components
 # Import force Mistral embedder first to patch agno framework
 try:
     from . import force_mistral_embedder
-    print("✅ Force Mistral embedder module loaded successfully")
+    print("Force Mistral embedder module loaded successfully")
 except Exception as e:
-    print(f"⚠️  Could not load force Mistral embedder module: {e}")
+    print(f"Could not load force Mistral embedder module: {e}")
 
 # Import embedder configuration to ensure it's configured
 try:
     from . import agno_embedder_config
-    print("✅ Agno embedder configuration loaded successfully")
+    print("Agno embedder configuration loaded successfully")
 except ImportError as e:
-    print(f"⚠️  Could not load agno embedder configuration: {e}")
+    print(f"Could not load agno embedder configuration: {e}")
 
 # Import other configuration modules
 from . import settings

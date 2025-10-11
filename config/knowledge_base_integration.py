@@ -45,9 +45,15 @@ class AgentKnowledgeIntegration:
         # Use mock mode if environment variables are not available
         mock_mode = not (supabase_url and supabase_key and mistral_key)
         
+        # Temporarily disable vector database due to embedding issues
+        vector_db_enabled = False
+        
         if mock_mode:
-            logger.warning(f"Using MOCK mode for knowledge base integration (agent: {agent_type})")
-            logger.warning("Set SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, and MISTRAL_API_KEY for full functionality")
+            logger.info(f"Using MOCK mode for knowledge base integration (agent: {agent_type})")
+            logger.info("Set SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, and MISTRAL_API_KEY for full functionality")
+        else:
+            logger.info(f"Using REAL mode for knowledge base integration (agent: {agent_type})")
+            logger.info("Vector database temporarily disabled due to embedding configuration issues")
         
         self.kb = SupabaseLegalKnowledgeBase(mock_mode=mock_mode)
         self.agent_enum = self._get_agent_enum(agent_type)
@@ -263,6 +269,27 @@ class AgentKnowledgeIntegration:
             return await self.kb.get_jurisprudence(topic, limit=limit)
         except Exception as e:
             logger.error(f"Error getting jurisprudence: {e}")
+            return []
+
+    async def get_legal_documents(self, query: str, limit: int = 10) -> List[Dict[str, Any]]:
+        """
+        Get legal documents from ai.legal_documents_rag via Supabase, falling back to search
+        """
+        try:
+            # Prefer direct Supabase access if available
+            try:
+                resp = self.kb.supabase.table("ai.legal_documents_rag").select("*") \
+                    .or_(f"title.ilike.%{query}%,content.ilike.%{query}%").limit(limit).execute()
+                data = resp.data or []
+                if data:
+                    return data
+            except Exception as table_err:
+                logger.warning(f"ai.legal_documents_rag lookup failed, fallback to search: {table_err}")
+            # Fallback to search
+            results = await self.kb.search_knowledge(query, limit=limit)
+            return results.get("results", [])
+        except Exception as e:
+            logger.error(f"Error getting legal documents: {e}")
             return []
     
     async def get_contract_clauses(self) -> List[Dict[str, Any]]:
