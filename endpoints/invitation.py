@@ -409,7 +409,7 @@ async def validate_friend_invite(request: FriendInviteValidationRequest):
             )
         
         # Validate the invite code against your database
-        invite = await validate_invite_code_supabase(invite_code)
+        invite = await validate_invite_code_se(invite_code)
         
         if invite and invite.get('status') == 'pending':
             return FriendInviteValidationResponse(
