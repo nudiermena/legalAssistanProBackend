@@ -438,7 +438,7 @@ async def validate_friend_invite(request: FriendInviteValidationRequest):
 
 async def accept_invite_supabase(invite_code: str, user_id: str) -> bool:
     """
-    Accept a friend invite in the Supabase database
+    Accept a friend invite in the Supabase database to create a new user
     """
     try:
         from config.supabase import get_supabase_config
