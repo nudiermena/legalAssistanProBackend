@@ -162,7 +162,7 @@ async def list_upcoming_events(
 
 @router.post("/send", response_model=List[ReminderResult])
 async def send_upcoming_event_reminders(
-    days: int = Query(7, ge=1, le=60),
+    days: int = Query(1, ge=1, le=60),
     table: str = Query("calendar_events"),
     date_column: str = Query("end_time"),
 ):
@@ -205,7 +205,7 @@ async def send_upcoming_event_reminders(
                 email=None,
                 full_name=full_name,
                 event_title=ev.get("title"),
-                event_date=event_dt,
+                event_date=end_dt,
                 sent=False,
                 error="No email on profile"
             ))
@@ -222,18 +222,35 @@ async def send_upcoming_event_reminders(
             event_type=event_type,
         )
         try:
+            from_email = os.getenv("RESEND_FROM_EMAIL", "noreply@miasistentelegalia.com")
+            reply_to_email = os.getenv("RESEND_REPLY_TO_EMAIL", "support@miasistentelegalia.com")
+            
+            logger.info(f"Sending email to {email} from {from_email}")
+            logger.debug(f"Email HTML content length: {len(html)} characters")
+            
             params = {
-                "from": os.getenv("RESEND_FROM_EMAIL", "noreply@miasistentelegalia.com"),
+                "from": from_email,
                 "to": [email],
                 "subject": "Recordatorio: evento próximo a vencer",
                 "html": html,
-                "reply_to": os.getenv("RESEND_REPLY_TO_EMAIL", "support@miasistentelegalia.com"),
+                "reply_to": reply_to_email,
                 "tags": [
                     {"name": "type", "value": "calendar_reminder"},
                     {"name": "event_id", "value": str(ev.get("id"))},
                 ],
             }
-            resend.Emails.send(params)  # fire-and-forget acceptable here
+            
+            # Send email and capture response
+            response = resend.Emails.send(params)
+            logger.info(f"Resend API response for {email}: {response}")
+            
+            # Check if response contains error information
+            if hasattr(response, 'data') and response.data:
+                email_id = response.data.get('id')
+                logger.info(f"Email sent successfully to {email}, ID: {email_id}")
+            else:
+                logger.warning(f"Unexpected response format from Resend for {email}: {response}")
+            
             results.append(ReminderResult(
                 event_id=ev.get("id"),
                 user_id=uid or "",
@@ -246,6 +263,7 @@ async def send_upcoming_event_reminders(
             ))
         except Exception as e:
             logger.error(f"Failed sending email to {email}: {e}")
+            logger.error(f"Email parameters: from={from_email}, to={email}, subject=Recordatorio: evento próximo a vencer")
             results.append(ReminderResult(
                 event_id=ev.get("id"),
                 user_id=uid or "",
@@ -258,5 +276,57 @@ async def send_upcoming_event_reminders(
             ))
 
     return results
+
+
+@router.post("/test-email")
+async def test_email_sending(
+    test_email: str = Query(..., description="Email address to send test email to")
+):
+    """Test endpoint to verify Resend email configuration"""
+    if resend is None or not getattr(resend, "api_key", None):
+        raise HTTPException(status_code=500, detail="Email service not configured")
+    
+    try:
+        from_email = os.getenv("RESEND_FROM_EMAIL", "noreply@miasistentelegalia.com")
+        reply_to_email = os.getenv("RESEND_REPLY_TO_EMAIL", "support@miasistentelegalia.com")
+        
+        logger.info(f"Testing email configuration - From: {from_email}, To: {test_email}")
+        
+        # Simple test email
+        test_html = """
+        <div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;'>
+            <h2>Test Email from MiAsistenteLegalIA</h2>
+            <p>This is a test email to verify the email configuration.</p>
+            <p>If you receive this email, the Resend configuration is working correctly.</p>
+            <p>Timestamp: {}</p>
+        </div>
+        """.format(datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S UTC"))
+        
+        params = {
+            "from": from_email,
+            "to": [test_email],
+            "subject": "Test Email - MiAsistenteLegalIA",
+            "html": test_html,
+            "reply_to": reply_to_email,
+            "tags": [
+                {"name": "type", "value": "test_email"},
+                {"name": "timestamp", "value": datetime.utcnow().isoformat()},
+            ],
+        }
+        
+        response = resend.Emails.send(params)
+        logger.info(f"Test email response: {response}")
+        
+        return {
+            "success": True,
+            "message": f"Test email sent to {test_email}",
+            "response": str(response),
+            "from_email": from_email,
+            "to_email": test_email
+        }
+        
+    except Exception as e:
+        logger.error(f"Test email failed: {e}")
+        raise HTTPException(status_code=500, detail=f"Test email failed: {str(e)}")
 
 

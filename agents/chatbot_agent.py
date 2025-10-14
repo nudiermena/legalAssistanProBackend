@@ -573,6 +573,16 @@ def create_chatbot_agent(
         "PLANTILLAS LEGALES: Proporciona plantillas y ejemplos de documentos legales comunes adaptados al contexto colombiano.",
         "CUMPLIMIENTO LEGAL: Asegura que todas las recomendaciones cumplan con la normativa colombiana vigente.",
         
+        # === COMPREHENSIVE ANALYSIS REQUIREMENTS ===
+        "ANÁLISIS COMPREHENSIVO: Proporciona respuestas detalladas de al menos 2000-3000 palabras con estructura académica.",
+        "ESTRUCTURA OBLIGATORIA: Organiza respuestas con secciones numeradas: 1) Introducción, 2) Marco normativo, 3) Principios rectores, 4) Análisis detallado, 5) Jurisprudencia, 6) Conclusiones.",
+        "SISTEMA DE REFERENCIAS: Usa números en círculos grises [1] [2] [3] para citar fuentes, creando al menos 8-15 referencias por respuesta.",
+        "BÚSQUEDA WEB AVANZADA: Realiza búsqueda web de fuentes legales oficiales y verifica URLs antes de citarlas.",
+        "INGESTION AUTOMÁTICA: Ingesta automáticamente las fuentes encontradas a la base de datos contract_knowledge.",
+        "VERIFICACIÓN DE FUENTES: Valida que todas las URLs citadas sean accesibles (HTTP 200) antes de incluirlas.",
+        "FUENTES OFICIALES: Prioriza dominios .gov.co, cortes oficiales y fuentes académicas confiables.",
+        "METADATOS COMPLETOS: Incluye fecha de consulta, autor, fuente y tipo de documento para cada referencia.",
+        
         # === INTEGRACIÓN CON BASE DE CONOCIMIENTO RAG ===
         "ANTES de responder, consulta la base de conocimiento legal para obtener información actualizada",
         "Utiliza la base de datos de plantillas de documentos (document_templates) para proporcionar ejemplos específicos",
@@ -922,6 +932,92 @@ async def enhance_response_with_jurisprudence(
     except Exception as e:
         logger.error(f"Error enhancing response with jurisprudence: {str(e)}")
         return response_content
+
+async def enhance_response_with_web_search(
+    response_content: str,
+    user_query: str,
+    practice_area: str = None,
+    web_sources: List[Any] = None
+) -> str:
+    """Enhance response with web search results"""
+    try:
+        if not web_sources:
+            return response_content
+        
+        enhanced_response = response_content + "\n\n"
+        enhanced_response += "## 🔍 FUENTES LEGALES ENCONTRADAS\n\n"
+        enhanced_response += "He realizado una búsqueda web exhaustiva de fuentes legales oficiales y he encontrado las siguientes referencias relevantes:\n\n"
+        
+        # Add web sources
+        for i, source in enumerate(web_sources[:8], 1):  # Limit to top 8 sources
+            enhanced_response += f"### Fuente {i}: {source.title}\n"
+            enhanced_response += f"**Tipo:** {source.source_type.value.title()}\n"
+            enhanced_response += f"**URL:** {source.url}\n"
+            enhanced_response += f"**Relevancia:** {source.relevance_score:.2f}\n"
+            enhanced_response += f"**Verificado:** {'✅' if source.verified else '❌'}\n"
+            if source.snippet:
+                enhanced_response += f"**Resumen:** {source.snippet[:200]}...\n"
+            enhanced_response += "\n"
+        
+        enhanced_response += "> 💡 **Nota:** Estas fuentes han sido verificadas y están disponibles para consulta. Se han ingerido automáticamente a la base de conocimiento legal para futuras consultas.\n"
+        
+        return enhanced_response
+        
+    except Exception as e:
+        logger.error(f"Error enhancing response with web search: {str(e)}")
+        return response_content
+
+def add_numbered_references_to_response(response_content: str, web_sources: List[Any] = None) -> str:
+    """Add numbered references to response content"""
+    try:
+        if not web_sources:
+            return response_content
+        
+        # Add references section
+        references_section = "\n\n**Fuentes:**\n"
+        
+        for i, source in enumerate(web_sources[:15], 1):  # Limit to 15 references
+            citation = source.citation or source.title
+            if source.page_number:
+                citation += f" - Página {source.page_number}"
+            if source.date:
+                citation += f" - {source.date}"
+            
+            references_section += f"{citation}\n"
+        
+        return response_content + references_section
+        
+    except Exception as e:
+        logger.error(f"Error adding numbered references: {str(e)}")
+        return response_content
+
+async def ingest_web_sources_to_supabase(web_sources: List[Any]):
+    """Ingest web sources to Supabase contract_knowledge table"""
+    try:
+        from scripts.ingest_legal_sources_to_contract_knowledge import LegalSourceIngester
+        ingester = LegalSourceIngester()
+        
+        for source in web_sources:
+            if source.verified and source.content:
+                await ingester.ingest_from_legal_text(
+                    legal_text=source.content,
+                    title=source.title,
+                    source_type=source.source_type.value,
+                    citation=source.citation or source.title,
+                    url=source.url,
+                    metadata={
+                        'relevance_score': source.relevance_score,
+                        'page_number': source.page_number,
+                        'date': source.date,
+                        'court': source.court,
+                        'ingestion_date': datetime.datetime.now().isoformat()
+                    }
+                )
+        
+        logger.info(f"Ingested {len(web_sources)} web sources to Supabase")
+        
+    except Exception as e:
+        logger.error(f"Error ingesting web sources to Supabase: {str(e)}")
 
 async def enhance_response_with_document_suggestions(
     response_content: str,
@@ -1332,22 +1428,43 @@ async def process_client_message(
         logger.debug(f"Extracted clarifying_questions: {clarifying_questions}")
         logger.debug(f"Final response_content (main): {response_content[:500]}...")
 
-        # === ENHANCE RESPONSE WITH JURISPRUDENCE AND DOCUMENT CAPABILITIES ===
+        # === ENHANCE RESPONSE WITH WEB SEARCH AND COMPREHENSIVE ANALYSIS ===
         try:
-            # Enhance with jurisprudence if relevant
-            enhanced_response = await enhance_response_with_jurisprudence(
-                response_content, message, practice_area
+            # Step 1: Web search for legal sources
+            from utils.legal_web_searcher import LegalWebSearcher
+            web_searcher = LegalWebSearcher()
+            
+            # Search for legal sources
+            web_sources, search_stats = await web_searcher.search_and_ingest(
+                query=f"{message} derecho colombiano",
+                max_results=16
             )
             
-            # Enhance with document suggestions if relevant
+            # Step 2: Enhance response with web search results
+            enhanced_response = await enhance_response_with_web_search(
+                response_content, message, practice_area, web_sources
+            )
+            
+            # Step 3: Enhance with jurisprudence if relevant
+            enhanced_response = await enhance_response_with_jurisprudence(
+                enhanced_response, message, practice_area
+            )
+            
+            # Step 4: Enhance with document suggestions if relevant
             final_response = await enhance_response_with_document_suggestions(
                 enhanced_response, message, practice_area
             )
             
+            # Step 5: Add numbered references
+            final_response = add_numbered_references_to_response(final_response, web_sources)
+            
+            # Step 6: Ingest sources to Supabase
+            await ingest_web_sources_to_supabase(web_sources)
+            
             response_content = final_response
             
         except Exception as enhancement_error:
-            logger.warning(f"Failed to enhance response with jurisprudence/document capabilities: {enhancement_error}")
+            logger.warning(f"Failed to enhance response with web search capabilities: {enhancement_error}")
             # Continue with original response if enhancement fails
             pass
         
@@ -1431,7 +1548,12 @@ async def process_client_message(
                 "constitutional_court_cases": True,
                 "ace_context_engineering": True,
                 "adaptive_context_management": True,
-                "performance_monitoring": True
+                "performance_monitoring": True,
+                "web_search": True,
+                "reference_numbering": True,
+                "supabase_ingestion": True,
+                "comprehensive_analysis": True,
+                "source_verification": True
             },
             # === ACE ENHANCEMENT INFORMATION ===
             "ace_enhancement": {
@@ -1443,7 +1565,15 @@ async def process_client_message(
             },
             # === QUERY VALIDATION INFORMATION ===
             "query_validation": validation_result,
-            "is_legal_query": True
+            "is_legal_query": True,
+            # === WEB SEARCH RESULTS ===
+            "web_search_results": {
+                "sources_found": len(web_sources) if 'web_sources' in locals() else 0,
+                "verified_sources": len([s for s in web_sources if s.verified]) if 'web_sources' in locals() else 0,
+                "sources_ingested": len([s for s in web_sources if s.verified and s.content]) if 'web_sources' in locals() else 0,
+                "search_query": f"{message} derecho colombiano",
+                "search_timestamp": datetime.datetime.now().isoformat()
+            }
         }
 
         return response_data

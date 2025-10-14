@@ -353,7 +353,9 @@ class AuthenticationMiddleware(BaseHTTPMiddleware):
             "/auth/health",
             "/api/friend-invite/validate",  # Allow friend invite validation without auth
             "/api/friend-invite/accept",  # Allow friend invite acceptance without auth
-            "/api/request-demo"  # Allow request demo without auth (public)
+            "/api/request-demo",  # Allow request demo without auth (public)
+            "/calendar/reminders/send",  # Allow calendar reminders without auth (automated system)
+            "/calendar/reminders/test-email"  # Allow email testing without auth
         ]
         
         return not any(path.startswith(public_path) for public_path in public_paths)
